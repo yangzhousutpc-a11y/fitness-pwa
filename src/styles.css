@@ -470,14 +470,75 @@ a {
 
 .exercise-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.exercise-log-card.active .exercise-heading {
+  margin-bottom: 18px;
 }
 
 .exercise-heading p {
   margin: 6px 0 0;
+}
+
+.exercise-heading-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.exercise-chevron {
+  color: #22c55e;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* 重量/次数步进器：− 输入 ＋ 横排，嵌进 set-grid 单列 */
+.stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.stepper input {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.stepper input {
+  padding: 0 4px !important;
+}
+
+.stepper button {
+  flex: 0 0 auto;
+  width: 26px;
+  min-height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  background: #17233a;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper button:active {
+  transform: scale(0.94);
 }
 
 .coach-cue-card {
@@ -569,8 +630,8 @@ a {
 
 .set-grid {
   display: grid;
-  grid-template-columns: 34px minmax(76px, 1fr) minmax(58px, 0.78fr) 50px;
-  gap: 10px;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(0, 1fr) 40px;
+  gap: 6px;
   align-items: center;
 }
 

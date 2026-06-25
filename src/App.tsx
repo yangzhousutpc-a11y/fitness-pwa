@@ -612,6 +612,22 @@ function WorkoutView({
   const [addQuery, setAddQuery] = useState('');
   const [addFilter, setAddFilter] = useState<ExerciseFilter>('全部');
   const [restSeconds, setRestSeconds] = useState<number | null>(null);
+  // 训练页动作卡片各自独立展开/折叠；进入时默认只展开第一个动作。
+  const [expandedExerciseIds, setExpandedExerciseIds] = useState<Set<string>>(
+    () => new Set(session.exerciseLogs[0] ? [session.exerciseLogs[0].exerciseId] : []),
+  );
+
+  function toggleExercise(exerciseId: string) {
+    setExpandedExerciseIds((current) => {
+      const next = new Set(current);
+      if (next.has(exerciseId)) {
+        next.delete(exerciseId);
+      } else {
+        next.add(exerciseId);
+      }
+      return next;
+    });
+  }
   const lastSetsByExercise = useMemo(() => {
     const sessions = loadSessions();
     const map: Record<string, ReturnType<typeof getLastExerciseSets>> = {};
@@ -630,19 +646,37 @@ function WorkoutView({
 
   function updateSet(exerciseIndex: number, setIndex: number, patch: Partial<SetLog>) {
     const previousSet = session.exerciseLogs[exerciseIndex]?.sets[setIndex];
+    const justCompleted = patch.completed === true && previousSet && !previousSet.completed;
+
     const nextLogs = session.exerciseLogs.map((log, currentExerciseIndex) => {
       if (currentExerciseIndex !== exerciseIndex) {
         return log;
       }
 
+      const completedSet = { ...log.sets[setIndex], ...patch };
+
       return {
         ...log,
-        sets: log.sets.map((set, currentSetIndex) => (currentSetIndex === setIndex ? { ...set, ...patch } : set)),
+        sets: log.sets.map((set, currentSetIndex) => {
+          if (currentSetIndex === setIndex) {
+            return completedSet;
+          }
+          // 勾完本组后，把本组重量/次数带入「下一组」——仅当下一组对应字段还空着，
+          // 不覆盖用户已填的值（遵守「不擅自改已填数据」约定）。
+          if (justCompleted && currentSetIndex === setIndex + 1) {
+            return {
+              ...set,
+              weight: set.weight ?? completedSet.weight,
+              reps: set.reps ?? completedSet.reps,
+            };
+          }
+          return set;
+        }),
       };
     });
 
     // 从「未完成」切到「完成」时启动组间休息计时。
-    if (patch.completed === true && previousSet && !previousSet.completed) {
+    if (justCompleted) {
       setRestSeconds(90);
     }
 
@@ -776,16 +810,30 @@ function WorkoutView({
         const exercise = getExerciseById(log.exerciseId);
         const coachNote = day ? findCoachNote(day, log.exerciseId) : undefined;
         const exerciseName = exercise?.name ?? log.exerciseId;
+        const isExpanded = expandedExerciseIds.has(log.exerciseId);
+        const doneCount = log.sets.filter((set) => set.completed).length;
 
         return (
-          <article className="exercise-log-card" key={log.exerciseId}>
-            <div className="exercise-heading">
+          <article className={isExpanded ? 'exercise-log-card active' : 'exercise-log-card'} key={log.exerciseId}>
+            <button
+              type="button"
+              className="exercise-heading"
+              onClick={() => toggleExercise(log.exerciseId)}
+              aria-expanded={isExpanded}
+              aria-label={`${exerciseName} 展开收起`}
+            >
               <div>
                 <h3>{exerciseName}</h3>
                 <p>{exercise?.muscleGroups.join(' / ')} · {exercise?.equipment}</p>
               </div>
-            </div>
+              <span className="exercise-heading-meta">
+                <span>{doneCount}/{log.sets.length}</span>
+                <span className="exercise-chevron" aria-hidden="true">{isExpanded ? '▴' : '▾'}</span>
+              </span>
+            </button>
 
+            {isExpanded ? (
+              <div className="exercise-log-body">
             {coachNote ? <CoachCueCard note={coachNote} /> : null}
 
             <div className="set-grid">
@@ -823,6 +871,8 @@ function WorkoutView({
               placeholder="备注"
               rows={2}
             />
+              </div>
+            ) : null}
           </article>
         );
       })}
@@ -868,6 +918,34 @@ function CoachCueCard({ note }: { note: CoachExerciseNote }) {
   );
 }
 
+// 休息结束的轻提示音（Web Audio 合成，无需音频文件）。两声短促上行蜂鸣。
+function playBeep() {
+  try {
+    const AudioCtx =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) {
+      return;
+    }
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    [0, 0.18].forEach((offset, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = index === 0 ? 660 : 880;
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.15);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.16);
+    });
+    window.setTimeout(() => ctx.close(), 600);
+  } catch {
+    // 静默失败：部分浏览器需用户手势激活音频，不影响其他功能。
+  }
+}
+
 function RestTimer({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [running, setRunning] = useState(true);
@@ -896,6 +974,7 @@ function RestTimer({ initialSeconds, onClose }: { initialSeconds: number; onClos
       if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
         navigator.vibrate(200);
       }
+      playBeep();
     }
   }, [seconds]);
 
@@ -937,26 +1016,45 @@ function SetRow({
   lastSet?: { weight: number | null; reps: number | null };
   onChange: (patch: Partial<SetLog>) => void;
 }) {
-  const weightHint = lastSet?.weight != null ? `上次 ${lastSet.weight}` : 'kg';
-  const repsHint = lastSet?.reps != null ? `上次 ${lastSet.reps}` : '次';
+  // 窄输入框里占位文字要短：有历史就直接显示上次数值作参考，否则用单位提示。
+  const weightHint = lastSet?.weight != null ? `${lastSet.weight}` : 'kg';
+  const repsHint = lastSet?.reps != null ? `${lastSet.reps}` : '次';
+
+  function stepWeight(delta: number) {
+    const base = set.weight ?? lastSet?.weight ?? 0;
+    onChange({ weight: Math.max(0, Math.round((base + delta) * 100) / 100) });
+  }
+
+  function stepReps(delta: number) {
+    const base = set.reps ?? lastSet?.reps ?? 0;
+    onChange({ reps: Math.max(0, base + delta) });
+  }
 
   return (
     <>
       <strong>{set.setNumber}</strong>
-      <input
-        inputMode="decimal"
-        aria-label={`第 ${set.setNumber} 组重量`}
-        value={set.weight ?? ''}
-        placeholder={weightHint}
-        onChange={(event) => onChange({ weight: parseOptionalNumber(event.target.value) })}
-      />
-      <input
-        inputMode="numeric"
-        aria-label={`第 ${set.setNumber} 组次数`}
-        value={set.reps ?? ''}
-        placeholder={repsHint}
-        onChange={(event) => onChange({ reps: parseOptionalNumber(event.target.value) })}
-      />
+      <div className="stepper">
+        <button type="button" onClick={() => stepWeight(-2.5)} aria-label={`第 ${set.setNumber} 组重量减 2.5`}>−</button>
+        <input
+          inputMode="decimal"
+          aria-label={`第 ${set.setNumber} 组重量`}
+          value={set.weight ?? ''}
+          placeholder={weightHint}
+          onChange={(event) => onChange({ weight: parseOptionalNumber(event.target.value) })}
+        />
+        <button type="button" onClick={() => stepWeight(2.5)} aria-label={`第 ${set.setNumber} 组重量加 2.5`}>＋</button>
+      </div>
+      <div className="stepper">
+        <button type="button" onClick={() => stepReps(-1)} aria-label={`第 ${set.setNumber} 组次数减 1`}>−</button>
+        <input
+          inputMode="numeric"
+          aria-label={`第 ${set.setNumber} 组次数`}
+          value={set.reps ?? ''}
+          placeholder={repsHint}
+          onChange={(event) => onChange({ reps: parseOptionalNumber(event.target.value) })}
+        />
+        <button type="button" onClick={() => stepReps(1)} aria-label={`第 ${set.setNumber} 组次数加 1`}>＋</button>
+      </div>
       <button
         type="button"
         className={set.completed ? 'check-button done' : 'check-button'}

@@ -73,8 +73,9 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
+    // 进入训练默认只展开第一个动作（杠铃卧推），故只有它的 5 组可见
     expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
-    expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(5);
+    expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(1);
 
     fireEvent.click(screen.getByLabelText('给杠铃卧推增加一组'));
 
@@ -85,6 +86,52 @@ describe('fitness PWA user flows', () => {
 
     expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
     expect(screen.queryByLabelText('第 6 组重量')).not.toBeInTheDocument();
+  });
+
+  it('expands the first exercise by default and lets each be toggled independently', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    // 默认：第一个动作展开（有逐组输入），第二个折叠（无输入但有标题）
+    expect(screen.getByLabelText('第 1 组重量')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '上斜哑铃卧推' })).toBeInTheDocument();
+    expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(1);
+
+    // 展开第二个动作 → 现在两个动作的逐组输入都在
+    fireEvent.click(screen.getByRole('button', { name: '上斜哑铃卧推 展开收起' }));
+    expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(2);
+  });
+
+  it('auto-fills the next set when the previous set is checked complete', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
+    fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
+    fireEvent.click(screen.getByLabelText('切换第 1 组完成状态'));
+
+    // 勾完第 1 组 → 第 2 组重量/次数自动带入（此前为空）
+    expect((screen.getByLabelText('第 2 组重量') as HTMLInputElement).value).toBe('60');
+    expect((screen.getByLabelText('第 2 组次数') as HTMLInputElement).value).toBe('10');
+  });
+
+  it('steps weight by 2.5 and reps by 1 via plus buttons', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
+    fireEvent.click(screen.getByLabelText('第 1 组重量加 2.5'));
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('62.5');
+
+    fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
+    fireEvent.click(screen.getByLabelText('第 1 组次数加 1'));
+    expect((screen.getByLabelText('第 1 组次数') as HTMLInputElement).value).toBe('11');
   });
 
   it('adds exercises from the library to the current workout only', () => {
@@ -183,11 +230,15 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
+    // 训练页默认只展开第一个动作；单独展开「高位下拉」「坐姿划船」（曾各自与 引体/划船 共用图）
+    fireEvent.click(screen.getByRole('button', { name: '高位下拉 展开收起' }));
+    fireEvent.click(screen.getByRole('button', { name: '坐姿绳索划船 展开收起' }));
+
     const imgs = screen.getAllByRole('img') as HTMLImageElement[];
     const srcs = imgs.map((img) => img.getAttribute('src'));
-    // 同一训练日内不应出现重复的名师截图
-    expect(new Set(srcs).size).toBe(srcs.length);
     expect(srcs).toContain('/coach-shots/lat-pulldown.jpg');
     expect(srcs).toContain('/coach-shots/seated-cable-row.jpg');
+    // 这两张与默认展开的引体向上(pull.jpg)互不重复
+    expect(new Set(srcs).size).toBe(srcs.length);
   });
 });
