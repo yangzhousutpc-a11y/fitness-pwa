@@ -326,8 +326,23 @@ function PlanDetail({
   onChangePlan?: (plan: CoachPlan) => void;
   onStartWorkout: (plan: CoachPlan, day: TrainingDayTemplate) => void;
 }) {
-  const [expandedDayId, setExpandedDayId] = useState(initialExpandedDayId ?? plan.days[0]?.id);
+  // 训练日改为各自独立展开/收起（不再互斥），手机上想对比多天无需来回点。
+  const [expandedDayIds, setExpandedDayIds] = useState<Set<string>>(
+    () => new Set(initialExpandedDayId ? [initialExpandedDayId] : plan.days[0] ? [plan.days[0].id] : []),
+  );
   const [pickerDayId, setPickerDayId] = useState(initialExpandedDayId ?? plan.days[0]?.id);
+
+  function toggleDay(dayId: string) {
+    setExpandedDayIds((current) => {
+      const next = new Set(current);
+      if (next.has(dayId)) {
+        next.delete(dayId);
+      } else {
+        next.add(dayId);
+      }
+      return next;
+    });
+  }
   const [addQuery, setAddQuery] = useState('');
   const [addFilter, setAddFilter] = useState<ExerciseFilter>('全部');
   const addResults = useMemo(() => filterExercises(addQuery, addFilter), [addFilter, addQuery]);
@@ -361,7 +376,7 @@ function PlanDetail({
     };
 
     commitPlan({ ...plan, days: [...plan.days, nextDay] });
-    setExpandedDayId(nextDay.id);
+    setExpandedDayIds((current) => new Set(current).add(nextDay.id));
     setPickerDayId(nextDay.id);
   }
 
@@ -372,8 +387,14 @@ function PlanDetail({
 
     const nextDays = plan.days.filter((day) => day.id !== dayId);
     commitPlan({ ...plan, days: nextDays });
-    setExpandedDayId(nextDays[0]?.id);
-    setPickerDayId(nextDays[0]?.id);
+    setExpandedDayIds((current) => {
+      const next = new Set(current);
+      next.delete(dayId);
+      return next;
+    });
+    if (pickerDayId === dayId) {
+      setPickerDayId(nextDays[0]?.id);
+    }
   }
 
   function addExerciseToDay(dayId: string, exerciseId: string) {
@@ -430,14 +451,14 @@ function PlanDetail({
 
       <div className="plan-days">
         {plan.days.map((day) => {
-          const isExpanded = day.id === expandedDayId;
+          const isExpanded = expandedDayIds.has(day.id);
           return (
           <article className={isExpanded ? 'training-day-card active' : 'training-day-card'} key={day.id}>
             <button
               type="button"
               className="training-day-toggle"
               onClick={() => {
-                setExpandedDayId(day.id);
+                toggleDay(day.id);
                 if (editable) {
                   setPickerDayId(day.id);
                 }
@@ -449,7 +470,10 @@ function PlanDetail({
                 <h3>{day.name}</h3>
                 <p>{day.focus.join(' / ')}</p>
               </div>
-              <span>{day.exerciseIds.length} 个动作</span>
+              <span className="training-day-meta">
+                <span>{day.exerciseIds.length} 个动作</span>
+                <span className="training-day-chevron" aria-hidden="true">{isExpanded ? '▴' : '▾'}</span>
+              </span>
             </button>
             {isExpanded ? (
               <div className="training-day-body">

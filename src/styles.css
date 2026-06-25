@@ -1146,3 +1146,16 @@ a {
 .primary-button.full-width {
   width: 100%;
 }
+
+/* ===== 训练日展开指示（手机更明确可点开/收起） ===== */
+.training-day-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.training-day-chevron {
+  color: #22c55e;
+  font-size: 14px;
+  line-height: 1;
+}

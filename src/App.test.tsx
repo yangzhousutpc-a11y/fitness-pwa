@@ -44,21 +44,27 @@ describe('fitness PWA user flows', () => {
     expect(JSON.parse(localStorage.getItem('fitness-pwa.sessions.v1') ?? '[]')).toHaveLength(1);
   });
 
-  it('expands only one training day and keeps coach notes out of plan browsing', () => {
+  it('expands training days independently and keeps coach notes out of plan browsing', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
 
+    // 默认展开 Day 1
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
     expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
     expect(screen.queryByText('名师要点')).not.toBeInTheDocument();
     expect(screen.queryByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).not.toBeInTheDocument();
 
+    // 展开 Day 2 —— Day 1 应仍保持展开（独立展开，非互斥）
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
-
-    expect(screen.queryByText('杠铃卧推')).not.toBeInTheDocument();
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
     expect(screen.getByText('引体向上')).toBeInTheDocument();
     expect(screen.queryByText('名师要点')).not.toBeInTheDocument();
+
+    // 再点 Day 2 —— 收起 Day 2，Day 1 不受影响
+    fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
+    expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
   });
 
   it('starts workouts with five sets and supports adding and deleting sets per exercise', () => {
@@ -172,7 +178,8 @@ describe('fitness PWA user flows', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
-    // 切到 Day 2（含 引体向上 / 高位下拉，曾共用 pull.jpg）
+    // 先收起默认展开的 Day 1，再单独展开 Day 2（含 引体向上 / 高位下拉，曾共用 pull.jpg）
+    fireEvent.click(screen.getByRole('button', { name: 'Day 1 胸 / 肩 / 三头' }));
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
