@@ -340,28 +340,47 @@ function CustomPlanLibrary({
           <span>{customPlans.length} 个</span>
         </div>
         {customPlans.length === 0 ? (
-          <div className="empty-state">还没有自定义计划。点上方按钮，从动作库挑动作组成训练日。</div>
+          <div className="custom-empty">
+            <div className="custom-empty-icon" aria-hidden="true">＋</div>
+            <strong>还没有自定义计划</strong>
+            <p>点上方「新建自定义计划」，从动作库挑动作、组成训练日，保存后即可像名师计划一样逐组记录。</p>
+          </div>
         ) : (
-          <div className="coming-soon-list">
-            {customPlans.map((item) => (
-              <article className="coming-soon-card" key={item.id}>
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.days.length} 个训练日</span>
-                </div>
-                <div className="custom-plan-actions">
-                  <button type="button" className="secondary-button" onClick={() => onOpenCustomPlan(item.id)}>
-                    编辑
-                  </button>
-                  <button type="button" className="primary-button" onClick={() => onOpenCustomPlan(item.id, item.days[0]?.id)}>
-                    进入
-                  </button>
-                  <button type="button" className="danger-button" onClick={() => onDeleteCustomPlan(item.id)}>
-                    删除
-                  </button>
-                </div>
-              </article>
-            ))}
+          <div className="custom-plan-list">
+            {customPlans.map((item) => {
+              const exerciseIds = item.days.flatMap((day) => day.exerciseIds);
+              const muscleGroups = Array.from(
+                new Set(exerciseIds.flatMap((id) => getExerciseById(id)?.muscleGroups ?? [])),
+              ).slice(0, 4);
+              return (
+                <article className="custom-plan-card" key={item.id}>
+                  <div className="custom-plan-head">
+                    <strong>{item.title.trim() || '未命名计划'}</strong>
+                    <span>{item.days.length} 个训练日 · {exerciseIds.length} 个动作</span>
+                  </div>
+                  {muscleGroups.length > 0 ? (
+                    <div className="custom-plan-tags">
+                      {muscleGroups.map((mg) => (
+                        <span className="muscle-tag" key={mg}>{mg}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="custom-plan-hint">还没有动作，点「编辑」从动作库添加。</p>
+                  )}
+                  <div className="custom-plan-actions">
+                    <button type="button" className="secondary-button" onClick={() => onOpenCustomPlan(item.id)}>
+                      编辑
+                    </button>
+                    <button type="button" className="primary-button" onClick={() => onOpenCustomPlan(item.id, item.days[0]?.id)}>
+                      进入
+                    </button>
+                    <button type="button" className="danger-button" onClick={() => onDeleteCustomPlan(item.id)}>
+                      删除
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
@@ -478,13 +497,14 @@ function PlanDetail({
   return (
     <section className="screen">
       <article className="source-panel">
-        <p className="eyebrow">{plan.coachName}</p>
+        <p className="eyebrow">{editable ? '我的计划' : plan.coachName}</p>
         {editable ? (
           <input
             className="plan-title-input"
             value={plan.title}
             onChange={(event) => updatePlanField('title', event.target.value)}
             aria-label="计划标题"
+            placeholder="给计划起个名字"
           />
         ) : (
           <h2>{plan.title}</h2>
@@ -495,14 +515,17 @@ function PlanDetail({
             value={plan.description}
             onChange={(event) => updatePlanField('description', event.target.value)}
             aria-label="计划描述"
-            rows={3}
+            rows={2}
+            placeholder="备注（可选）：训练目标、节奏…"
           />
         ) : (
           <p>{plan.description}</p>
         )}
-        <a href={plan.sourceUrl} target="_blank" rel="noreferrer">
-          打开原视频合集
-        </a>
+        {!editable && plan.sourceUrl ? (
+          <a href={plan.sourceUrl} target="_blank" rel="noreferrer">
+            打开原视频合集
+          </a>
+        ) : null}
       </article>
 
       <div className="plan-days">
@@ -571,15 +594,20 @@ function PlanDetail({
                     className="secondary-button"
                     onClick={() => {
                       setPickerDayId(day.id);
+                      document
+                        .getElementById('exercise-picker-panel')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
                   >
-                    添加动作
+                    + 给「{day.name}」加动作
                   </button>
                 ) : null}
                 <div className="card-actions">
-                  <a href={day.sourceUrl} target="_blank" rel="noreferrer">
-                    视频
-                  </a>
+                  {!editable && day.sourceUrl ? (
+                    <a href={day.sourceUrl} target="_blank" rel="noreferrer">
+                      视频
+                    </a>
+                  ) : null}
                   <button
                     type="button"
                     className="primary-button"
@@ -601,10 +629,10 @@ function PlanDetail({
           <button type="button" className="secondary-button" onClick={addDay}>
             新增训练日
           </button>
-          <section className="workout-add-panel" aria-label="从动作库添加到自定义计划">
+          <section className="workout-add-panel" id="exercise-picker-panel" aria-label="从动作库添加到自定义计划">
             <div className="section-title">
               <h2>添加动作</h2>
-              <span>{plan.days.find((day) => day.id === pickerDayId)?.name ?? '未选择'}</span>
+              <span>加入：{plan.days.find((day) => day.id === pickerDayId)?.name ?? '未选择'}</span>
             </div>
             <input
               value={addQuery}

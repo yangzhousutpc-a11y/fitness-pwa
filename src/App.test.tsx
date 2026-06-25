@@ -219,13 +219,20 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
     fireEvent.click(screen.getByRole('button', { name: '+ 新建自定义计划' }));
 
-    // 进入自定义计划编辑器
-    expect(screen.getByLabelText('计划标题')).toBeInTheDocument();
+    // 进入自定义计划编辑器：标题为空(有 placeholder)，不应出现名师专属的视频链接
+    const titleInput = screen.getByLabelText('计划标题') as HTMLInputElement;
+    expect(titleInput).toBeInTheDocument();
+    expect(titleInput.value).toBe('');
+    expect(titleInput).toHaveAttribute('placeholder', '给计划起个名字');
+    expect(screen.queryByText('打开原视频合集')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '视频' })).not.toBeInTheDocument();
+    expect(screen.queryByText('自定义')).not.toBeInTheDocument(); // eyebrow 不再硬塞「自定义」
 
     // 返回应回到我的计划库（而非首页双入口）
     fireEvent.click(screen.getByRole('button', { name: '返回' }));
     expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
-    expect(screen.getByText('1 个')).toBeInTheDocument();
+    // 未命名计划在列表卡兜底显示
+    expect(screen.getByText('未命名计划')).toBeInTheDocument();
   });
 
   it('gives each exercise its own coach screenshot (no shared image within a day)', () => {

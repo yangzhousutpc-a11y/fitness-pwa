@@ -38,8 +38,8 @@ export function createEmptyCustomPlan(): CoachPlan {
   return {
     id,
     coachName: '自定义',
-    title: '新建自定义计划',
-    description: '从动作库搭建训练日',
+    title: '',
+    description: '',
     sourceUrl: '',
     planType: 'custom',
     days: [createEmptyCustomDay()],
