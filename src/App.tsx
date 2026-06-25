@@ -145,9 +145,13 @@ function App() {
         <PlanHome
           builtinPlan={coachPlans[0]}
           customPlanCount={customPlans.length}
-          latestSession={sessions[0]}
+          sessions={sessions}
           onOpenBuiltinPlan={openBuiltinPlan}
           onOpenCustomLibrary={openCustomLibrary}
+          onOpenHistory={() => {
+            setActiveTab('history');
+            setRoute({ name: 'home' });
+          }}
         />
       ) : null}
       {route.name === 'custom-library' ? (
@@ -209,16 +213,24 @@ function App() {
 function PlanHome({
   builtinPlan,
   customPlanCount,
-  latestSession,
+  sessions,
   onOpenBuiltinPlan,
   onOpenCustomLibrary,
+  onOpenHistory,
 }: {
   builtinPlan: CoachPlan;
   customPlanCount: number;
-  latestSession?: WorkoutSession;
+  sessions: WorkoutSession[];
   onOpenBuiltinPlan: (planId: string, expandedDayId?: string) => void;
   onOpenCustomLibrary: () => void;
+  onOpenHistory: () => void;
 }) {
+  const latestSession = sessions[0];
+  const weekly = useMemo(() => getWeeklyStats(sessions), [sessions]);
+  const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
+  // 首页只放速览：PR 取前 3，看全部去历史页。
+  const topRecords = personalRecords.slice(0, 3);
+
   return (
     <section className="screen with-nav">
       <div className="entry-grid">
@@ -242,9 +254,53 @@ function PlanHome({
         </button>
       </div>
 
+      {sessions.length > 0 ? (
+        <section className="section-block">
+          <div className="section-title">
+            <h2>本周概览</h2>
+            <span>近 7 天</span>
+          </div>
+          <div className="stat-grid">
+            <StatTile label="训练次数" value={weekly.recentSessions} delta={weekly.recentSessions - weekly.previousSessions} />
+            <StatTile label="完成组数" value={weekly.recentCompletedSets} delta={weekly.recentCompletedSets - weekly.previousCompletedSets} />
+            <StatTile label="总容量 (kg)" value={Math.round(weekly.recentVolume)} delta={Math.round(weekly.recentVolume - weekly.previousVolume)} />
+          </div>
+        </section>
+      ) : null}
+
+      {topRecords.length > 0 ? (
+        <section className="section-block">
+          <div className="section-title">
+            <h2>个人最好成绩</h2>
+            <button type="button" className="link-button" onClick={onOpenHistory}>
+              全部 {personalRecords.length} 个 →
+            </button>
+          </div>
+          <div className="pr-list">
+            {topRecords.map((pr) => (
+              <article className="pr-card" key={pr.exerciseId}>
+                <div>
+                  <strong>{getExerciseById(pr.exerciseId)?.name ?? pr.exerciseId}</strong>
+                  <span>{pr.sessionCount} 次 · {formatDateShort(pr.bestWeightDate)}</span>
+                </div>
+                <div className="pr-value">
+                  <em>{pr.bestWeight}</em>
+                  <small>kg</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="section-block">
         <div className="section-title">
           <h2>最近记录</h2>
+          {sessions.length > 0 ? (
+            <button type="button" className="link-button" onClick={onOpenHistory}>
+              查看全部 →
+            </button>
+          ) : null}
         </div>
         {latestSession ? (
           <div className="history-card compact">

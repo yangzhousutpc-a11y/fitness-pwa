@@ -241,4 +241,30 @@ describe('fitness PWA user flows', () => {
     // 这两张与默认展开的引体向上(pull.jpg)互不重复
     expect(new Set(srcs).size).toBe(srcs.length);
   });
+
+  it('shows weekly overview and personal records on the plan home after a workout', () => {
+    render(<App />);
+
+    // 无记录时首页不显示概览/PR
+    expect(screen.queryByText('本周概览')).not.toBeInTheDocument();
+    expect(screen.queryByText('个人最好成绩')).not.toBeInTheDocument();
+
+    // 完成一次训练
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
+    fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
+    fireEvent.click(screen.getByLabelText('切换第 1 组完成状态'));
+    fireEvent.click(screen.getByRole('button', { name: '完成' }));
+
+    // 回到计划首页（顶部「计划」Tab）
+    fireEvent.click(screen.getByRole('button', { name: /计划/ }));
+
+    // 首页现在应同时出现 本周概览 + 个人最好成绩 + 双入口
+    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    expect(screen.getByText('本周概览')).toBeInTheDocument();
+    expect(screen.getByText('个人最好成绩')).toBeInTheDocument();
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
+    expect(screen.getByText('60')).toBeInTheDocument();
+  });
 });
