@@ -114,9 +114,22 @@ function App() {
     setRoute({ name: 'home' });
   }
 
+  // 标题为空且所有训练日都没有动作 → 视为"没真正建起来"的空计划。
+  function isEmptyCustomPlan(plan: CoachPlan): boolean {
+    const hasTitle = plan.title.trim().length > 0;
+    const hasExercise = plan.days.some((day) => day.exerciseIds.length > 0);
+    return !hasTitle && !hasExercise;
+  }
+
+  function discardIfEmpty(planId: string) {
+    setCustomPlans((current) => current.filter((item) => !(item.id === planId && isEmptyCustomPlan(item))));
+  }
+
   function goBack() {
     setActiveTab('plans');
     if (route.name === 'custom-plan') {
+      // 离开编辑器时，若是没填任何内容的空计划，自动丢弃，避免留下"未命名计划"垃圾卡。
+      discardIfEmpty(route.planId);
       setRoute({ name: 'custom-library' });
       return;
     }
@@ -326,6 +339,35 @@ function CustomPlanLibrary({
   onCreateCustomPlan: () => void;
   onDeleteCustomPlan: (planId: string) => void;
 }) {
+  // 行内二次确认：记录当前处于"确认删除"状态的计划 id，3 秒不点自动复原。
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const confirmTimer = useRef<number | null>(null);
+
+  function askDelete(planId: string) {
+    setConfirmingId(planId);
+    if (confirmTimer.current) {
+      window.clearTimeout(confirmTimer.current);
+    }
+    confirmTimer.current = window.setTimeout(() => setConfirmingId(null), 3000);
+  }
+
+  function confirmDelete(planId: string) {
+    if (confirmTimer.current) {
+      window.clearTimeout(confirmTimer.current);
+    }
+    setConfirmingId(null);
+    onDeleteCustomPlan(planId);
+  }
+
+  useEffect(
+    () => () => {
+      if (confirmTimer.current) {
+        window.clearTimeout(confirmTimer.current);
+      }
+    },
+    [],
+  );
+
   return (
     <section className="screen with-nav">
       <div className="section-block">
@@ -374,9 +416,25 @@ function CustomPlanLibrary({
                     <button type="button" className="primary-button" onClick={() => onOpenCustomPlan(item.id, item.days[0]?.id)}>
                       进入
                     </button>
-                    <button type="button" className="danger-button" onClick={() => onDeleteCustomPlan(item.id)}>
-                      删除
-                    </button>
+                    {confirmingId === item.id ? (
+                      <button
+                        type="button"
+                        className="danger-button confirming"
+                        onClick={() => confirmDelete(item.id)}
+                        aria-label={`确认删除${item.title.trim() || '未命名计划'}`}
+                      >
+                        确认删除？
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="danger-button"
+                        onClick={() => askDelete(item.id)}
+                        aria-label={`删除${item.title.trim() || '未命名计划'}`}
+                      >
+                        删除
+                      </button>
+                    )}
                   </div>
                 </article>
               );
@@ -473,6 +531,7 @@ function PlanDetail({
   }
 
   function addExerciseToDay(dayId: string, exerciseId: string) {
+    // 加完不清空搜索/筛选：让用户在同一筛选下连续添加多个动作（批量添加体验）。
     commitPlan({
       ...plan,
       days: plan.days.map((day) =>
@@ -481,8 +540,6 @@ function PlanDetail({
           : day,
       ),
     });
-    setAddQuery('');
-    setAddFilter('全部');
   }
 
   function removeExerciseFromDay(dayId: string, exerciseId: string) {
@@ -608,6 +665,9 @@ function PlanDetail({
                       视频
                     </a>
                   ) : null}
+                  {day.exerciseIds.length === 0 ? (
+                    <span className="start-hint">先加动作才能开始</span>
+                  ) : null}
                   <button
                     type="button"
                     className="primary-button"
@@ -632,12 +692,16 @@ function PlanDetail({
           <section className="workout-add-panel" id="exercise-picker-panel" aria-label="从动作库添加到自定义计划">
             <div className="section-title">
               <h2>添加动作</h2>
-              <span>加入：{plan.days.find((day) => day.id === pickerDayId)?.name ?? '未选择'}</span>
+              <span>
+                加入：{plan.days.find((day) => day.id === pickerDayId)?.name ?? '未选择'}
+                {' · 已选 '}
+                {plan.days.find((day) => day.id === pickerDayId)?.exerciseIds.length ?? 0} 个
+              </span>
             </div>
             <input
               value={addQuery}
               onChange={(event) => setAddQuery(event.target.value)}
-              placeholder="搜索要加入的动作"
+              placeholder="搜索要加入的动作（可连续添加多个）"
             />
             <div className="filter-pills compact" aria-label="自定义计划肌群筛选">
               {(['全部', '胸', '背', '肩', '腿', '手臂'] as ExerciseFilter[]).map((filterOption) => (
@@ -674,6 +738,17 @@ function PlanDetail({
                 );
               })}
             </div>
+            <button
+              type="button"
+              className="secondary-button full-width"
+              onClick={() => {
+                setAddQuery('');
+                setAddFilter('全部');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              完成添加，回到训练日
+            </button>
           </section>
         </div>
       ) : null}

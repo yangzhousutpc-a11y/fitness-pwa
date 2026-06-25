@@ -228,11 +228,45 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByRole('link', { name: '视频' })).not.toBeInTheDocument();
     expect(screen.queryByText('自定义')).not.toBeInTheDocument(); // eyebrow 不再硬塞「自定义」
 
-    // 返回应回到我的计划库（而非首页双入口）
+    // 给计划起个名字后再返回，计划应保留在库里
+    fireEvent.change(titleInput, { target: { value: '我的推日' } });
     fireEvent.click(screen.getByRole('button', { name: '返回' }));
     expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
-    // 未命名计划在列表卡兜底显示
-    expect(screen.getByText('未命名计划')).toBeInTheDocument();
+    expect(screen.getByText('我的推日')).toBeInTheDocument();
+  });
+
+  it('discards an empty custom plan when leaving the editor without any input', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ 新建自定义计划' }));
+    // 什么都不填直接返回 → 空计划应被自动丢弃，库里仍为空
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
+
+    expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
+    expect(screen.queryByText('未命名计划')).not.toBeInTheDocument();
+    expect(screen.getByText('还没有自定义计划')).toBeInTheDocument();
+  });
+
+  it('requires a second tap to confirm deleting a custom plan', () => {
+    render(<App />);
+
+    // 先建一个有名字的计划
+    fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ 新建自定义计划' }));
+    fireEvent.change(screen.getByLabelText('计划标题'), { target: { value: '待删计划' } });
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
+    expect(screen.getByText('待删计划')).toBeInTheDocument();
+
+    // 第一次点删除 → 只是进入"确认删除？"态，计划还在
+    fireEvent.click(screen.getByRole('button', { name: '删除待删计划' }));
+    expect(screen.getByRole('button', { name: '确认删除待删计划' })).toBeInTheDocument();
+    expect(screen.getByText('待删计划')).toBeInTheDocument();
+
+    // 第二次点确认 → 真删
+    fireEvent.click(screen.getByRole('button', { name: '确认删除待删计划' }));
+    expect(screen.queryByText('待删计划')).not.toBeInTheDocument();
+    expect(screen.getByText('还没有自定义计划')).toBeInTheDocument();
   });
 
   it('gives each exercise its own coach screenshot (no shared image within a day)', () => {
