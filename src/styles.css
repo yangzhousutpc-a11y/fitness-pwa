@@ -1,9 +1,35 @@
 :root {
-  color: #f8fafc;
-  background: #0f172a;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+  /* ===== 设计 token：精炼健身房黑绿 ===== */
+  --bg-0: #05070d;
+  --bg-1: #0b1018;
+  --surface-1: #121a26;
+  --surface-2: #182433;
+  --line: rgba(148, 163, 184, 0.14);
+  --line-strong: rgba(148, 163, 184, 0.26);
+  --ink-1: #f4f7fb;
+  --ink-2: #9aa7b8;
+  --ink-3: #66748a;
+  --accent: #2bd66a;
+  --accent-strong: #14b85a;
+  --accent-soft: rgba(43, 214, 106, 0.14);
+  --accent-ink: #062712;
+  --danger: #f6736b;
+  --radius-s: 12px;
+  --radius-m: 16px;
+  --radius-l: 22px;
+  --shadow-card: 0 18px 44px rgba(0, 0, 0, 0.34);
+  --shadow-pop: 0 22px 60px rgba(0, 0, 0, 0.5);
+
+  /* 正文：系统优质无衬线（中文 PingFang/雅黑）。标题用同栈 + 字重/字距制造性格，离线可用。 */
+  --font-body:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", sans-serif;
+  --font-display: var(--font-body);
+  --font-num: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  color: var(--ink-1);
+  background: var(--bg-1);
+  font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,14 +41,14 @@
 
 html {
   min-width: 320px;
-  background: #020617;
+  background: var(--bg-0);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #020617;
+  background: var(--bg-0);
 }
 
 button,
@@ -46,8 +72,11 @@ a {
   width: min(100%, 430px);
   min-height: 100vh;
   margin: 0 auto;
-  color: #f8fafc;
-  background: #0f172a;
+  color: var(--ink-1);
+  /* 顶部一抹绿色光晕，制造深度与运动感，避免纯平涂 */
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(43, 214, 106, 0.12), transparent 60%),
+    var(--bg-1);
 }
 
 .topbar {
@@ -58,10 +87,11 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  min-height: 132px;
-  padding: max(58px, env(safe-area-inset-top)) 24px 18px;
-  background: rgba(15, 23, 42, 0.94);
+  min-height: 128px;
+  padding: max(54px, env(safe-area-inset-top)) 22px 16px;
+  background: linear-gradient(180deg, rgba(11, 16, 24, 0.96), rgba(11, 16, 24, 0.78));
   backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar h1,
@@ -70,27 +100,30 @@ a {
 }
 
 .topbar h1 {
-  max-width: 310px;
-  color: #f8fafc;
-  font-size: 32px;
-  font-weight: 850;
-  line-height: 1.08;
-  letter-spacing: 0;
+  max-width: 320px;
+  font-family: var(--font-display);
+  color: var(--ink-1);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
 }
 
 .topbar p {
-  margin-top: 8px;
-  color: #94a3b8;
-  font-size: 14px;
+  margin-top: 9px;
+  color: var(--ink-2);
+  font-size: 13px;
   line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 .eyebrow {
   margin: 0 0 10px;
-  color: #22c55e;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 0;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .icon-button {
@@ -99,7 +132,7 @@ a {
   flex: 0 0 auto;
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 12px;
-  color: #f8fafc;
+  color: var(--ink-1);
   background: rgba(30, 41, 59, 0.92);
 }
 
@@ -120,10 +153,10 @@ a {
 .search-panel,
 .empty-state,
 .coming-soon-card {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  background: #111c31;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-card);
 }
 
 .hero-panel,
@@ -138,17 +171,18 @@ a {
 .section-title h2,
 .workout-summary h2 {
   margin: 0;
-  color: #f8fafc;
-  font-size: 22px;
-  font-weight: 850;
+  font-family: var(--font-display);
+  color: var(--ink-1);
+  font-size: 21px;
+  font-weight: 800;
   line-height: 1.18;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
 }
 
 .hero-panel p,
 .source-panel p {
   margin: 12px 0 0;
-  color: #cbd5e1;
+  color: var(--ink-2);
   line-height: 1.6;
 }
 
@@ -157,8 +191,8 @@ a {
   display: inline-flex;
   align-items: center;
   min-height: 42px;
-  color: #22c55e;
-  font-weight: 850;
+  color: var(--accent);
+  font-weight: 800;
   text-decoration: none;
 }
 
@@ -167,20 +201,29 @@ a {
 .finish-button {
   min-height: 48px;
   border: 0;
-  border-radius: 8px;
-  font-weight: 900;
+  border-radius: var(--radius-s);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition: transform 0.12s ease;
+}
+
+.primary-button:active,
+.secondary-button:active,
+.finish-button:active {
+  transform: scale(0.98);
 }
 
 .primary-button,
 .finish-button {
-  color: #052e16;
-  background: #22c55e;
+  color: var(--accent-ink);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 8px 20px rgba(43, 214, 106, 0.24);
 }
 
 .secondary-button {
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  color: #f8fafc;
-  background: #17233a;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-1);
+  background: var(--surface-2);
 }
 
 .section-block,
@@ -199,9 +242,28 @@ a {
 }
 
 .section-title span {
-  color: #94a3b8;
-  font-size: 13px;
+  color: var(--ink-2);
+  font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* 区块标题左侧加一根绿色短竖条，制造编辑感节奏 */
+.section-title h2 {
+  position: relative;
+  padding-left: 14px;
+}
+
+.section-title h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 0.82em;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 .day-stack,
@@ -223,8 +285,8 @@ a {
   padding: 16px 20px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
-  color: #f8fafc;
-  background: #111c31;
+  color: var(--ink-1);
+  background: var(--surface-1);
   text-align: left;
 }
 
@@ -239,7 +301,7 @@ a {
 .history-card p,
 .coming-soon-card span,
 .training-day-main p {
-  color: #94a3b8;
+  color: var(--ink-2);
   font-size: 13px;
 }
 
@@ -258,12 +320,12 @@ a {
 }
 
 .coming-soon-card strong {
-  color: #f8fafc;
+  color: var(--ink-1);
 }
 
 .coming-soon-card em {
   flex: 0 0 auto;
-  color: #94a3b8;
+  color: var(--ink-2);
   font-size: 12px;
   font-style: normal;
   font-weight: 850;
@@ -280,7 +342,7 @@ a {
 .training-day-card h3,
 .exercise-log-card h3 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--ink-1);
   font-size: 22px;
   font-weight: 850;
   line-height: 1.18;
@@ -319,7 +381,7 @@ a {
 .training-day-toggle span,
 .training-day-main span {
   flex: 0 0 auto;
-  color: #cbd5e1;
+  color: var(--ink-1);
   font-size: 13px;
   font-weight: 850;
 }
@@ -327,7 +389,7 @@ a {
 .training-day-list {
   margin: 14px 0 0;
   padding-left: 20px;
-  color: #cbd5e1;
+  color: var(--ink-1);
   line-height: 1.75;
 }
 
@@ -341,13 +403,13 @@ a {
 }
 
 .training-day-list li span {
-  color: #f8fafc;
+  color: var(--ink-1);
   font-weight: 850;
 }
 
 .training-day-list li small {
   margin-top: 2px;
-  color: #94a3b8;
+  color: var(--ink-2);
   font-size: 12px;
   line-height: 1.45;
 }
@@ -394,7 +456,7 @@ a {
   padding: 18px;
   border: 1px solid rgba(34, 197, 94, 0.22);
   border-radius: 8px;
-  background: #111c31;
+  background: var(--surface-1);
 }
 
 .workout-add-panel input {
@@ -403,13 +465,13 @@ a {
   padding: 0 14px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  color: #f8fafc;
-  background: #0f172a;
+  color: var(--ink-1);
+  background: var(--bg-1);
   outline: none;
 }
 
 .workout-add-panel input:focus {
-  border-color: #22c55e;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
 }
 
@@ -436,12 +498,12 @@ a {
 }
 
 .exercise-add-card strong {
-  color: #f8fafc;
+  color: var(--ink-1);
 }
 
 .exercise-add-card span {
   overflow: hidden;
-  color: #94a3b8;
+  color: var(--ink-2);
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -452,16 +514,16 @@ a {
   min-height: 36px;
   border: 1px solid rgba(34, 197, 94, 0.34);
   border-radius: 8px;
-  color: #052e16;
-  background: #22c55e;
+  color: var(--accent-ink);
+  background: var(--accent);
   font-size: 13px;
   font-weight: 900;
 }
 
 .exercise-add-card button:disabled {
   border-color: rgba(148, 163, 184, 0.18);
-  color: #94a3b8;
-  background: #17233a;
+  color: var(--ink-2);
+  background: var(--surface-2);
 }
 
 .exercise-log-card {
@@ -495,13 +557,13 @@ a {
   align-items: center;
   gap: 8px;
   flex: 0 0 auto;
-  color: #cbd5e1;
+  color: var(--ink-1);
   font-size: 13px;
   font-weight: 850;
 }
 
 .exercise-chevron {
-  color: #22c55e;
+  color: var(--accent);
   font-size: 14px;
   line-height: 1;
 }
@@ -529,8 +591,8 @@ a {
   min-height: 42px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 8px;
-  background: #17233a;
-  color: #f8fafc;
+  background: var(--surface-2);
+  color: var(--ink-1);
   font-size: 16px;
   font-weight: 700;
   line-height: 1;
@@ -564,7 +626,7 @@ a {
 }
 
 .coach-cue-card summary span {
-  color: #22c55e;
+  color: var(--accent);
   font-size: 13px;
   font-weight: 900;
 }
@@ -582,7 +644,7 @@ a {
   border-radius: 8px;
   object-fit: cover;
   object-position: center;
-  background: #020617;
+  background: var(--bg-0);
 }
 
 .coach-cue-copy {
@@ -595,33 +657,33 @@ a {
 }
 
 .coach-cue-copy > p {
-  color: #e2e8f0;
+  color: var(--ink-1);
   font-size: 13px;
   line-height: 1.55;
 }
 
 .coach-cue-copy h4 {
   margin: 12px 0 5px;
-  color: #f8fafc;
+  color: var(--ink-1);
   font-size: 12px;
 }
 
 .coach-cue-copy ul {
   padding-left: 17px;
-  color: #cbd5e1;
+  color: var(--ink-1);
   font-size: 12px;
   line-height: 1.55;
 }
 
 .coach-cue-copy .regression-note {
   margin-top: 10px;
-  color: #86efac;
+  color: var(--accent);
 }
 
 .coach-cue-copy a {
   display: inline-flex;
   margin-top: 12px;
-  color: #22c55e;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 850;
   line-height: 1.4;
@@ -636,13 +698,13 @@ a {
 }
 
 .set-grid > span {
-  color: #94a3b8;
+  color: var(--ink-2);
   font-size: 12px;
   font-weight: 850;
 }
 
 .set-grid strong {
-  color: #e2e8f0;
+  color: var(--ink-1);
   text-align: center;
 }
 
@@ -652,15 +714,15 @@ a {
   width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  color: #f8fafc;
-  background: #0f172a;
+  color: var(--ink-1);
+  background: var(--bg-1);
   outline: none;
 }
 
 .set-grid input:focus,
 .search-panel input:focus,
 .exercise-log-card textarea:focus {
-  border-color: #22c55e;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
 }
 
@@ -680,29 +742,29 @@ a {
   min-height: 42px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  color: #f8fafc;
-  background: #17233a;
+  color: var(--ink-1);
+  background: var(--surface-2);
   font-weight: 850;
 }
 
 .set-actions button:disabled {
-  color: #64748b;
+  color: var(--ink-3);
 }
 
 .check-button {
   min-height: 42px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  color: #94a3b8;
-  background: #0f172a;
+  color: var(--ink-2);
+  background: var(--bg-1);
   font-size: 19px;
   font-weight: 900;
 }
 
 .check-button.done {
-  border-color: #22c55e;
-  color: #052e16;
-  background: #22c55e;
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent);
 }
 
 .exercise-log-card textarea {
@@ -754,17 +816,17 @@ a {
   padding: 0 14px;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 999px;
-  color: #cbd5e1;
-  background: #111c31;
+  color: var(--ink-1);
+  background: var(--surface-1);
   font-size: 13px;
   font-weight: 850;
   white-space: nowrap;
 }
 
 .filter-pills button.active {
-  border-color: #22c55e;
-  color: #052e16;
-  background: #22c55e;
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent);
 }
 
 .exercise-card {
@@ -787,7 +849,7 @@ a {
 }
 
 .exercise-card summary span {
-  color: #f8fafc;
+  color: var(--ink-1);
   font-weight: 850;
 }
 
@@ -808,13 +870,13 @@ a {
 
 .detail-grid h4 {
   margin: 0 0 6px;
-  color: #f8fafc;
+  color: var(--ink-1);
 }
 
 .detail-grid ul {
   margin: 0;
   padding-left: 18px;
-  color: #cbd5e1;
+  color: var(--ink-1);
   line-height: 1.6;
 }
 
@@ -835,7 +897,7 @@ a {
 }
 
 .history-card strong {
-  color: #f8fafc;
+  color: var(--ink-1);
 }
 
 .history-card p {
@@ -844,7 +906,7 @@ a {
 
 .empty-state {
   margin-top: 12px;
-  color: #94a3b8;
+  color: var(--ink-2);
   line-height: 1.6;
 }
 
@@ -859,8 +921,8 @@ a {
   width: min(100%, 430px);
   margin: 0 auto;
   padding: 12px 24px max(18px, env(safe-area-inset-bottom));
-  border-top: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(15, 23, 42, 0.96);
+  border-top: 1px solid var(--line);
+  background: linear-gradient(0deg, rgba(11, 16, 24, 0.98), rgba(11, 16, 24, 0.86));
   backdrop-filter: blur(18px);
 }
 
@@ -871,7 +933,7 @@ a {
   min-height: 56px;
   border: 0;
   border-radius: 8px;
-  color: #94a3b8;
+  color: var(--ink-2);
   background: transparent;
   font-weight: 850;
 }
@@ -887,8 +949,8 @@ a {
 }
 
 .bottom-nav button.active {
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.1);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 @media (min-width: 720px) {
@@ -910,19 +972,19 @@ a {
   gap: 4px;
   padding: 14px 12px;
   border-radius: 16px;
-  background: #111c31;
+  background: var(--surface-1);
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--ink-2);
 }
 
 .stat-value {
   font-size: 22px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--ink-1);
   line-height: 1.1;
 }
 
@@ -932,15 +994,15 @@ a {
 }
 
 .stat-delta.up {
-  color: #22c55e;
+  color: var(--accent);
 }
 
 .stat-delta.down {
-  color: #f87171;
+  color: var(--danger);
 }
 
 .stat-delta.flat {
-  color: #64748b;
+  color: var(--ink-3);
 }
 
 /* ===== 动作进度选择器 ===== */
@@ -948,18 +1010,18 @@ a {
   appearance: none;
   padding: 6px 28px 6px 12px;
   border-radius: 999px;
-  background: #17233a
+  background: var(--surface-2)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E")
     no-repeat right 10px center;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  color: #f8fafc;
+  color: var(--ink-1);
   font-size: 13px;
   max-width: 60%;
 }
 
 /* ===== SVG 折线图 ===== */
 .progress-chart {
-  background: #111c31;
+  background: var(--surface-1);
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 16px;
   padding: 12px 12px 8px;
@@ -977,7 +1039,7 @@ a {
 }
 
 .chart-tick {
-  fill: #94a3b8;
+  fill: var(--ink-2);
   font-size: 9px;
 }
 
@@ -987,15 +1049,15 @@ a {
 
 .chart-line {
   fill: none;
-  stroke: #22c55e;
+  stroke: var(--accent);
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
 .chart-dot {
-  fill: #22c55e;
-  stroke: #052e16;
+  fill: var(--accent);
+  stroke: var(--accent-ink);
   stroke-width: 1.5;
 }
 
@@ -1005,21 +1067,21 @@ a {
   align-items: center;
   margin-top: 6px;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--ink-2);
 }
 
 .single-point-hint {
   padding: 14px;
   border-radius: 16px;
-  background: #111c31;
+  background: var(--surface-1);
   border: 1px dashed rgba(148, 163, 184, 0.2);
   font-size: 13px;
-  color: #cbd5e1;
+  color: var(--ink-1);
   line-height: 1.6;
 }
 
 .single-point-hint strong {
-  color: #22c55e;
+  color: var(--accent);
 }
 
 /* ===== 个人最好成绩 PR ===== */
@@ -1035,19 +1097,19 @@ a {
   align-items: center;
   padding: 12px 14px;
   border-radius: 14px;
-  background: #111c31;
+  background: var(--surface-1);
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .pr-card strong {
   display: block;
   font-size: 15px;
-  color: #f8fafc;
+  color: var(--ink-1);
 }
 
 .pr-card span {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--ink-2);
 }
 
 .pr-value {
@@ -1060,12 +1122,12 @@ a {
   font-style: normal;
   font-size: 20px;
   font-weight: 700;
-  color: #22c55e;
+  color: var(--accent);
 }
 
 .pr-value small {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--ink-2);
 }
 
 /* ===== 组间休息计时器 ===== */
@@ -1080,7 +1142,7 @@ a {
   margin-bottom: 12px;
   padding: 12px 14px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #052e16, #14532d);
+  background: linear-gradient(135deg, var(--accent-ink), #14532d);
   border: 1px solid rgba(34, 197, 94, 0.4);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
@@ -1106,13 +1168,13 @@ a {
   font-size: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #f8fafc;
+  color: var(--ink-1);
   line-height: 1.1;
 }
 
 .rest-timer-hint {
   font-size: 11px;
-  color: #86efac;
+  color: var(--accent);
 }
 
 .rest-timer.done .rest-timer-hint {
@@ -1131,7 +1193,7 @@ a {
   border-radius: 999px;
   border: 1px solid rgba(248, 250, 252, 0.2);
   background: rgba(15, 23, 42, 0.4);
-  color: #f8fafc;
+  color: var(--ink-1);
   font-size: 12px;
   cursor: pointer;
 }
@@ -1152,56 +1214,100 @@ a {
 }
 
 .entry-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 20px 16px 18px;
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 18px 16px 16px;
+  border-radius: var(--radius-l);
+  border: 1px solid var(--line-strong);
   text-align: left;
   cursor: pointer;
-  min-height: 150px;
-  color: #f8fafc;
+  min-height: 158px;
+  color: var(--ink-1);
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.entry-card::after {
+  /* 右下角放一个超大数字/符号水印，海报式记忆点 */
+  position: absolute;
+  right: -10px;
+  bottom: -22px;
+  font-family: var(--font-num);
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: -1;
+  opacity: 0.1;
+}
+
+.entry-card:active {
+  transform: scale(0.985);
 }
 
 .entry-builtin {
-  background: linear-gradient(150deg, #14532d, #052e16);
-  border-color: rgba(34, 197, 94, 0.4);
+  background:
+    radial-gradient(130% 100% at 0% 0%, rgba(43, 214, 106, 0.34), transparent 58%),
+    linear-gradient(155deg, #103b25, #07140d);
+  border-color: rgba(43, 214, 106, 0.42);
+}
+
+.entry-builtin::after {
+  content: "01";
+  color: var(--accent);
 }
 
 .entry-custom {
-  background: linear-gradient(150deg, #1e293b, #0f172a);
-  border-color: rgba(148, 163, 184, 0.28);
+  background: linear-gradient(155deg, var(--surface-2), var(--bg-1));
+}
+
+.entry-custom::after {
+  content: "+";
+  color: var(--ink-2);
+  font-size: 120px;
+  right: 4px;
+  bottom: -34px;
 }
 
 .entry-eyebrow {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #86efac;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .entry-custom .entry-eyebrow {
-  color: #94a3b8;
+  color: var(--ink-2);
 }
 
 .entry-title {
-  font-size: 19px;
-  font-weight: 850;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: -0.01em;
 }
 
 .entry-desc {
-  font-size: 13px;
-  color: #cbd5e1;
+  font-size: 12.5px;
+  color: var(--ink-2);
   flex: 1;
+  line-height: 1.45;
 }
 
 .entry-cta {
-  font-size: 13px;
-  font-weight: 700;
-  color: #f8fafc;
-  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--ink-1);
+  margin-top: 6px;
+}
+
+.entry-builtin .entry-cta {
+  color: var(--accent);
 }
 
 .primary-button.full-width {
@@ -1216,7 +1322,33 @@ a {
 }
 
 .training-day-chevron {
-  color: #22c55e;
+  color: var(--accent);
   font-size: 14px;
   line-height: 1;
+}
+
+/* ===== 数字等宽：进度/计时/统计/PR 用 mono 字体，制造仪表盘质感 ===== */
+.workout-summary h2,
+.rest-timer-time,
+.stat-value,
+.pr-value em,
+.exercise-heading-meta,
+.training-day-meta {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.workout-summary h2 {
+  letter-spacing: -0.01em;
+}
+
+/* 训练日/动作折叠头：hover 时绿色描边反馈 */
+.training-day-card,
+.exercise-log-card {
+  transition: border-color 0.15s ease;
+}
+
+.training-day-card.active,
+.exercise-log-card.active {
+  border-color: var(--line-strong);
 }
