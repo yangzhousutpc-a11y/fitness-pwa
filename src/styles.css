@@ -536,16 +536,44 @@ a {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
+  min-height: 52px;
   border: 0;
   background: transparent;
-  padding: 0;
+  padding: 4px 0;
   text-align: left;
   color: inherit;
   cursor: pointer;
 }
 
+.exercise-heading:active {
+  opacity: 0.75;
+}
+
+/* 折叠指示箭头放进一个圆形底，手指目标更大更明确 */
+.exercise-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* 展开态：动作标题栏吸附在「本周概览条」下方，滚到动作底部时仍能就地点它折叠。
+   sticky 范围天然限于本卡片内，离开卡片后标题随之滚走，正好实现"挂在顶部的当前动作标题"。
+   用卡片背景 + 负 margin 把 padding 区域铺满，吸顶时不透出下方内容。 */
 .exercise-log-card.active .exercise-heading {
-  margin-bottom: 18px;
+  position: sticky;
+  top: 212px;
+  z-index: 3;
+  margin: -20px -24px 18px;
+  padding: 14px 24px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-m) var(--radius-m) 0 0;
 }
 
 .exercise-heading p {
@@ -560,12 +588,6 @@ a {
   color: var(--ink-1);
   font-size: 13px;
   font-weight: 850;
-}
-
-.exercise-chevron {
-  color: var(--accent);
-  font-size: 14px;
-  line-height: 1;
 }
 
 /* 重量/次数步进器：− 输入 ＋ 横排，嵌进 set-grid 单列 */

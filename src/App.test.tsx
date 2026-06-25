@@ -140,6 +140,13 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     fireEvent.click(screen.getByRole('button', { name: '添加动作' }));
+
+    // 名师计划自带的杠铃卧推，按钮应明确为「本计划已含」且禁用（区别于"被自定义占用"）
+    fireEvent.change(screen.getByPlaceholderText('搜索要加入的动作'), { target: { value: '卧推' } });
+    const benchBtn = screen.getByRole('button', { name: '杠铃卧推本次训练已包含' });
+    expect(benchBtn).toBeDisabled();
+    expect(benchBtn).toHaveTextContent('本计划已含');
+
     fireEvent.change(screen.getByPlaceholderText('搜索要加入的动作'), { target: { value: '飞鸟' } });
     fireEvent.click(screen.getByLabelText('将哑铃飞鸟加入训练'));
 

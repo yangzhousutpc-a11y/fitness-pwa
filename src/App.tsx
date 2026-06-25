@@ -851,9 +851,9 @@ function WorkoutView({
                     type="button"
                     disabled={isAdded}
                     onClick={() => addExercise(exercise.id)}
-                    aria-label={isAdded ? `${exercise.name}已在训练中` : `将${exercise.name}加入训练`}
+                    aria-label={isAdded ? `${exercise.name}本次训练已包含` : `将${exercise.name}加入训练`}
                   >
-                    {isAdded ? '已加入' : '加入'}
+                    {isAdded ? '本计划已含' : '加入'}
                   </button>
                 </article>
               );
