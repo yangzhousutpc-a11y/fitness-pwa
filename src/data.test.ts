@@ -1,0 +1,110 @@
+import { describe, expect, it } from 'vitest';
+import { coachPlans, exercises, filterExercises, getExerciseById, searchExercises } from './data';
+
+describe('built-in fitness data', () => {
+  it('ships an approximately 40 exercise library covering major strength training groups', () => {
+    expect(exercises.length).toBeGreaterThanOrEqual(40);
+    expect(exercises.some((exercise) => exercise.muscleGroups.includes('胸'))).toBe(true);
+    expect(exercises.some((exercise) => exercise.muscleGroups.includes('背'))).toBe(true);
+    expect(exercises.some((exercise) => exercise.muscleGroups.includes('腿'))).toBe(true);
+    expect(exercises.some((exercise) => exercise.muscleGroups.includes('肩'))).toBe(true);
+    expect(exercises.some((exercise) => exercise.muscleGroups.includes('核心'))).toBe(true);
+  });
+
+  it('defines the Kaisheng Wang Tan Chengyi three-day split skeleton', () => {
+    const plan = coachPlans[0];
+
+    expect(plan.coachName).toBe('凯圣王-谭成义');
+    expect(plan.days.map((day) => day.name)).toEqual([
+      'Day 1 胸 / 肩 / 三头',
+      'Day 2 背 / 后束 / 二头',
+      'Day 3 腿部',
+    ]);
+    expect(plan.sourceUrl).toContain('bilibili.com/video/BV1FcdZBNEm3');
+    expect(plan.days.every((day) => day.sourceUrl.includes('bilibili.com/video/'))).toBe(true);
+  });
+
+  it('uses the confirmed Day 1 follow-along exercise list from the public video entry', () => {
+    const dayOne = coachPlans[0].days.find((day) => day.id === 'day-1-push');
+
+    expect(dayOne?.exerciseIds).toEqual([
+      'barbell-bench-press',
+      'incline-dumbbell-press',
+      'parallel-bar-dip',
+      'skull-crusher',
+      'y-raise',
+    ]);
+  });
+
+  it('attaches concise coach follow-along notes to every planned exercise', () => {
+    const exerciseIds = new Set(exercises.map((exercise) => exercise.id));
+
+    for (const day of coachPlans[0].days) {
+      expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
+
+      for (const note of day.coachNotes) {
+        expect(exerciseIds.has(note.exerciseId)).toBe(true);
+        expect(day.exerciseIds).toContain(note.exerciseId);
+        expect(note.sourceTitle).toContain('凯圣王-谭成义三分化');
+        expect(note.sourceUrl).toContain('bilibili.com/video/');
+        expect(note.keyCues.length).toBeGreaterThanOrEqual(3);
+        expect(note.commonMistakes.length).toBeGreaterThanOrEqual(2);
+        expect(note.illustration).toMatch(/^(bench|dip|raise|pull|row|curl|squat|hinge|leg-machine|calf)$/);
+        expect(note.imageUrl).toMatch(/^\/coach-shots\/.+\.jpg$/);
+      }
+    }
+  });
+
+  it('gives every exercise a unique coach screenshot within each day', () => {
+    for (const day of coachPlans[0].days) {
+      const images = day.coachNotes.map((note) => note.imageUrl);
+      expect(new Set(images).size).toBe(images.length);
+    }
+  });
+
+  it('only references exercises that exist in the library', () => {
+    const ids = new Set(exercises.map((exercise) => exercise.id));
+    const referencedIds = coachPlans.flatMap((plan) => plan.days.flatMap((day) => day.exerciseIds));
+
+    expect(referencedIds.length).toBeGreaterThan(0);
+    expect(referencedIds.every((id) => ids.has(id))).toBe(true);
+  });
+
+  it('searches by name, muscle group, and equipment', () => {
+    expect(searchExercises('卧推').map((exercise) => exercise.name)).toContain('杠铃卧推');
+    expect(searchExercises('背').length).toBeGreaterThan(4);
+    expect(searchExercises('哑铃').length).toBeGreaterThan(4);
+  });
+
+  it('filters exercises by visible library filter labels', () => {
+    expect(filterExercises('', '全部')).toHaveLength(exercises.length);
+    expect(filterExercises('', '胸').every((exercise) => exercise.muscleGroups.includes('胸'))).toBe(true);
+    expect(
+      filterExercises('', '手臂').every(
+        (exercise) => exercise.muscleGroups.includes('二头') || exercise.muscleGroups.includes('三头'),
+      ),
+    ).toBe(true);
+    expect(filterExercises('卧推', '胸').map((exercise) => exercise.name)).toContain('杠铃卧推');
+    expect(filterExercises('深蹲', '胸')).toHaveLength(0);
+  });
+
+  it('does not ship user-facing caveat copy inside coach notes', () => {
+    const notes = coachPlans.flatMap((currentPlan) => currentPlan.days.flatMap((day) => day.coachNotes));
+    const combined = [
+      ...coachPlans.map((currentPlan) => currentPlan.description),
+      ...notes.map((note) => Object.values(note).join(' ')),
+    ].join(' ');
+
+    expect(combined).not.toContain('非字幕逐字稿');
+    expect(combined).not.toContain('通用跟练摘要');
+    expect(combined).not.toContain('公开接口无字幕');
+    expect(combined).not.toContain('公开视频入口可确认动作列表');
+    expect(combined).not.toContain('公开页面信息');
+    expect(combined).not.toContain('基础训练原则');
+    expect(combined).not.toContain('不复制视频全文');
+  });
+
+  it('returns undefined for unknown exercise ids', () => {
+    expect(getExerciseById('missing')).toBeUndefined();
+  });
+});

@@ -1,0 +1,186 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
+import App from './App';
+
+describe('fitness PWA user flows', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('filters the exercise library by selected muscle group and search query', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '◉动作库' }));
+    fireEvent.click(screen.getByRole('button', { name: '胸' }));
+
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
+    expect(screen.queryByText('杠铃深蹲')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('⌕ 搜索动作'), { target: { value: '飞鸟' } });
+
+    expect(screen.getByText('哑铃飞鸟')).toBeInTheDocument();
+    expect(screen.queryByText('杠铃卧推')).not.toBeInTheDocument();
+  });
+
+  it('starts a coach-plan workout, records a set, and saves it to history', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
+    expect(screen.getAllByText('名师要点').length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getAllByLabelText('第 1 组重量')[0], { target: { value: '60' } });
+    fireEvent.change(screen.getAllByLabelText('第 1 组次数')[0], { target: { value: '10' } });
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
+
+    expect(screen.getByText('1/25 组完成')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '完成' }));
+
+    expect(screen.getByText('训练记录')).toBeInTheDocument();
+    expect(screen.getByText('5 个动作 · 1/25 组完成')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('fitness-pwa.sessions.v1') ?? '[]')).toHaveLength(1);
+  });
+
+  it('expands only one training day and keeps coach notes out of plan browsing', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+
+    expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
+    expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
+    expect(screen.queryByText('名师要点')).not.toBeInTheDocument();
+    expect(screen.queryByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
+
+    expect(screen.queryByText('杠铃卧推')).not.toBeInTheDocument();
+    expect(screen.getByText('引体向上')).toBeInTheDocument();
+    expect(screen.queryByText('名师要点')).not.toBeInTheDocument();
+  });
+
+  it('starts workouts with five sets and supports adding and deleting sets per exercise', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(5);
+
+    fireEvent.click(screen.getByLabelText('给杠铃卧推增加一组'));
+
+    expect(screen.getByText('0/26 组完成')).toBeInTheDocument();
+    expect(screen.getByLabelText('第 6 组重量')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('删除杠铃卧推最后一组'));
+
+    expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
+    expect(screen.queryByLabelText('第 6 组重量')).not.toBeInTheDocument();
+  });
+
+  it('adds exercises from the library to the current workout only', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.click(screen.getByRole('button', { name: '添加动作' }));
+    fireEvent.change(screen.getByPlaceholderText('搜索要加入的动作'), { target: { value: '飞鸟' } });
+    fireEvent.click(screen.getByLabelText('将哑铃飞鸟加入训练'));
+
+    expect(screen.getByRole('heading', { name: '哑铃飞鸟' })).toBeInTheDocument();
+    expect(screen.getByText('0/30 组完成')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '完成' }));
+
+    expect(screen.getByText('6 个动作 · 0/30 组完成')).toBeInTheDocument();
+  });
+
+  it('starts a rest timer when a set is checked complete', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
+
+    expect(screen.getByRole('timer', { name: '组间休息计时器' })).toBeInTheDocument();
+    expect(screen.getByText('01:30')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭休息计时器' }));
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+  });
+
+  it('shows personal records and weekly overview in history after a workout', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.change(screen.getAllByLabelText('第 1 组重量')[0], { target: { value: '60' } });
+    fireEvent.change(screen.getAllByLabelText('第 1 组次数')[0], { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: '完成' }));
+
+    expect(screen.getByText('本周概览')).toBeInTheDocument();
+    expect(screen.getByText('个人最好成绩')).toBeInTheDocument();
+    expect(screen.getByText('动作进度')).toBeInTheDocument();
+    // 杠铃卧推 60kg 应作为 PR 出现
+    expect(screen.getByText('60')).toBeInTheDocument();
+  });
+
+  it('shows coach note screenshots instead of generated diagrams', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    const firstCoachNote = screen.getAllByText('名师要点')[0].closest('.coach-cue-card');
+
+    expect(firstCoachNote).not.toBeNull();
+    expect(within(firstCoachNote as HTMLElement).getByRole('img')).toHaveAttribute('src', '/coach-shots/bench.jpg');
+  });
+
+  it('home shows two separate entries: builtin coach plan and custom library', () => {
+    render(<App />);
+
+    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入我的计划' })).toBeInTheDocument();
+
+    // 进入我的计划库
+    fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
+    expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
+  });
+
+  it('creates a custom plan from the library and returns to the library', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ 新建自定义计划' }));
+
+    // 进入自定义计划编辑器
+    expect(screen.getByLabelText('计划标题')).toBeInTheDocument();
+
+    // 返回应回到我的计划库（而非首页双入口）
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
+    expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
+    expect(screen.getByText('1 个')).toBeInTheDocument();
+  });
+
+  it('gives each exercise its own coach screenshot (no shared image within a day)', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    // 切到 Day 2（含 引体向上 / 高位下拉，曾共用 pull.jpg）
+    fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    const imgs = screen.getAllByRole('img') as HTMLImageElement[];
+    const srcs = imgs.map((img) => img.getAttribute('src'));
+    // 同一训练日内不应出现重复的名师截图
+    expect(new Set(srcs).size).toBe(srcs.length);
+    expect(srcs).toContain('/coach-shots/lat-pulldown.jpg');
+    expect(srcs).toContain('/coach-shots/seated-cable-row.jpg');
+  });
+});

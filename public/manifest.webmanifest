@@ -1,0 +1,17 @@
+{
+  "name": "力量计划",
+  "short_name": "力量计划",
+  "description": "手机优先的力量训练计划和逐组记录工具",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f3eb",
+  "theme_color": "#10140f",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
