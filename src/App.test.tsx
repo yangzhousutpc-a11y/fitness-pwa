@@ -1,14 +1,22 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 const apiState = vi.hoisted(() => ({
   customPlans: [] as any[],
+  loadError: null as Error | null,
   sessions: [] as any[],
 }));
 
 vi.mock('./api', () => ({
-  getCustomPlans: vi.fn(async () => apiState.customPlans),
+  getCustomPlans: vi.fn(async () => {
+    if (apiState.loadError) {
+      const error = apiState.loadError;
+      apiState.loadError = null;
+      throw error;
+    }
+    return apiState.customPlans;
+  }),
   getWorkoutSessions: vi.fn(async () => apiState.sessions),
   saveCustomPlan: vi.fn(async (plan: any) => {
     apiState.customPlans = [plan, ...apiState.customPlans.filter((item: any) => item.id !== plan.id)];
@@ -29,8 +37,26 @@ describe('fitness PWA user flows', () => {
     vi.useRealTimers();
     vi.clearAllMocks();
     apiState.customPlans = [];
+    apiState.loadError = null;
     apiState.sessions = [];
     localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('lets the user save an access key and retry database loading', async () => {
+    apiState.loadError = new Error('访问密钥无效，请重新输入');
+
+    render(<App />);
+
+    expect(await screen.findByText('访问密钥无效，请重新输入')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('访问密钥'), { target: { value: 'phone-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存并重试' }));
+
+    await waitFor(() => {
+      expect(sessionStorage.getItem('fitness-pwa.api-token.v1')).toBe('phone-secret');
+      expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    });
   });
 
   it('filters the exercise library by selected muscle group and search query', () => {

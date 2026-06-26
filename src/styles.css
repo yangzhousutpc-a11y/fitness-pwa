@@ -143,11 +143,39 @@ a {
 }
 
 .sync-banner.error {
+  align-items: stretch;
+  flex-direction: column;
   border-color: rgba(248, 113, 113, 0.34);
   background: rgba(127, 29, 29, 0.28);
 }
 
-.sync-banner button {
+.sync-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.sync-actions input {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--ink-1);
+  font: inherit;
+  padding: 7px 9px;
+}
+
+.sync-actions input::placeholder {
+  color: rgba(226, 232, 240, 0.58);
+}
+
+.sync-actions input:focus {
+  border-color: rgba(43, 214, 106, 0.7);
+  outline: none;
+}
+
+.sync-banner button,
+.sync-actions button {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
   background: rgba(15, 23, 42, 0.8);
@@ -155,6 +183,12 @@ a {
   font: inherit;
   font-weight: 700;
   padding: 6px 10px;
+}
+
+@media (max-width: 520px) {
+  .sync-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .eyebrow {

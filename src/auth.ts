@@ -9,6 +9,10 @@ export function getApiToken(): string {
   return '';
 }
 
+export function setApiToken(token: string): void {
+  sessionStorage.setItem(apiTokenKey, token);
+}
+
 export function clearApiToken(): void {
   sessionStorage.removeItem(apiTokenKey);
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { setApiToken } from './auth';
 import { coachPlans, filterExercises, getExerciseById } from './data';
 import {
   getExerciseProgress,
@@ -43,6 +44,7 @@ function App() {
   const [customPlans, setCustomPlans] = useState<CoachPlan[]>([]);
   const [syncStatus, setSyncStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [syncError, setSyncError] = useState('');
+  const [apiTokenDraft, setApiTokenDraft] = useState('');
   const [exerciseQuery, setExerciseQuery] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('全部');
 
@@ -65,6 +67,19 @@ function App() {
         setSyncStatus('ready');
       })
       .catch(reportSyncError);
+  }
+
+  function saveAccessKey() {
+    const token = apiTokenDraft.trim();
+    if (!token) {
+      setSyncStatus('error');
+      setSyncError('请输入访问密钥');
+      return;
+    }
+
+    setApiToken(token);
+    setApiTokenDraft('');
+    loadDatabaseState();
   }
 
   const builtinPlan = route.name === 'builtin-plan' || route.name === 'workout'
@@ -191,7 +206,14 @@ function App() {
         ) : null}
       </header>
 
-      <SyncStatusBanner status={syncStatus} error={syncError} onRetry={loadDatabaseState} />
+      <SyncStatusBanner
+        status={syncStatus}
+        error={syncError}
+        tokenDraft={apiTokenDraft}
+        onTokenDraftChange={setApiTokenDraft}
+        onSaveToken={saveAccessKey}
+        onRetry={loadDatabaseState}
+      />
 
       {route.name === 'home' && activeTab === 'plans' ? (
         <PlanHome
@@ -267,10 +289,16 @@ function App() {
 function SyncStatusBanner({
   status,
   error,
+  tokenDraft,
+  onTokenDraftChange,
+  onSaveToken,
   onRetry,
 }: {
   status: 'loading' | 'ready' | 'error';
   error: string;
+  tokenDraft: string;
+  onTokenDraftChange: (value: string) => void;
+  onSaveToken: () => void;
   onRetry: () => void;
 }) {
   if (status === 'ready') {
@@ -284,7 +312,18 @@ function SyncStatusBanner({
   return (
     <div className="sync-banner error" role="alert">
       <span>{error || '数据库同步失败'}</span>
-      <button type="button" onClick={onRetry}>重试</button>
+      <div className="sync-actions">
+        <input
+          aria-label="访问密钥"
+          type="password"
+          inputMode="text"
+          placeholder="输入访问密钥"
+          value={tokenDraft}
+          onChange={(event) => onTokenDraftChange(event.target.value)}
+        />
+        <button type="button" onClick={onSaveToken}>保存并重试</button>
+        <button type="button" onClick={onRetry}>重试</button>
+      </div>
     </div>
   );
 }
