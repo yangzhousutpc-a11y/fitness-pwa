@@ -600,6 +600,25 @@ a {
   margin: 0;
 }
 
+.collapse-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  border: 1px solid rgba(43, 214, 106, 0.24);
+  border-radius: 8px;
+  background: rgba(20, 83, 45, 0.18);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.collapse-action:active {
+  transform: scale(0.99);
+}
+
 .custom-exercise-card {
   background:
     linear-gradient(180deg, rgba(18, 26, 38, 0.96), rgba(15, 23, 42, 0.96));

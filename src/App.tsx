@@ -1088,6 +1088,9 @@ function PlanExercisePreviewCard({
       {isExpanded ? (
         <div className="plan-exercise-body">
           {coachNote ? <CoachCueCard note={coachNote} /> : <p className="start-hint">暂无名师要点</p>}
+          <button type="button" className="collapse-action" onClick={onToggle} aria-label={`收起${exerciseName}`}>
+            收起动作 ↑
+          </button>
         </div>
       ) : null}
     </article>
@@ -1369,6 +1372,14 @@ function WorkoutView({
               placeholder="备注"
               rows={2}
             />
+            <button
+              type="button"
+              className="collapse-action"
+              onClick={() => toggleExercise(log.exerciseId)}
+              aria-label={`收起${exerciseName}`}
+            >
+              收起动作 ↑
+            </button>
               </div>
             ) : null}
           </article>

@@ -121,6 +121,18 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
   });
 
+  it('collapses an expanded plan exercise from the bottom action', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+
+    expect(screen.getByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '收起杠铃卧推' }));
+
+    expect(screen.queryByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).not.toBeInTheDocument();
+  });
+
   it('starts workouts with five sets and supports adding and deleting sets per exercise', () => {
     render(<App />);
 
@@ -156,6 +168,19 @@ describe('fitness PWA user flows', () => {
     // 展开第二个动作 → 现在两个动作的逐组输入都在
     fireEvent.click(screen.getByRole('button', { name: '上斜哑铃卧推 展开收起' }));
     expect(screen.getAllByLabelText('第 5 组重量')).toHaveLength(2);
+  });
+
+  it('collapses an expanded workout exercise from the bottom action', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    expect(screen.getByLabelText('第 1 组重量')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '收起杠铃卧推' }));
+
+    expect(screen.queryByLabelText('第 1 组重量')).not.toBeInTheDocument();
   });
 
   it('auto-fills the next set when the previous set is checked complete', () => {
