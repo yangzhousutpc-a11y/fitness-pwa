@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSessionFromDay, loadSessions, saveSession } from './storage';
+import { createEmptyCustomPlan, createSessionFromDay } from './storage';
 import { coachPlans } from './data';
 
-describe('workout session storage', () => {
+describe('workout session factories', () => {
   beforeEach(() => {
-    localStorage.clear();
     vi.setSystemTime(new Date('2026-06-24T10:00:00+08:00'));
   });
 
@@ -24,25 +23,21 @@ describe('workout session storage', () => {
     ]);
   });
 
-  it('persists multiple sessions without overwriting old history', () => {
-    const day = coachPlans[0].days[0];
-    const first = createSessionFromDay(coachPlans[0], day);
-    const second = createSessionFromDay(coachPlans[0], day);
-
-    saveSession(first);
-    saveSession(second);
-
-    expect(loadSessions()).toHaveLength(2);
-    expect(loadSessions().map((session) => session.id)).toEqual([second.id, first.id]);
-  });
-
   it('preserves blank weights and reps when saving', () => {
     const session = createSessionFromDay(coachPlans[0], coachPlans[0].days[0]);
 
-    saveSession(session);
+    expect(session.exerciseLogs[0].sets[0].weight).toBeNull();
+    expect(session.exerciseLogs[0].sets[0].reps).toBeNull();
+  });
 
-    const saved = loadSessions()[0];
-    expect(saved.exerciseLogs[0].sets[0].weight).toBeNull();
-    expect(saved.exerciseLogs[0].sets[0].reps).toBeNull();
+  it('creates empty custom plans without reading localStorage', () => {
+    localStorage.setItem('fitness-pwa.custom-plans.v1', JSON.stringify([{ id: 'old-local-plan' }]));
+
+    const plan = createEmptyCustomPlan();
+
+    expect(plan.id).toMatch(/^custom-plan-/);
+    expect(plan.planType).toBe('custom');
+    expect(plan.days).toHaveLength(1);
+    expect(plan.days[0].exerciseIds).toEqual([]);
   });
 });

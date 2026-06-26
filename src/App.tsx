@@ -8,18 +8,27 @@ import {
   type ExerciseProgressPoint,
 } from './analytics';
 import {
+  deleteCustomPlan as deleteCustomPlanFromApi,
+  getCustomPlans,
+  getWorkoutSessions,
+  saveCustomPlan,
+  saveWorkoutSession,
+} from './api';
+import {
   createEmptyCustomPlan,
   createExerciseLog,
   createSessionFromDay,
-  loadCustomPlans,
-  loadSessions,
-  saveCustomPlans,
-  saveSession,
 } from './storage';
 import type { CoachExerciseNote, CoachPlan, ExerciseLog, SetLog, TrainingDayTemplate, WorkoutSession } from './types';
 
 type Tab = 'plans' | 'exercises' | 'history';
 type ExerciseFilter = '全部' | '胸' | '背' | '肩' | '腿' | '手臂';
+type CalendarDay = {
+  date: Date;
+  dateKey: string;
+  inCurrentMonth: boolean;
+  sessions: WorkoutSession[];
+};
 type Route =
   | { name: 'home' }
   | { name: 'custom-library' }
@@ -30,14 +39,33 @@ type Route =
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('plans');
   const [route, setRoute] = useState<Route>({ name: 'home' });
-  const [sessions, setSessions] = useState<WorkoutSession[]>(() => loadSessions());
-  const [customPlans, setCustomPlans] = useState<CoachPlan[]>(() => loadCustomPlans());
+  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [customPlans, setCustomPlans] = useState<CoachPlan[]>([]);
+  const [syncStatus, setSyncStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [syncError, setSyncError] = useState('');
   const [exerciseQuery, setExerciseQuery] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('全部');
 
   useEffect(() => {
-    saveCustomPlans(customPlans);
-  }, [customPlans]);
+    loadDatabaseState();
+  }, []);
+
+  function reportSyncError(error: unknown) {
+    setSyncStatus('error');
+    setSyncError(error instanceof Error ? error.message : '数据库同步失败');
+  }
+
+  function loadDatabaseState() {
+    setSyncStatus('loading');
+    setSyncError('');
+    Promise.all([getCustomPlans(), getWorkoutSessions()])
+      .then(([nextCustomPlans, nextSessions]) => {
+        setCustomPlans(nextCustomPlans);
+        setSessions(nextSessions);
+        setSyncStatus('ready');
+      })
+      .catch(reportSyncError);
+  }
 
   const builtinPlan = route.name === 'builtin-plan' || route.name === 'workout'
     ? coachPlans.find((item) => item.id === route.planId)
@@ -51,6 +79,7 @@ function App() {
   const activeDay =
     route.name === 'workout' && selectedPlan ? selectedPlan.days.find((day) => day.id === route.dayId) : undefined;
   const header = getHeaderCopy(route, activeTab, selectedPlan, activeDay);
+  const isWorkoutRoute = route.name === 'workout';
 
   function openBuiltinPlan(planId: string, expandedDayId?: string) {
     setActiveTab('plans');
@@ -76,6 +105,7 @@ function App() {
 
   function deleteCustomPlan(planId: string) {
     setCustomPlans((current) => current.filter((item) => item.id !== planId));
+    deleteCustomPlanFromApi(planId).catch(reportSyncError);
     if (route.name === 'custom-plan' && route.planId === planId) {
       setRoute({ name: 'custom-library' });
       setActiveTab('plans');
@@ -99,14 +129,15 @@ function App() {
   }
 
   function finishWorkout(session: WorkoutSession) {
-    saveSession(session);
-    setSessions(loadSessions());
+    setSessions((current) => [session, ...current.filter((item) => item.id !== session.id)]);
+    saveWorkoutSession(session).catch(reportSyncError);
     setActiveTab('history');
     setRoute({ name: 'home' });
   }
 
   function updateCustomPlan(nextPlan: CoachPlan) {
     setCustomPlans((current) => [nextPlan, ...current.filter((item) => item.id !== nextPlan.id)]);
+    saveCustomPlan(nextPlan).catch(reportSyncError);
   }
 
   function goHome(tab: Tab = activeTab) {
@@ -122,7 +153,13 @@ function App() {
   }
 
   function discardIfEmpty(planId: string) {
-    setCustomPlans((current) => current.filter((item) => !(item.id === planId && isEmptyCustomPlan(item))));
+    setCustomPlans((current) => {
+      const discardedPlan = current.find((item) => item.id === planId && isEmptyCustomPlan(item));
+      if (discardedPlan) {
+        deleteCustomPlanFromApi(planId).catch(reportSyncError);
+      }
+      return current.filter((item) => !(item.id === planId && isEmptyCustomPlan(item)));
+    });
   }
 
   function goBack() {
@@ -154,11 +191,14 @@ function App() {
         ) : null}
       </header>
 
+      <SyncStatusBanner status={syncStatus} error={syncError} onRetry={loadDatabaseState} />
+
       {route.name === 'home' && activeTab === 'plans' ? (
         <PlanHome
-          builtinPlan={coachPlans[0]}
+          builtinPlans={coachPlans}
           customPlanCount={customPlans.length}
           sessions={sessions}
+          customPlans={customPlans}
           onOpenBuiltinPlan={openBuiltinPlan}
           onOpenCustomLibrary={openCustomLibrary}
           onOpenHistory={() => {
@@ -183,7 +223,7 @@ function App() {
           onFilterChange={setExerciseFilter}
         />
       ) : null}
-      {route.name === 'home' && activeTab === 'history' ? <History sessions={sessions} /> : null}
+      {route.name === 'home' && activeTab === 'history' ? <History sessions={sessions} customPlans={customPlans} /> : null}
       {route.name === 'builtin-plan' && selectedPlan ? (
         <PlanDetail
           plan={selectedPlan}
@@ -205,35 +245,63 @@ function App() {
         <WorkoutView
           plan={selectedPlan}
           session={route.session}
+          sessions={sessions}
           onChange={updateSession}
           onFinish={() => finishWorkout(route.session)}
         />
       ) : null}
 
-      {route.name === 'home' || route.name === 'custom-library' ? (
-        <BottomNav
-          activeTab={activeTab}
-          onChange={(tab) => {
+      <BottomNav
+        activeTab={activeTab}
+        onChange={(tab) => {
+          if (!isWorkoutRoute) {
             setActiveTab(tab);
             setRoute({ name: 'home' });
-          }}
-        />
-      ) : null}
+          }
+        }}
+      />
     </main>
   );
 }
 
+function SyncStatusBanner({
+  status,
+  error,
+  onRetry,
+}: {
+  status: 'loading' | 'ready' | 'error';
+  error: string;
+  onRetry: () => void;
+}) {
+  if (status === 'ready') {
+    return null;
+  }
+
+  if (status === 'loading') {
+    return <div className="sync-banner">正在同步数据库…</div>;
+  }
+
+  return (
+    <div className="sync-banner error" role="alert">
+      <span>{error || '数据库同步失败'}</span>
+      <button type="button" onClick={onRetry}>重试</button>
+    </div>
+  );
+}
+
 function PlanHome({
-  builtinPlan,
+  builtinPlans,
   customPlanCount,
   sessions,
+  customPlans,
   onOpenBuiltinPlan,
   onOpenCustomLibrary,
   onOpenHistory,
 }: {
-  builtinPlan: CoachPlan;
+  builtinPlans: CoachPlan[];
   customPlanCount: number;
   sessions: WorkoutSession[];
+  customPlans: CoachPlan[];
   onOpenBuiltinPlan: (planId: string, expandedDayId?: string) => void;
   onOpenCustomLibrary: () => void;
   onOpenHistory: () => void;
@@ -247,17 +315,20 @@ function PlanHome({
   return (
     <section className="screen with-nav">
       <div className="entry-grid">
-        <button
-          type="button"
-          className="entry-card entry-builtin"
-          aria-label="进入名师计划"
-          onClick={() => onOpenBuiltinPlan(builtinPlan.id)}
-        >
-          <span className="entry-eyebrow">名师计划</span>
-          <strong className="entry-title">{builtinPlan.coachName}</strong>
-          <span className="entry-desc">{builtinPlan.days.length} 天三分化 · 跟练要点</span>
-          <span className="entry-cta">进入 →</span>
-        </button>
+        {builtinPlans.map((plan, index) => (
+          <button
+            type="button"
+            className="entry-card entry-builtin"
+            aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
+            onClick={() => onOpenBuiltinPlan(plan.id)}
+            key={plan.id}
+          >
+            <span className="entry-eyebrow">名师计划</span>
+            <strong className="entry-title">{plan.coachName}</strong>
+            <span className="entry-desc">{plan.days.length} 天 · {plan.title}</span>
+            <span className="entry-cta">进入 →</span>
+          </button>
+        ))}
 
         <button type="button" className="entry-card entry-custom" aria-label="进入我的计划" onClick={onOpenCustomLibrary}>
           <span className="entry-eyebrow">我的计划</span>
@@ -317,7 +388,7 @@ function PlanHome({
         </div>
         {latestSession ? (
           <div className="history-card compact">
-            <strong>{findDayName(latestSession)}</strong>
+            <strong>{findDayName(latestSession, customPlans)}</strong>
             <span>{formatDate(latestSession.date)}</span>
           </div>
         ) : (
@@ -385,7 +456,7 @@ function CustomPlanLibrary({
           <div className="custom-empty">
             <div className="custom-empty-icon" aria-hidden="true">＋</div>
             <strong>还没有自定义计划</strong>
-            <p>点上方「新建自定义计划」，从动作库挑动作、组成训练日，保存后即可像名师计划一样逐组记录。</p>
+            <p>点上方「新建自定义计划」，从动作库挑动作、组成一次训练，保存后即可逐组记录。</p>
           </div>
         ) : (
           <div className="custom-plan-list">
@@ -398,7 +469,7 @@ function CustomPlanLibrary({
                 <article className="custom-plan-card" key={item.id}>
                   <div className="custom-plan-head">
                     <strong>{item.title.trim() || '未命名计划'}</strong>
-                    <span>{item.days.length} 个训练日 · {exerciseIds.length} 个动作</span>
+                    <span>{exerciseIds.length} 个动作</span>
                   </div>
                   {muscleGroups.length > 0 ? (
                     <div className="custom-plan-tags">
@@ -464,6 +535,9 @@ function PlanDetail({
     () => new Set(initialExpandedDayId ? [initialExpandedDayId] : plan.days[0] ? [plan.days[0].id] : []),
   );
   const [pickerDayId, setPickerDayId] = useState(initialExpandedDayId ?? plan.days[0]?.id);
+  const [expandedPlanExerciseIds, setExpandedPlanExerciseIds] = useState<Set<string>>(
+    () => new Set(plan.days.flatMap((day) => (day.exerciseIds[0] ? [`${day.id}:${day.exerciseIds[0]}`] : []))),
+  );
 
   function toggleDay(dayId: string) {
     setExpandedDayIds((current) => {
@@ -472,6 +546,19 @@ function PlanDetail({
         next.delete(dayId);
       } else {
         next.add(dayId);
+      }
+      return next;
+    });
+  }
+
+  function togglePlanExercise(dayId: string, exerciseId: string) {
+    const key = `${dayId}:${exerciseId}`;
+    setExpandedPlanExerciseIds((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
       }
       return next;
     });
@@ -487,7 +574,8 @@ function PlanDetail({
   }
 
   function updatePlanField(field: 'title' | 'description', value: string) {
-    commitPlan({ ...plan, [field]: value });
+    const nextPlan = { ...plan, [field]: value };
+    commitPlan(editable ? normalizeCustomPlan(nextPlan) : nextPlan);
   }
 
   function updateDayName(dayId: string, value: string) {
@@ -551,8 +639,161 @@ function PlanDetail({
     });
   }
 
+  const customDay = getUnifiedCustomDay(plan);
+  const customExerciseIds = customDay.exerciseIds;
+
+  function commitCustomExercises(exerciseIds: string[]) {
+    commitPlan(normalizeCustomPlan({ ...plan, days: [{ ...customDay, exerciseIds }] }));
+  }
+
+  function addExerciseToCustomPlan(exerciseId: string) {
+    if (customExerciseIds.includes(exerciseId)) {
+      return;
+    }
+    commitCustomExercises([...customExerciseIds, exerciseId]);
+  }
+
+  function removeExerciseFromCustomPlan(exerciseId: string) {
+    commitCustomExercises(customExerciseIds.filter((item) => item !== exerciseId));
+  }
+
+  function startCustomWorkout() {
+    const nextPlan = normalizeCustomPlan(plan);
+    const nextDay = getUnifiedCustomDay(nextPlan);
+    commitPlan(nextPlan);
+    onStartWorkout(nextPlan, nextDay);
+  }
+
+  if (editable) {
+    return (
+      <section className="screen with-nav">
+        <article className="source-panel custom-plan-form">
+          <input
+            className="plan-title-input"
+            value={plan.title}
+            onChange={(event) => updatePlanField('title', event.target.value)}
+            aria-label="计划标题"
+            placeholder="给计划起个名字"
+          />
+          <textarea
+            className="plan-description-input"
+            value={plan.description}
+            onChange={(event) => updatePlanField('description', event.target.value)}
+            aria-label="计划描述"
+            rows={2}
+            placeholder="备注（可选）：训练目标、节奏…"
+          />
+        </article>
+
+        <section className="plan-days">
+          <article className="training-day-card custom-exercise-card active">
+            <div className="training-day-body">
+              <div className="section-title">
+                <h2>动作列表</h2>
+                <span>{customExerciseIds.length} 个动作</span>
+              </div>
+              {customExerciseIds.length === 0 ? (
+                <div className="empty-state">还没有动作，先从动作库添加。</div>
+              ) : (
+                <ol className="custom-exercise-list">
+                  {customExerciseIds.map((exerciseId, index) => {
+                    const exercise = getExerciseById(exerciseId);
+                    return (
+                      <li key={exerciseId}>
+                        <span className="custom-exercise-index">{index + 1}</span>
+                        <span className="custom-exercise-name">{exercise?.name ?? exerciseId}</span>
+                        <button
+                          type="button"
+                          className="inline-remove-button"
+                          onClick={() => removeExerciseFromCustomPlan(exerciseId)}
+                          aria-label={`从当前计划删除${exercise?.name ?? exerciseId}`}
+                        >
+                          删除
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+              <div className="card-actions custom-plan-actions">
+                {customExerciseIds.length === 0 ? <span className="start-hint">先加动作才能开始</span> : null}
+                <button
+                  type="button"
+                  className="primary-button custom-start-button"
+                  onClick={startCustomWorkout}
+                  disabled={customExerciseIds.length === 0}
+                >
+                  开始训练
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <div className="plan-editor-tools">
+          <section className="workout-add-panel" id="exercise-picker-panel" aria-label="从动作库添加到自定义计划">
+            <div className="section-title">
+              <h2>添加动作</h2>
+              <span>已选 {customExerciseIds.length} 个</span>
+            </div>
+            <input
+              value={addQuery}
+              onChange={(event) => setAddQuery(event.target.value)}
+              placeholder="搜索要加入的动作（可连续添加多个）"
+            />
+            <div className="filter-pills compact" aria-label="自定义计划肌群筛选">
+              {(['全部', '胸', '背', '肩', '腿', '手臂'] as ExerciseFilter[]).map((filterOption) => (
+                <button
+                  key={filterOption}
+                  type="button"
+                  className={filterOption === addFilter ? 'active' : ''}
+                  onClick={() => setAddFilter(filterOption)}
+                >
+                  {filterOption}
+                </button>
+              ))}
+            </div>
+            <div className="exercise-add-list">
+              {addResults.slice(0, 12).map((exercise) => {
+                const isAdded = customExerciseIds.includes(exercise.id);
+
+                return (
+                  <article className="exercise-add-card" key={exercise.id}>
+                    <div>
+                      <strong>{exercise.name}</strong>
+                      <span>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</span>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isAdded}
+                      onClick={() => addExerciseToCustomPlan(exercise.id)}
+                      aria-label={isAdded ? `${exercise.name}已在当前计划` : `将${exercise.name}加入当前计划`}
+                    >
+                      {isAdded ? '已加入' : '加入'}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              className="secondary-button full-width"
+              onClick={() => {
+                setAddQuery('');
+                setAddFilter('全部');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              完成添加，回到动作列表
+            </button>
+          </section>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="screen">
+    <section className="screen with-nav">
       <article className="source-panel">
         <p className="eyebrow">{editable ? '我的计划' : plan.coachName}</p>
         {editable ? (
@@ -625,13 +866,13 @@ function PlanDetail({
                     </button>
                   </div>
                 ) : null}
-                <ol className="training-day-list">
-                  {day.exerciseIds.map((exerciseId) => {
-                    const exercise = getExerciseById(exerciseId);
-                    return (
-                      <li key={exerciseId}>
-                        <span>{exercise?.name ?? exerciseId}</span>
-                        {editable ? (
+                {editable ? (
+                  <ol className="training-day-list">
+                    {day.exerciseIds.map((exerciseId) => {
+                      const exercise = getExerciseById(exerciseId);
+                      return (
+                        <li key={exerciseId}>
+                          <span>{exercise?.name ?? exerciseId}</span>
                           <button
                             type="button"
                             className="inline-remove-button"
@@ -640,11 +881,26 @@ function PlanDetail({
                           >
                             删除
                           </button>
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ol>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <div className="plan-exercise-list">
+                    {day.exerciseIds.map((exerciseId) => {
+                      const key = `${day.id}:${exerciseId}`;
+                      return (
+                        <PlanExercisePreviewCard
+                          key={key}
+                          day={day}
+                          exerciseId={exerciseId}
+                          isExpanded={expandedPlanExerciseIds.has(key)}
+                          onToggle={() => togglePlanExercise(day.id, exerciseId)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
                 {editable ? (
                   <button
                     type="button"
@@ -756,14 +1012,59 @@ function PlanDetail({
   );
 }
 
+function PlanExercisePreviewCard({
+  day,
+  exerciseId,
+  isExpanded,
+  onToggle,
+}: {
+  day: TrainingDayTemplate;
+  exerciseId: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const exercise = getExerciseById(exerciseId);
+  const coachNote = findCoachNote(day, exerciseId);
+  const exerciseName = exercise?.name ?? exerciseId;
+
+  return (
+    <article className={isExpanded ? 'plan-exercise-card active' : 'plan-exercise-card'}>
+      <button
+        type="button"
+        className="exercise-heading"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        aria-label={`${exerciseName} 展开收起`}
+      >
+        <div>
+          <h3>{exerciseName}</h3>
+          <p>{exercise?.muscleGroups.join(' / ')} · {exercise?.equipment}</p>
+        </div>
+        <span className="exercise-heading-meta">
+          <span>0/5</span>
+          <span className="exercise-chevron" aria-hidden="true">{isExpanded ? '▴' : '▾'}</span>
+        </span>
+      </button>
+
+      {isExpanded ? (
+        <div className="plan-exercise-body">
+          {coachNote ? <CoachCueCard note={coachNote} /> : <p className="start-hint">暂无名师要点</p>}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 function WorkoutView({
   plan,
   session,
+  sessions,
   onChange,
   onFinish,
 }: {
   plan: CoachPlan;
   session: WorkoutSession;
+  sessions: WorkoutSession[];
   onChange: (session: WorkoutSession) => void;
   onFinish: () => void;
 }) {
@@ -788,7 +1089,6 @@ function WorkoutView({
     });
   }
   const lastSetsByExercise = useMemo(() => {
-    const sessions = loadSessions();
     const map: Record<string, ReturnType<typeof getLastExerciseSets>> = {};
     for (const log of session.exerciseLogs) {
       map[log.exerciseId] = getLastExerciseSets(sessions, log.exerciseId);
@@ -1047,7 +1347,7 @@ function CoachCueCard({ note }: { note: CoachExerciseNote }) {
       </summary>
       <div className="coach-cue-body">
         {note.imageUrl ? (
-          <img className="coach-cue-shot" src={withBase(note.imageUrl)} alt={`${note.sourceTitle} 视频截图`} loading="lazy" />
+          <img className="coach-cue-shot" src={withBase(note.imageUrl)} alt={`${note.sourceTitle} 动作示意图`} loading="lazy" />
         ) : null}
         <div className="coach-cue-copy">
           <p>{note.goal}</p>
@@ -1295,10 +1595,11 @@ function ExerciseLibrary({
   );
 }
 
-function History({ sessions }: { sessions: WorkoutSession[] }) {
+function History({ sessions, customPlans }: { sessions: WorkoutSession[]; customPlans: CoachPlan[] }) {
   const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
   const weekly = useMemo(() => getWeeklyStats(sessions), [sessions]);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => sessions[0]?.date ? getDateKey(sessions[0].date) : getDateKey(new Date()));
 
   const trackedExerciseId = selectedExerciseId || personalRecords[0]?.exerciseId || '';
   const progress = useMemo(
@@ -1309,10 +1610,12 @@ function History({ sessions }: { sessions: WorkoutSession[] }) {
   if (sessions.length === 0) {
     return (
       <section className="screen with-nav">
-        <div className="section-title">
-          <h2>训练历史</h2>
-          <span>0 次</span>
-        </div>
+        <TrainingCalendar
+          sessions={sessions}
+          customPlans={customPlans}
+          selectedDateKey={selectedCalendarDate}
+          onSelectDate={setSelectedCalendarDate}
+        />
         <div className="empty-state">还没有训练记录。进入计划并完成一次训练后会自动保存。</div>
       </section>
     );
@@ -1320,6 +1623,13 @@ function History({ sessions }: { sessions: WorkoutSession[] }) {
 
   return (
     <section className="screen with-nav">
+      <TrainingCalendar
+        sessions={sessions}
+        customPlans={customPlans}
+        selectedDateKey={selectedCalendarDate}
+        onSelectDate={setSelectedCalendarDate}
+      />
+
       <section className="section-block">
         <div className="section-title">
           <h2>本周概览</h2>
@@ -1385,7 +1695,7 @@ function History({ sessions }: { sessions: WorkoutSession[] }) {
           {sessions.map((session) => (
             <article className="history-card" key={session.id}>
               <div>
-                <strong>{findDayName(session)}</strong>
+                <strong>{findDayName(session, customPlans)}</strong>
                 <span>{formatDate(session.date)}</span>
               </div>
               <p>{summarizeSession(session)}</p>
@@ -1393,6 +1703,80 @@ function History({ sessions }: { sessions: WorkoutSession[] }) {
           ))}
         </div>
       </section>
+    </section>
+  );
+}
+
+function TrainingCalendar({
+  sessions,
+  customPlans,
+  selectedDateKey,
+  onSelectDate,
+}: {
+  sessions: WorkoutSession[];
+  customPlans: CoachPlan[];
+  selectedDateKey: string;
+  onSelectDate: (dateKey: string) => void;
+}) {
+  const monthDate = new Date();
+  const sessionsByDate = useMemo(() => groupSessionsByDate(sessions), [sessions]);
+  const calendarDays = useMemo(() => buildCalendarDays(monthDate, sessionsByDate), [monthDate, sessionsByDate]);
+  const selectedSessions = sessionsByDate.get(selectedDateKey) ?? [];
+  const nextSuggestion = getNextWorkoutSuggestion(sessions, customPlans);
+
+  return (
+    <section className="section-block">
+      <div className="section-title">
+        <h2>训练日历</h2>
+        <span>{formatMonthTitle(monthDate)}</span>
+      </div>
+
+      {nextSuggestion ? <div className="calendar-suggestion">{nextSuggestion}</div> : null}
+
+      <div className="training-calendar" aria-label="训练日历">
+        {['一', '二', '三', '四', '五', '六', '日'].map((weekday) => (
+          <span className="calendar-weekday" key={weekday}>
+            {weekday}
+          </span>
+        ))}
+        {calendarDays.map((day) => {
+          const firstSession = day.sessions[0];
+          const label = firstSession ? getCalendarSessionLabel(firstSession, customPlans) : '';
+          return (
+            <button
+              type="button"
+              key={day.dateKey}
+              className={[
+                'calendar-day',
+                day.inCurrentMonth ? '' : 'muted',
+                day.sessions.length > 0 ? 'trained' : '',
+                day.dateKey === selectedDateKey ? 'selected' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={() => onSelectDate(day.dateKey)}
+              aria-label={`${formatDateForAria(day.date)} ${day.sessions.length > 0 ? `有训练 ${label}` : '无训练'}`}
+            >
+              <span>{day.date.getDate()}</span>
+              {label ? <small>{label}</small> : null}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="calendar-detail" role="region" aria-label="所选日期训练摘要">
+        <strong>{formatDateForDetail(selectedDateKey)}</strong>
+        {selectedSessions.length === 0 ? (
+          <p>当天没有训练记录</p>
+        ) : (
+          <div className="calendar-session-list">
+            {selectedSessions.map((session) => (
+              <article className="calendar-session-card" key={session.id}>
+                <strong>训练：{findDayName(session, customPlans)}</strong>
+                <span>{summarizeCalendarSession(session)}</span>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -1525,8 +1909,8 @@ function getHeaderCopy(
 
   if (route.name === 'builtin-plan') {
     return {
-      title: selectedPlan?.title ? `${selectedPlan.coachName}三分化` : '计划详情',
-      subtitle: '增肌 / 三分化循环',
+      title: selectedPlan?.title ?? '计划详情',
+      subtitle: selectedPlan?.coachName ?? '名师计划',
     };
   }
 
@@ -1536,7 +1920,7 @@ function getHeaderCopy(
 
   if (route.name === 'custom-plan') {
     return {
-      title: selectedPlan?.title ?? '自定义计划',
+      title: selectedPlan?.title.trim() || '自定义计划',
       subtitle: '动作库拼装 / 本地保存',
     };
   }
@@ -1561,8 +1945,96 @@ function parseOptionalNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function findDayName(session: WorkoutSession): string {
-  const currentPlan = [...coachPlans, ...loadCustomPlans()].find((item) => item.id === session.planId);
+function normalizeCustomPlan(plan: CoachPlan): CoachPlan {
+  return {
+    ...plan,
+    days: [getUnifiedCustomDay(plan)],
+  };
+}
+
+function getUnifiedCustomDay(plan: CoachPlan): TrainingDayTemplate {
+  const firstDay = plan.days[0];
+  const exerciseIds = Array.from(new Set(plan.days.flatMap((day) => day.exerciseIds)));
+
+  return {
+    id: firstDay?.id ?? `${plan.id}-workout`,
+    name: plan.title.trim() || '自定义训练',
+    focus: firstDay?.focus.length ? firstDay.focus : ['全身'],
+    sourceUrl: '',
+    exerciseIds,
+    coachNotes: [],
+  };
+}
+
+function groupSessionsByDate(sessions: WorkoutSession[]): Map<string, WorkoutSession[]> {
+  const grouped = new Map<string, WorkoutSession[]>();
+
+  for (const session of sessions) {
+    const key = getDateKey(session.date);
+    grouped.set(key, [...(grouped.get(key) ?? []), session]);
+  }
+
+  return grouped;
+}
+
+function buildCalendarDays(monthDate: Date, sessionsByDate: Map<string, WorkoutSession[]>): CalendarDay[] {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const mondayOffset = (firstDay.getDay() + 6) % 7;
+  const start = new Date(year, month, 1 - mondayOffset);
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+    const dateKey = getDateKey(date);
+
+    return {
+      date,
+      dateKey,
+      inCurrentMonth: date.getMonth() === month,
+      sessions: sessionsByDate.get(dateKey) ?? [],
+    };
+  });
+}
+
+function getNextWorkoutSuggestion(sessions: WorkoutSession[], customPlans: CoachPlan[]): string {
+  const latest = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  if (!latest) {
+    return '';
+  }
+
+  const plan = [...coachPlans, ...customPlans].find((item) => item.id === latest.planId);
+  if (!plan) {
+    return '建议根据最近一次训练安排下一次';
+  }
+
+  if (plan.planType === 'custom') {
+    return `可继续最近的自定义计划：${plan.title.trim() || '自定义训练'}`;
+  }
+
+  const currentIndex = plan.days.findIndex((day) => day.id === latest.dayId);
+  if (currentIndex === -1 || plan.days.length === 0) {
+    return '建议根据最近一次训练安排下一次';
+  }
+
+  const nextDay = plan.days[(currentIndex + 1) % plan.days.length];
+  return `建议下一次练 ${nextDay.name}`;
+}
+
+function getCalendarSessionLabel(session: WorkoutSession, customPlans: CoachPlan[]): string {
+  const dayName = findDayName(session, customPlans);
+  const dayMatch = dayName.match(/^Day\s+\d+/);
+  if (dayMatch) {
+    return dayMatch[0];
+  }
+  if (dayName.includes('自定义')) {
+    return '自定义';
+  }
+  return dayName.slice(0, 3);
+}
+
+function findDayName(session: WorkoutSession, customPlans: CoachPlan[]): string {
+  const currentPlan = [...coachPlans, ...customPlans].find((item) => item.id === session.planId);
   return currentPlan?.days.find((day) => day.id === session.dayId)?.name ?? '训练记录';
 }
 
@@ -1590,10 +2062,37 @@ function formatDateShort(date: string): string {
   return new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' }).format(new Date(date));
 }
 
+function formatMonthTitle(date: Date): string {
+  return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long' }).format(date);
+}
+
+function formatDateForAria(date: Date): string {
+  return new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' }).format(date).replace('/', '月') + '日';
+}
+
+function formatDateForDetail(dateKey: string): string {
+  const [, month, day] = dateKey.split('-');
+  return `${month}月${day}日`;
+}
+
+function getDateKey(value: string | Date): string {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function summarizeSession(session: WorkoutSession): string {
   const completedSets = session.exerciseLogs.flatMap((log: ExerciseLog) => log.sets).filter((set) => set.completed).length;
   const totalSets = session.exerciseLogs.flatMap((log: ExerciseLog) => log.sets).length;
   return `${session.exerciseLogs.length} 个动作 · ${completedSets}/${totalSets} 组完成`;
+}
+
+function summarizeCalendarSession(session: WorkoutSession): string {
+  const completedSets = session.exerciseLogs.flatMap((log: ExerciseLog) => log.sets).filter((set) => set.completed).length;
+  const totalSets = session.exerciseLogs.flatMap((log: ExerciseLog) => log.sets).length;
+  return `完成 ${completedSets}/${totalSets} 组 · ${session.exerciseLogs.length} 个动作`;
 }
 
 export default App;

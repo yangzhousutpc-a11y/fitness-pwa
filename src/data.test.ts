@@ -36,29 +36,51 @@ describe('built-in fitness data', () => {
     ]);
   });
 
+  it('defines the Tan Chengyi private coaching follow-along plan from four public videos', () => {
+    const plan = coachPlans.find((item) => item.id === 'tanchengyi-private-coaching-follow-along');
+
+    expect(plan?.coachName).toBe('谭成义');
+    expect(plan?.title).toBe('谭成义私教跟练');
+    expect(plan?.days.map((day) => day.name)).toEqual(['Day 1 背部', 'Day 2 手臂', 'Day 3 胸部', 'Day 4 肩部']);
+    expect(plan?.days.map((day) => day.sourceUrl)).toEqual([
+      'https://www.bilibili.com/video/BV1HR7o6CE8q/',
+      'https://www.bilibili.com/video/BV1GzEg6wEVb/',
+      'https://www.bilibili.com/video/BV1ZxEk6cEv1/',
+      'https://www.bilibili.com/video/BV1csj36CEf9/',
+    ]);
+
+    for (const day of plan?.days ?? []) {
+      expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
+      expect(day.coachNotes.every((note) => note.sourceBasis.includes('B站公开视频标题、标签与训练主题整理'))).toBe(true);
+    }
+  });
+
   it('attaches concise coach follow-along notes to every planned exercise', () => {
     const exerciseIds = new Set(exercises.map((exercise) => exercise.id));
 
-    for (const day of coachPlans[0].days) {
-      expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
+    for (const plan of coachPlans) {
+      for (const day of plan.days) {
+        expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
 
-      for (const note of day.coachNotes) {
-        expect(exerciseIds.has(note.exerciseId)).toBe(true);
-        expect(day.exerciseIds).toContain(note.exerciseId);
-        expect(note.sourceTitle).toContain('凯圣王-谭成义三分化');
-        expect(note.sourceUrl).toContain('bilibili.com/video/');
-        expect(note.keyCues.length).toBeGreaterThanOrEqual(3);
-        expect(note.commonMistakes.length).toBeGreaterThanOrEqual(2);
-        expect(note.illustration).toMatch(/^(bench|dip|raise|pull|row|curl|squat|hinge|leg-machine|calf)$/);
-        expect(note.imageUrl).toMatch(/^\/coach-shots\/.+\.jpg$/);
+        for (const note of day.coachNotes) {
+          expect(exerciseIds.has(note.exerciseId)).toBe(true);
+          expect(day.exerciseIds).toContain(note.exerciseId);
+          expect(note.sourceUrl).toContain('bilibili.com/video/');
+          expect(note.keyCues.length).toBeGreaterThanOrEqual(3);
+          expect(note.commonMistakes.length).toBeGreaterThanOrEqual(2);
+          expect(note.illustration).toMatch(/^(bench|dip|raise|pull|row|curl|squat|hinge|leg-machine|calf)$/);
+          expect(note.imageUrl).toMatch(/^\/coach-shots\/.+\.jpg$/);
+        }
       }
     }
   });
 
-  it('gives every exercise a unique coach screenshot within each day', () => {
-    for (const day of coachPlans[0].days) {
-      const images = day.coachNotes.map((note) => note.imageUrl);
-      expect(new Set(images).size).toBe(images.length);
+  it('gives every exercise a unique coach cue image within each day', () => {
+    for (const plan of coachPlans) {
+      for (const day of plan.days) {
+        const images = day.coachNotes.map((note) => note.imageUrl);
+        expect(new Set(images).size).toBe(images.length);
+      }
     }
   });
 
