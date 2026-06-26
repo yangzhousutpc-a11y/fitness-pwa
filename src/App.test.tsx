@@ -422,6 +422,7 @@ describe('fitness PWA user flows', () => {
   it('home shows two separate entries: builtin coach plan and custom library', () => {
     render(<App />);
 
+    expect(screen.getByText('选择训练计划')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入谭成义私教跟练' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入我的计划' })).toBeInTheDocument();
@@ -429,6 +430,37 @@ describe('fitness PWA user flows', () => {
     // 进入我的计划库
     fireEvent.click(screen.getByRole('button', { name: '进入我的计划' }));
     expect(screen.getByRole('button', { name: '+ 新建自定义计划' })).toBeInTheDocument();
+  });
+
+  it('recommends the next workout while keeping the full plan entry available', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-1',
+        date: '2026-06-26T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [{ setNumber: 1, weight: 60, reps: 10, completed: true }],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    expect(await screen.findByText('下一次训练')).toBeInTheDocument();
+    expect(screen.getByText('Day 2')).toBeInTheDocument();
+    expect(screen.getByText('背 / 后束 / 二头')).toBeInTheDocument();
+    expect(screen.getByText('根据最近一次训练：上次完成 Day 1 胸 / 肩 / 三头')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '开始推荐训练' }));
+
+    expect(screen.getByRole('heading', { name: '引体向上' })).toBeInTheDocument();
+    expect(screen.getByText('0/30 组完成')).toBeInTheDocument();
   });
 
   it('opens the Tan Chengyi private coaching plan and starts a workout from it', () => {

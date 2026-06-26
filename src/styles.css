@@ -1774,107 +1774,11 @@ a {
   background: rgba(248, 250, 252, 0.12) !important;
 }
 
-/* ===== 首页双入口卡片 ===== */
-.entry-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.entry-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 18px 16px 16px;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line-strong);
-  text-align: left;
-  cursor: pointer;
-  min-height: 158px;
-  color: var(--ink-1);
-  overflow: hidden;
-  isolation: isolate;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.entry-card::after {
-  /* 右下角放一个超大数字/符号水印，海报式记忆点 */
-  position: absolute;
-  right: -10px;
-  bottom: -22px;
-  font-family: var(--font-num);
-  font-size: 96px;
-  font-weight: 700;
-  line-height: 1;
-  z-index: -1;
-  opacity: 0.1;
-}
-
-.entry-card:active {
-  transform: scale(0.985);
-}
-
-.entry-builtin {
-  background:
-    radial-gradient(130% 100% at 0% 0%, rgba(43, 214, 106, 0.34), transparent 58%),
-    linear-gradient(155deg, #103b25, #07140d);
-  border-color: rgba(43, 214, 106, 0.42);
-}
-
-.entry-builtin::after {
-  content: "01";
-  color: var(--accent);
-}
-
-.entry-custom {
-  background: linear-gradient(155deg, var(--surface-2), var(--bg-1));
-}
-
-.entry-custom::after {
-  content: "+";
-  color: var(--ink-2);
-  font-size: 120px;
-  right: 4px;
-  bottom: -34px;
-}
-
 .entry-eyebrow {
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent);
-}
-
-.entry-custom .entry-eyebrow {
-  color: var(--ink-2);
-}
-
-.entry-title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.16;
-  letter-spacing: -0.01em;
-}
-
-.entry-desc {
-  font-size: 12.5px;
-  color: var(--ink-2);
-  flex: 1;
-  line-height: 1.45;
-}
-
-.entry-cta {
-  font-size: 12.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--ink-1);
-  margin-top: 6px;
-}
-
-.entry-builtin .entry-cta {
   color: var(--accent);
 }
 
@@ -1954,7 +1858,7 @@ a {
   display: grid;
   gap: 10px;
   width: 100%;
-  min-height: 174px;
+  min-height: 228px;
   padding: 22px 20px;
   overflow: hidden;
   border: 1px solid rgba(43, 214, 106, 0.42);
@@ -1968,7 +1872,7 @@ a {
 }
 
 .primary-training-card::after {
-  content: "TRAIN";
+  content: "NEXT";
   position: absolute;
   right: -18px;
   bottom: -12px;
@@ -1979,40 +1883,137 @@ a {
   letter-spacing: -0.08em;
 }
 
-.primary-training-card strong {
+.primary-training-card h2 {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  margin: 0;
   max-width: 260px;
   color: var(--ink-1);
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 31px;
   font-weight: 900;
   line-height: 1.12;
 }
 
-.primary-training-card > span:not(.entry-eyebrow) {
+.primary-training-card h2 span {
+  color: rgba(238, 247, 255, 0.86);
+  font-family: var(--font-num);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.primary-training-card p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
   max-width: 270px;
   color: var(--ink-2);
   font-size: 13px;
   line-height: 1.45;
 }
 
-.primary-training-card em {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 132px;
-  min-height: 42px;
-  margin-top: 6px;
+.primary-training-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  max-width: 310px;
+  margin-top: 4px;
+}
+
+.recommended-start-button,
+.recommended-adjust-button {
+  min-height: 44px;
   border-radius: 12px;
-  color: var(--accent-ink);
-  background: var(--accent);
   font-size: 14px;
-  font-style: normal;
   font-weight: 900;
 }
 
-.secondary-entry-grid {
+.recommended-start-button {
+  border: 0;
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.recommended-adjust-button {
+  border: 1px solid rgba(238, 247, 255, 0.18);
+  color: var(--ink-1);
+  background: rgba(7, 12, 20, 0.42);
+}
+
+.home-plan-picker {
   order: 2;
+  display: grid;
+  gap: 12px;
   margin-top: 18px;
+}
+
+.plan-choice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-choice-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 82px;
+  padding: 15px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  color: var(--ink-1);
+  background: rgba(18, 26, 38, 0.88);
+  text-align: left;
+}
+
+.plan-choice-card.primary {
+  border-color: rgba(43, 214, 106, 0.38);
+  background:
+    linear-gradient(90deg, rgba(43, 214, 106, 0.11), transparent 48%),
+    rgba(18, 26, 38, 0.9);
+}
+
+.plan-choice-card > span {
+  display: grid;
+  gap: 5px;
+}
+
+.plan-choice-card small {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.plan-choice-card strong {
+  color: var(--ink-1);
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.14;
+}
+
+.plan-choice-card em {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.plan-choice-card b {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  color: var(--ink-1);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 28px;
+  line-height: 1;
 }
 
 .home-recent {
@@ -2025,31 +2026,6 @@ a {
 
 .home-pr {
   order: 5;
-}
-
-.secondary-entry-grid .entry-card {
-  min-height: 112px;
-  padding: 15px 14px;
-  border-radius: 14px;
-  background: rgba(18, 26, 38, 0.92);
-}
-
-.secondary-entry-grid .entry-builtin {
-  border-color: rgba(148, 163, 184, 0.2);
-  background: linear-gradient(155deg, rgba(18, 26, 38, 0.96), rgba(11, 16, 24, 0.96));
-}
-
-.secondary-entry-grid .entry-card::after {
-  opacity: 0.04;
-}
-
-.secondary-entry-grid .entry-title {
-  font-size: 16px;
-}
-
-.secondary-entry-grid .entry-cta {
-  margin-top: 0;
-  color: var(--ink-2);
 }
 
 .home-weekly .stat-grid {

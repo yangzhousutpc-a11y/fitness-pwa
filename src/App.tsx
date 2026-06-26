@@ -32,6 +32,11 @@ type CalendarDay = {
   sessions: WorkoutSession[];
 };
 type SetTarget = { exerciseId: string; setNumber: number };
+type RecommendedWorkout = {
+  plan: CoachPlan;
+  day: TrainingDayTemplate;
+  reason: string;
+};
 type Route =
   | { name: 'home' }
   | { name: 'custom-library' }
@@ -239,12 +244,19 @@ function App() {
           customPlanCount={customPlans.length}
           sessions={sessions}
           customPlans={customPlans}
-          onOpenBuiltinPlan={openBuiltinPlan}
+          onOpenPlan={(plan, expandedDayId) => {
+            if (plan.planType === 'custom') {
+              openCustomPlan(plan.id, expandedDayId);
+              return;
+            }
+            openBuiltinPlan(plan.id, expandedDayId);
+          }}
           onOpenCustomLibrary={openCustomLibrary}
           onOpenHistory={() => {
             setActiveTab('history');
             setRoute({ name: 'home' });
           }}
+          onStartWorkout={startWorkout}
         />
       ) : null}
       {route.name === 'custom-library' ? (
@@ -354,65 +366,100 @@ function PlanHome({
   customPlanCount,
   sessions,
   customPlans,
-  onOpenBuiltinPlan,
+  onOpenPlan,
   onOpenCustomLibrary,
   onOpenHistory,
+  onStartWorkout,
 }: {
   builtinPlans: CoachPlan[];
   customPlanCount: number;
   sessions: WorkoutSession[];
   customPlans: CoachPlan[];
-  onOpenBuiltinPlan: (planId: string, expandedDayId?: string) => void;
+  onOpenPlan: (plan: CoachPlan, expandedDayId?: string) => void;
   onOpenCustomLibrary: () => void;
   onOpenHistory: () => void;
+  onStartWorkout: (currentPlan: CoachPlan, day: TrainingDayTemplate) => void;
 }) {
   const latestSession = sessions[0];
   const weekly = useMemo(() => getWeeklyStats(sessions), [sessions]);
   const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
   // 首页只放速览：PR 取前 3，看全部去历史页。
   const topRecords = personalRecords.slice(0, 3);
-  const primaryPlan = builtinPlans[0];
-  const secondaryPlans = builtinPlans.slice(1);
+  const recommendedWorkout = useMemo(
+    () => getRecommendedWorkout(sessions, builtinPlans, customPlans),
+    [sessions, builtinPlans, customPlans],
+  );
+  const recommendedDayParts = recommendedWorkout ? splitDayTitle(recommendedWorkout.day.name) : null;
 
   return (
     <section className="screen with-nav home-screen">
-      {primaryPlan ? (
-        <button
-          type="button"
-          className="primary-training-card"
-          aria-label="进入名师计划"
-          onClick={() => onOpenBuiltinPlan(primaryPlan.id)}
-        >
-          <span className="entry-eyebrow">推荐训练</span>
-          <strong>{primaryPlan.days[0]?.name ?? primaryPlan.title}</strong>
-          <span>{primaryPlan.coachName} · {primaryPlan.days.length} 天 · {primaryPlan.title}</span>
-          <em>开始训练 →</em>
-        </button>
+      {recommendedWorkout && recommendedDayParts ? (
+        <article className="primary-training-card">
+          <span className="entry-eyebrow">下一次训练</span>
+          <h2>
+            <span>{recommendedDayParts.prefix}</span>
+            {recommendedDayParts.title}
+          </h2>
+          <p>{recommendedWorkout.reason}</p>
+          <div className="primary-training-actions">
+            <button
+              type="button"
+              className="recommended-start-button"
+              onClick={() => onStartWorkout(recommendedWorkout.plan, recommendedWorkout.day)}
+              aria-label="开始推荐训练"
+            >
+              开始训练
+            </button>
+            <button
+              type="button"
+              className="recommended-adjust-button"
+              onClick={() => onOpenPlan(recommendedWorkout.plan, recommendedWorkout.day.id)}
+              aria-label="调整推荐训练选择"
+            >
+              调整选择
+            </button>
+          </div>
+        </article>
       ) : null}
 
-      <div className="entry-grid secondary-entry-grid">
-        {secondaryPlans.map((plan) => (
+      <section className="home-plan-picker">
+        <div className="section-title">
+          <h2>选择训练计划</h2>
+          <span>查看全部</span>
+        </div>
+        <div className="plan-choice-list">
+          {builtinPlans.map((plan, index) => (
+            <button
+              type="button"
+              className={index === 0 ? 'plan-choice-card primary' : 'plan-choice-card'}
+              aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
+              onClick={() => onOpenPlan(plan, plan.days[0]?.id)}
+              key={plan.id}
+            >
+              <span>
+                <small>{index === 0 ? '三分化完整计划' : '名师计划'}</small>
+                <strong>{index === 0 ? plan.coachName : plan.title}</strong>
+                <em>{index === 0 ? 'Day 1 / Day 2 / Day 3 全部训练内容' : `${plan.days.length} 天 · 按视频结构训练`}</em>
+              </span>
+              <b>›</b>
+            </button>
+          ))}
+
           <button
             type="button"
-            className="entry-card entry-builtin"
-            aria-label={`进入${plan.title}`}
-            onClick={() => onOpenBuiltinPlan(plan.id)}
-            key={plan.id}
+            className="plan-choice-card"
+            aria-label="进入我的计划"
+            onClick={onOpenCustomLibrary}
           >
-            <span className="entry-eyebrow">名师计划</span>
-            <strong className="entry-title">{plan.coachName}</strong>
-            <span className="entry-desc">{plan.days.length} 天 · {plan.title}</span>
-            <span className="entry-cta">进入 →</span>
+            <span>
+              <small>我的计划</small>
+              <strong>自定义训练库</strong>
+              <em>{customPlanCount > 0 ? `${customPlanCount} 个计划` : '从动作库自由搭建'}</em>
+            </span>
+            <b>›</b>
           </button>
-        ))}
-
-        <button type="button" className="entry-card entry-custom" aria-label="进入我的计划" onClick={onOpenCustomLibrary}>
-          <span className="entry-eyebrow">我的计划</span>
-          <strong className="entry-title">自定义训练库</strong>
-          <span className="entry-desc">{customPlanCount > 0 ? `${customPlanCount} 个计划` : '从动作库自由搭建'}</span>
-          <span className="entry-cta">进入 →</span>
-        </button>
-      </div>
+        </div>
+      </section>
 
       {sessions.length > 0 ? (
         <section className="section-block home-weekly">
@@ -1762,6 +1809,64 @@ function ExerciseLibrary({
   );
 }
 
+function getRecommendedWorkout(
+  sessions: WorkoutSession[],
+  builtinPlans: CoachPlan[],
+  customPlans: CoachPlan[],
+): RecommendedWorkout | null {
+  const fallbackPlan = builtinPlans[0] ?? customPlans[0];
+  const fallbackDay = fallbackPlan?.days[0];
+
+  if (!fallbackPlan || !fallbackDay) {
+    return null;
+  }
+
+  const latest = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  if (!latest) {
+    return {
+      plan: fallbackPlan,
+      day: fallbackDay,
+      reason: '还没有训练记录，从 Day 1 开始',
+    };
+  }
+
+  const recentPlan = [...builtinPlans, ...customPlans].find((plan) => plan.id === latest.planId);
+  if (!recentPlan || recentPlan.days.length === 0) {
+    return {
+      plan: fallbackPlan,
+      day: fallbackDay,
+      reason: '根据最近一次训练安排下一次',
+    };
+  }
+
+  if (recentPlan.planType === 'custom') {
+    const recentDay = recentPlan.days.find((day) => day.id === latest.dayId) ?? recentPlan.days[0];
+    return {
+      plan: recentPlan,
+      day: recentDay,
+      reason: `继续最近的自定义计划：${recentPlan.title.trim() || recentDay.name}`,
+    };
+  }
+
+  const currentIndex = recentPlan.days.findIndex((day) => day.id === latest.dayId);
+  const recentDay = currentIndex >= 0 ? recentPlan.days[currentIndex] : undefined;
+  const nextDay = currentIndex >= 0 ? recentPlan.days[(currentIndex + 1) % recentPlan.days.length] : recentPlan.days[0];
+
+  return {
+    plan: recentPlan,
+    day: nextDay,
+    reason: recentDay ? `根据最近一次训练：上次完成 ${recentDay.name}` : '根据最近一次训练安排下一次',
+  };
+}
+
+function splitDayTitle(dayName: string): { prefix: string; title: string } {
+  const match = dayName.match(/^(Day\s+\d+)\s+(.+)$/);
+  if (!match) {
+    return { prefix: '', title: dayName };
+  }
+  return { prefix: match[1], title: match[2] };
+}
+
 function History({
   sessions,
   customPlans,
@@ -2150,7 +2255,7 @@ function getHeaderCopy(
     return { title: '历史训练', subtitle: '查看过往训练日、动作和逐组数据' };
   }
 
-  return { title: '健身计划', subtitle: '选择一个计划开始训练' };
+  return { title: '健身计划', subtitle: '推荐可直接开始，也可以自己选择今天练什么' };
 }
 
 function parseOptionalNumber(value: string): number | null {

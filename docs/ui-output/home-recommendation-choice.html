@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>健身 PWA 首页 UI 方案</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --panel: #111a26;
+      --panel-2: #152132;
+      --panel-3: #0d1520;
+      --line: rgba(148, 163, 184, 0.22);
+      --line-strong: rgba(148, 163, 184, 0.32);
+      --ink-1: #eff6ff;
+      --ink-2: #9aa8bb;
+      --ink-3: #6f7f94;
+      --accent: #29e27a;
+      --accent-2: #23c6b7;
+      --accent-soft: rgba(41, 226, 122, 0.14);
+      --danger: #f6736b;
+      --shadow: 0 20px 80px rgba(0, 0, 0, 0.38);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink-1);
+      background: #02050a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: start center;
+      padding: 32px;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(35, 198, 183, 0.16), transparent 32%),
+        #02050a;
+    }
+
+    .phone {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background:
+        linear-gradient(180deg, rgba(10, 18, 28, 0.95), rgba(7, 11, 18, 1) 38%),
+        var(--bg);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      padding: 38px 28px 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15, 23, 34, 0.82), rgba(11, 17, 26, 0.72));
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 10px 0 0;
+      color: var(--ink-2);
+      font-size: 15px;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+      padding: 20px 18px 104px;
+    }
+
+    .next-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 208px;
+      padding: 20px;
+      border: 1px solid rgba(41, 226, 122, 0.42);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 82% 24%, rgba(41, 226, 122, 0.2), transparent 28%),
+        linear-gradient(145deg, rgba(23, 132, 111, 0.72), rgba(15, 34, 52, 0.94) 55%, rgba(12, 19, 30, 0.98));
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    .next-card::after {
+      content: "NEXT";
+      position: absolute;
+      right: -12px;
+      bottom: -24px;
+      color: rgba(239, 246, 255, 0.05);
+      font-size: 82px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(41, 226, 122, 0.72);
+    }
+
+    .next-card h2 {
+      position: relative;
+      z-index: 1;
+      margin: 16px 0 8px;
+      max-width: 290px;
+      font-size: 31px;
+      line-height: 1.12;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .next-card h2 span {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 26px;
+      color: rgba(239, 246, 255, 0.86);
+    }
+
+    .next-card p {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(207, 219, 232, 0.82);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .next-actions {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      min-height: 52px;
+      border: 0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .btn-primary {
+      color: #062012;
+      background: linear-gradient(180deg, #32ef86, #24c96d);
+      box-shadow: 0 10px 30px rgba(41, 226, 122, 0.28);
+    }
+
+    .btn-secondary {
+      color: var(--ink-1);
+      border: 1px solid rgba(239, 246, 255, 0.16);
+      background: rgba(8, 14, 23, 0.42);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      font-size: 22px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .section-title h3::before {
+      content: "";
+      width: 4px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .section-title span {
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .plan-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .plan-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 14px;
+      min-height: 78px;
+      padding: 14px 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(20, 31, 46, 0.96), rgba(16, 25, 37, 0.92));
+    }
+
+    .plan-card.primary {
+      border-color: rgba(41, 226, 122, 0.28);
+      background:
+        linear-gradient(90deg, rgba(41, 226, 122, 0.12), transparent 42%),
+        linear-gradient(180deg, rgba(20, 31, 46, 0.98), rgba(16, 25, 37, 0.94));
+    }
+
+    .plan-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .plan-copy small {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .plan-copy strong {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .plan-copy span {
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .plan-card em {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      color: var(--ink-1);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(255, 255, 255, 0.03);
+      font-style: normal;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .recent-card {
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(17, 26, 38, 0.78);
+    }
+
+    .recent-card strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .recent-card span {
+      color: var(--ink-2);
+      font-size: 13px;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 12px 18px 14px;
+      border-top: 1px solid var(--line);
+      background: rgba(8, 13, 20, 0.96);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-item {
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      min-height: 58px;
+      border-radius: 8px;
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+      background: rgba(41, 226, 122, 0.12);
+    }
+
+    .nav-item b {
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <header class="topbar">
+      <h1>健身计划</h1>
+      <p>推荐可直接开始，也可以自己选择今天练什么</p>
+    </header>
+
+    <section class="content">
+      <article class="next-card">
+        <span class="eyebrow">下一次训练</span>
+        <h2><span>Day 2</span>背 / 后束 / 二头</h2>
+        <p>根据最近一次训练：上次完成 Day 1 胸 / 肩 / 三头</p>
+        <div class="next-actions">
+          <button class="btn btn-primary">开始训练</button>
+          <button class="btn btn-secondary">调整选择</button>
+        </div>
+      </article>
+
+      <section>
+        <div class="section-title">
+          <h3>选择训练计划</h3>
+          <span>查看全部</span>
+        </div>
+        <div class="plan-list">
+          <article class="plan-card primary">
+            <div class="plan-copy">
+              <small>三分化完整计划</small>
+              <strong>凯圣王-谭成义</strong>
+              <span>Day 1 / Day 2 / Day 3 全部训练内容</span>
+            </div>
+            <em>›</em>
+          </article>
+          <article class="plan-card">
+            <div class="plan-copy">
+              <small>名师计划</small>
+              <strong>谭成义私教跟练</strong>
+              <span>4 天 · 按视频结构训练</span>
+            </div>
+            <em>›</em>
+          </article>
+          <article class="plan-card">
+            <div class="plan-copy">
+              <small>我的计划</small>
+              <strong>自定义训练库</strong>
+              <span>从动作库自由搭建</span>
+            </div>
+            <em>›</em>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">
+          <h3>最近记录</h3>
+          <span>查看全部 →</span>
+        </div>
+        <article class="recent-card">
+          <strong>Day 1 胸 / 肩 / 三头</strong>
+          <span>06/26 10:51 · 完成 25 组</span>
+        </article>
+      </section>
+    </section>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <div class="nav-item active"><b>⌂</b><span>计划</span></div>
+      <div class="nav-item"><b>○</b><span>动作库</span></div>
+      <div class="nav-item"><b>▤</b><span>历史</span></div>
+    </nav>
+  </main>
+</body>
+</html>
