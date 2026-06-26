@@ -54,7 +54,7 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存并重试' }));
 
     await waitFor(() => {
-      expect(sessionStorage.getItem('fitness-pwa.api-token.v1')).toBe('phone-secret');
+      expect(localStorage.getItem('fitness-pwa.api-token.v1')).toBe('phone-secret');
       expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
     });
   });

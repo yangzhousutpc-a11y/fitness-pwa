@@ -8,8 +8,9 @@ vi.stubGlobal('fetch', fetchMock);
 describe('database API client', () => {
   beforeEach(() => {
     fetchMock.mockReset();
+    localStorage.clear();
     sessionStorage.clear();
-    sessionStorage.setItem('fitness-pwa.api-token.v1', 'secret-token');
+    localStorage.setItem('fitness-pwa.api-token.v1', 'secret-token');
   });
 
   it('does not block local preview with an access-key prompt when no token is saved', async () => {
@@ -104,6 +105,7 @@ describe('database API client', () => {
 
     await expect(getWorkoutSessions()).rejects.toThrow('访问密钥无效，请重新输入');
 
+    expect(localStorage.getItem('fitness-pwa.api-token.v1')).toBeNull();
     expect(sessionStorage.getItem('fitness-pwa.api-token.v1')).toBeNull();
   });
 });

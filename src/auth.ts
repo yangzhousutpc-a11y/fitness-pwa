@@ -1,7 +1,7 @@
 export const apiTokenKey = 'fitness-pwa.api-token.v1';
 
 export function getApiToken(): string {
-  const savedToken = sessionStorage.getItem(apiTokenKey);
+  const savedToken = localStorage.getItem(apiTokenKey) ?? sessionStorage.getItem(apiTokenKey);
   if (savedToken) {
     return savedToken;
   }
@@ -10,9 +10,10 @@ export function getApiToken(): string {
 }
 
 export function setApiToken(token: string): void {
-  sessionStorage.setItem(apiTokenKey, token);
+  localStorage.setItem(apiTokenKey, token);
 }
 
 export function clearApiToken(): void {
+  localStorage.removeItem(apiTokenKey);
   sessionStorage.removeItem(apiTokenKey);
 }
