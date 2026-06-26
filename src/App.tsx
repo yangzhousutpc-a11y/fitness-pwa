@@ -45,6 +45,7 @@ function App() {
   const [syncStatus, setSyncStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [syncError, setSyncError] = useState('');
   const [apiTokenDraft, setApiTokenDraft] = useState('');
+  const [isWorkoutInputFocused, setIsWorkoutInputFocused] = useState(false);
   const [exerciseQuery, setExerciseQuery] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('全部');
 
@@ -95,6 +96,12 @@ function App() {
     route.name === 'workout' && selectedPlan ? selectedPlan.days.find((day) => day.id === route.dayId) : undefined;
   const header = getHeaderCopy(route, activeTab, selectedPlan, activeDay);
   const isWorkoutRoute = route.name === 'workout';
+
+  useEffect(() => {
+    if (!isWorkoutRoute) {
+      setIsWorkoutInputFocused(false);
+    }
+  }, [isWorkoutRoute]);
 
   function openBuiltinPlan(planId: string, expandedDayId?: string) {
     setActiveTab('plans');
@@ -193,7 +200,7 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={isWorkoutRoute && isWorkoutInputFocused ? 'app-shell input-focus-mode' : 'app-shell'}>
       <header className="topbar">
         <div>
           <h1>{header.title}</h1>
@@ -270,6 +277,7 @@ function App() {
           sessions={sessions}
           onChange={updateSession}
           onFinish={() => finishWorkout(route.session)}
+          onInputFocusChange={setIsWorkoutInputFocused}
         />
       ) : null}
 
@@ -1103,12 +1111,14 @@ function WorkoutView({
   sessions,
   onChange,
   onFinish,
+  onInputFocusChange,
 }: {
   plan: CoachPlan;
   session: WorkoutSession;
   sessions: WorkoutSession[];
   onChange: (session: WorkoutSession) => void;
   onFinish: () => void;
+  onInputFocusChange: (focused: boolean) => void;
 }) {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [addQuery, setAddQuery] = useState('');
@@ -1348,6 +1358,8 @@ function WorkoutView({
                   set={set}
                   lastSet={lastSetsByExercise[log.exerciseId]?.[setIndex]}
                   onChange={(patch) => updateSet(exerciseIndex, setIndex, patch)}
+                  onInputFocus={() => onInputFocusChange(true)}
+                  onInputBlur={() => onInputFocusChange(false)}
                 />
               ))}
             </div>
@@ -1520,10 +1532,14 @@ function SetRow({
   set,
   lastSet,
   onChange,
+  onInputFocus,
+  onInputBlur,
 }: {
   set: SetLog;
   lastSet?: { weight: number | null; reps: number | null };
   onChange: (patch: Partial<SetLog>) => void;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }) {
   // 窄输入框里占位文字要短：有历史就直接显示上次数值作参考，否则用单位提示。
   const weightHint = lastSet?.weight != null ? `${lastSet.weight}` : 'kg';
@@ -1550,6 +1566,8 @@ function SetRow({
           value={set.weight ?? ''}
           placeholder={weightHint}
           onChange={(event) => onChange({ weight: parseOptionalNumber(event.target.value) })}
+          onFocus={onInputFocus}
+          onBlur={onInputBlur}
         />
         <button type="button" onClick={() => stepWeight(2.5)} aria-label={`第 ${set.setNumber} 组重量加 2.5`}>＋</button>
       </div>
@@ -1561,6 +1579,8 @@ function SetRow({
           value={set.reps ?? ''}
           placeholder={repsHint}
           onChange={(event) => onChange({ reps: parseOptionalNumber(event.target.value) })}
+          onFocus={onInputFocus}
+          onBlur={onInputBlur}
         />
         <button type="button" onClick={() => stepReps(1)} aria-label={`第 ${set.setNumber} 组次数加 1`}>＋</button>
       </div>

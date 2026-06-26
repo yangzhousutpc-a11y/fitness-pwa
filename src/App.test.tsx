@@ -198,6 +198,24 @@ describe('fitness PWA user flows', () => {
     expect((screen.getByLabelText('第 2 组次数') as HTMLInputElement).value).toBe('10');
   });
 
+  it('uses compact workout input mode while editing set numbers', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    const shell = screen.getByRole('main');
+    const weightInput = screen.getByLabelText('第 1 组重量');
+
+    expect(shell).not.toHaveClass('input-focus-mode');
+
+    fireEvent.focus(weightInput);
+    expect(shell).toHaveClass('input-focus-mode');
+
+    fireEvent.blur(weightInput);
+    expect(shell).not.toHaveClass('input-focus-mode');
+  });
+
   it('steps weight by 2.5 and reps by 1 via plus buttons', () => {
     render(<App />);
 

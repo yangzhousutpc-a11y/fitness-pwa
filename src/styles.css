@@ -127,6 +127,28 @@ a {
   letter-spacing: 0.01em;
 }
 
+.app-shell.input-focus-mode .topbar {
+  min-height: 74px;
+  padding: max(18px, env(safe-area-inset-top)) 18px 10px;
+}
+
+.app-shell.input-focus-mode .topbar h1 {
+  max-width: 260px;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.app-shell.input-focus-mode .topbar p {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.app-shell.input-focus-mode .icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
 .sync-banner {
   margin: 12px 22px 0;
   padding: 10px 12px;
@@ -720,6 +742,37 @@ a {
   backdrop-filter: blur(16px);
 }
 
+.app-shell.input-focus-mode .workout-screen {
+  padding-bottom: 24px;
+}
+
+.app-shell.input-focus-mode .workout-summary {
+  margin: -16px -24px 10px;
+  padding: 10px 24px;
+}
+
+.app-shell.input-focus-mode .workout-summary .eyebrow {
+  margin-bottom: 4px;
+  font-size: 10px;
+}
+
+.app-shell.input-focus-mode .workout-summary h2 {
+  font-size: 24px;
+}
+
+.app-shell.input-focus-mode .finish-button {
+  min-width: 74px;
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.app-shell.input-focus-mode .workout-tools,
+.app-shell.input-focus-mode .coach-cue-card,
+.app-shell.input-focus-mode .bottom-nav {
+  display: none;
+}
+
 .finish-button {
   min-width: 86px;
 }
@@ -857,6 +910,13 @@ a {
   background: var(--surface-1);
   border-bottom: 1px solid var(--line);
   border-radius: var(--radius-m) var(--radius-m) 0 0;
+}
+
+.app-shell.input-focus-mode .exercise-log-card.active .exercise-heading {
+  top: 64px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .exercise-heading p {
