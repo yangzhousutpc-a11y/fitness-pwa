@@ -11,8 +11,10 @@ import {
 import {
   deleteCustomPlan as deleteCustomPlanFromApi,
   deleteWorkoutSession as deleteWorkoutSessionFromApi,
+  getCurrentPlanPreference,
   getCustomPlans,
   getWorkoutSessions,
+  saveCurrentPlanPreference,
   saveCustomPlan,
   saveWorkoutSession,
 } from './api';
@@ -49,6 +51,7 @@ function App() {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [customPlans, setCustomPlans] = useState<CoachPlan[]>([]);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [syncError, setSyncError] = useState('');
   const [apiTokenDraft, setApiTokenDraft] = useState('');
@@ -68,10 +71,11 @@ function App() {
   function loadDatabaseState() {
     setSyncStatus('loading');
     setSyncError('');
-    Promise.all([getCustomPlans(), getWorkoutSessions()])
-      .then(([nextCustomPlans, nextSessions]) => {
+    Promise.all([getCustomPlans(), getWorkoutSessions(), getCurrentPlanPreference()])
+      .then(([nextCustomPlans, nextSessions, nextPreference]) => {
         setCustomPlans(nextCustomPlans);
         setSessions(nextSessions);
+        setCurrentPlanId(nextPreference.planId);
         setSyncStatus('ready');
       })
       .catch(reportSyncError);
@@ -164,6 +168,15 @@ function App() {
     setRoute({ name: 'home' });
   }
 
+  function changeCurrentPlan(planId: string) {
+    const previousPlanId = currentPlanId;
+    setCurrentPlanId(planId);
+    saveCurrentPlanPreference(planId).catch((error) => {
+      setCurrentPlanId(previousPlanId);
+      reportSyncError(error);
+    });
+  }
+
   function deleteSession(sessionId: string) {
     const previousSessions = sessions;
     setSessions((current) => current.filter((item) => item.id !== sessionId));
@@ -242,6 +255,7 @@ function App() {
         <PlanHome
           builtinPlans={coachPlans}
           customPlanCount={customPlans.length}
+          currentPlanId={currentPlanId}
           sessions={sessions}
           customPlans={customPlans}
           onOpenPlan={(plan, expandedDayId) => {
@@ -252,6 +266,7 @@ function App() {
             openBuiltinPlan(plan.id, expandedDayId);
           }}
           onOpenCustomLibrary={openCustomLibrary}
+          onSetCurrentPlan={changeCurrentPlan}
           onOpenHistory={() => {
             setActiveTab('history');
             setRoute({ name: 'home' });
@@ -364,19 +379,23 @@ function SyncStatusBanner({
 function PlanHome({
   builtinPlans,
   customPlanCount,
+  currentPlanId,
   sessions,
   customPlans,
   onOpenPlan,
   onOpenCustomLibrary,
+  onSetCurrentPlan,
   onOpenHistory,
   onStartWorkout,
 }: {
   builtinPlans: CoachPlan[];
   customPlanCount: number;
+  currentPlanId: string | null;
   sessions: WorkoutSession[];
   customPlans: CoachPlan[];
   onOpenPlan: (plan: CoachPlan, expandedDayId?: string) => void;
   onOpenCustomLibrary: () => void;
+  onSetCurrentPlan: (planId: string) => void;
   onOpenHistory: () => void;
   onStartWorkout: (currentPlan: CoachPlan, day: TrainingDayTemplate) => void;
 }) {
@@ -386,14 +405,23 @@ function PlanHome({
   // 首页只放速览：PR 取前 3，看全部去历史页。
   const topRecords = personalRecords.slice(0, 3);
   const recommendedWorkout = useMemo(
-    () => getRecommendedWorkout(sessions, builtinPlans, customPlans),
-    [sessions, builtinPlans, customPlans],
+    () => getRecommendedWorkout(sessions, builtinPlans, customPlans, currentPlanId),
+    [sessions, builtinPlans, customPlans, currentPlanId],
   );
   const recommendedDayParts = recommendedWorkout ? splitDayTitle(recommendedWorkout.day.name) : null;
 
   return (
     <section className="screen with-nav home-screen">
-      {recommendedWorkout && recommendedDayParts ? (
+      {!recommendedWorkout || !recommendedDayParts ? (
+        <article className="primary-training-card current-plan-empty">
+          <span className="entry-eyebrow">选择当前跟练计划</span>
+          <h2>
+            <span>当前跟练</span>
+            未设置
+          </h2>
+          <p>先在下方选择一个名师计划设为当前跟练</p>
+        </article>
+      ) : recommendedWorkout && recommendedDayParts ? (
         <article className="primary-training-card">
           <span className="entry-eyebrow">下一次训练</span>
           <h2>
@@ -429,11 +457,8 @@ function PlanHome({
         </div>
         <div className="plan-choice-list">
           {builtinPlans.map((plan, index) => (
-            <button
-              type="button"
+            <article
               className={index === 0 ? 'plan-choice-card primary' : 'plan-choice-card'}
-              aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
-              onClick={() => onOpenPlan(plan, plan.days[0]?.id)}
               key={plan.id}
             >
               <span>
@@ -441,8 +466,27 @@ function PlanHome({
                 <strong>{index === 0 ? plan.coachName : plan.title}</strong>
                 <em>{index === 0 ? 'Day 1 / Day 2 / Day 3 全部训练内容' : `${plan.days.length} 天 · 按视频结构训练`}</em>
               </span>
-              <b>›</b>
-            </button>
+              <div className="plan-choice-actions">
+                {currentPlanId === plan.id ? <span className="current-plan-badge">当前跟练</span> : (
+                  <button
+                    type="button"
+                    className="set-current-plan-button"
+                    onClick={() => onSetCurrentPlan(plan.id)}
+                    aria-label={`设为当前跟练${plan.title}`}
+                  >
+                    设为当前
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="plan-choice-open"
+                  aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
+                  onClick={() => onOpenPlan(plan, plan.days[0]?.id)}
+                >
+                  ›
+                </button>
+              </div>
+            </article>
           ))}
 
           <button
@@ -1813,47 +1857,37 @@ function getRecommendedWorkout(
   sessions: WorkoutSession[],
   builtinPlans: CoachPlan[],
   customPlans: CoachPlan[],
+  currentPlanId: string | null,
 ): RecommendedWorkout | null {
-  const fallbackPlan = builtinPlans[0] ?? customPlans[0];
-  const fallbackDay = fallbackPlan?.days[0];
-
-  if (!fallbackPlan || !fallbackDay) {
+  if (!currentPlanId) {
     return null;
   }
 
-  const latest = [...sessions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  const currentPlan = [...builtinPlans, ...customPlans].find((plan) => plan.id === currentPlanId);
+  const fallbackDay = currentPlan?.days[0];
+
+  if (!currentPlan || !fallbackDay) {
+    return null;
+  }
+
+  const latest = sessions
+    .filter((session) => session.planId === currentPlan.id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+
   if (!latest) {
     return {
-      plan: fallbackPlan,
+      plan: currentPlan,
       day: fallbackDay,
-      reason: '还没有训练记录，从 Day 1 开始',
+      reason: `当前计划：${currentPlan.title}`,
     };
   }
 
-  const recentPlan = [...builtinPlans, ...customPlans].find((plan) => plan.id === latest.planId);
-  if (!recentPlan || recentPlan.days.length === 0) {
-    return {
-      plan: fallbackPlan,
-      day: fallbackDay,
-      reason: '根据最近一次训练安排下一次',
-    };
-  }
-
-  if (recentPlan.planType === 'custom') {
-    const recentDay = recentPlan.days.find((day) => day.id === latest.dayId) ?? recentPlan.days[0];
-    return {
-      plan: recentPlan,
-      day: recentDay,
-      reason: `继续最近的自定义计划：${recentPlan.title.trim() || recentDay.name}`,
-    };
-  }
-
-  const currentIndex = recentPlan.days.findIndex((day) => day.id === latest.dayId);
-  const recentDay = currentIndex >= 0 ? recentPlan.days[currentIndex] : undefined;
-  const nextDay = currentIndex >= 0 ? recentPlan.days[(currentIndex + 1) % recentPlan.days.length] : recentPlan.days[0];
+  const currentIndex = currentPlan.days.findIndex((day) => day.id === latest.dayId);
+  const recentDay = currentIndex >= 0 ? currentPlan.days[currentIndex] : undefined;
+  const nextDay = currentIndex >= 0 ? currentPlan.days[(currentIndex + 1) % currentPlan.days.length] : fallbackDay;
 
   return {
-    plan: recentPlan,
+    plan: currentPlan,
     day: nextDay,
     reason: recentDay ? `根据最近一次训练：上次完成 ${recentDay.name}` : '根据最近一次训练安排下一次',
   };

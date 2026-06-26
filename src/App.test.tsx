@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 const apiState = vi.hoisted(() => ({
+  currentPlanId: null as string | null,
   customPlans: [] as any[],
   loadError: null as Error | null,
   sessions: [] as any[],
@@ -16,6 +17,11 @@ vi.mock('./api', () => ({
       throw error;
     }
     return apiState.customPlans;
+  }),
+  getCurrentPlanPreference: vi.fn(async () => ({ planId: apiState.currentPlanId })),
+  saveCurrentPlanPreference: vi.fn(async (planId: string) => {
+    apiState.currentPlanId = planId;
+    return { planId };
   }),
   getWorkoutSessions: vi.fn(async () => apiState.sessions),
   saveCustomPlan: vi.fn(async (plan: any) => {
@@ -40,6 +46,7 @@ describe('fitness PWA user flows', () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    apiState.currentPlanId = null;
     apiState.customPlans = [];
     apiState.loadError = null;
     apiState.sessions = [];
@@ -433,6 +440,7 @@ describe('fitness PWA user flows', () => {
   });
 
   it('recommends the next workout while keeping the full plan entry available', async () => {
+    apiState.currentPlanId = 'kaishengwang-tanchengyi-three-day-split';
     apiState.sessions = [
       {
         id: 'session-1',
@@ -461,6 +469,39 @@ describe('fitness PWA user flows', () => {
 
     expect(screen.getByRole('heading', { name: '引体向上' })).toBeInTheDocument();
     expect(screen.getByText('0/30 组完成')).toBeInTheDocument();
+  });
+
+  it('requires a current follow plan before recommending and keeps recommendations inside that plan', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-1',
+        date: '2026-06-26T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [{ setNumber: 1, weight: 60, reps: 10, completed: true }],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    expect(await screen.findByText('选择当前跟练计划')).toBeInTheDocument();
+    expect(screen.getByText('先在下方选择一个名师计划设为当前跟练')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '设为当前跟练谭成义私教跟练' }));
+
+    await waitFor(() => {
+      expect(apiState.currentPlanId).toBe('tanchengyi-private-coaching-follow-along');
+      expect(screen.getByText('当前计划：谭成义私教跟练')).toBeInTheDocument();
+      expect(screen.getByText('Day 1')).toBeInTheDocument();
+      expect(screen.getByText('背部')).toBeInTheDocument();
+      expect(screen.queryByText('背 / 后束 / 二头')).not.toBeInTheDocument();
+    });
   });
 
   it('opens the Tan Chengyi private coaching plan and starts a workout from it', () => {

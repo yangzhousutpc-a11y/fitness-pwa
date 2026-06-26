@@ -110,6 +110,38 @@ describe('database API client', () => {
     );
   });
 
+  it('loads and saves the current follow plan preference', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ code: 0, data: { planId: null } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ code: 0, data: { planId: 'tanchengyi-private-coaching-follow-along' } }),
+      });
+    const { getCurrentPlanPreference, saveCurrentPlanPreference } = await import('./api');
+
+    await expect(getCurrentPlanPreference()).resolves.toEqual({ planId: null });
+    await expect(saveCurrentPlanPreference('tanchengyi-private-coaching-follow-along')).resolves.toEqual({
+      planId: 'tanchengyi-private-coaching-follow-along',
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/preferences/current-plan',
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer secret-token' }) }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/preferences/current-plan',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ planId: 'tanchengyi-private-coaching-follow-along' }),
+      }),
+    );
+  });
+
   it('clears the saved token when the API returns 401', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,

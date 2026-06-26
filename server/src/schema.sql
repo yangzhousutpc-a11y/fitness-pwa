@@ -61,3 +61,9 @@ CREATE TABLE IF NOT EXISTS workout_set_logs (
     FOREIGN KEY (exercise_log_id) REFERENCES workout_exercise_logs(id)
     ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS user_preferences (
+  preference_key VARCHAR(128) PRIMARY KEY,
+  preference_value TEXT NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

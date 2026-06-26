@@ -69,3 +69,14 @@ export function deleteWorkoutSession(sessionId: string): Promise<{ id: string }>
     method: 'DELETE',
   });
 }
+
+export function getCurrentPlanPreference(): Promise<{ planId: string | null }> {
+  return requestJson<{ planId: string | null }>('/api/preferences/current-plan');
+}
+
+export function saveCurrentPlanPreference(planId: string): Promise<{ planId: string }> {
+  return requestJson<{ planId: string }>('/api/preferences/current-plan', {
+    method: 'PUT',
+    body: JSON.stringify({ planId }),
+  });
+}

@@ -4,8 +4,10 @@ import path from 'node:path';
 import { requireApiToken } from './auth.js';
 import { pool } from './db.js';
 import { createCustomPlanRouter } from './routes/customPlans.js';
+import { createPreferenceRouter } from './routes/preferences.js';
 import { createWorkoutSessionRouter } from './routes/workoutSessions.js';
 import { createCustomPlanStore } from './stores/customPlanStore.js';
+import { createPreferenceStore } from './stores/preferenceStore.js';
 import { createWorkoutSessionStore } from './stores/workoutSessionStore.js';
 
 function getClientError(error) {
@@ -27,6 +29,7 @@ function getClientError(error) {
 export function createApp({
   apiToken = process.env.API_TOKEN,
   customPlanStore = createCustomPlanStore(pool),
+  preferenceStore = createPreferenceStore(pool),
   staticDir = process.env.STATIC_DIR,
   workoutSessionStore = createWorkoutSessionStore(pool),
 } = {}) {
@@ -41,6 +44,7 @@ export function createApp({
 
   app.use('/api', requireApiToken(apiToken));
   app.use('/api/custom-plans', createCustomPlanRouter(customPlanStore));
+  app.use('/api/preferences', createPreferenceRouter(preferenceStore));
   app.use('/api/workout-sessions', createWorkoutSessionRouter(workoutSessionStore));
   app.use('/api', (_req, res) => {
     res.status(404).json({ code: 1, message: 'Not Found' });

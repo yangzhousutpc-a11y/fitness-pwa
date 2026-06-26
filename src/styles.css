@@ -1914,6 +1914,10 @@ a {
   line-height: 1.45;
 }
 
+.current-plan-empty {
+  min-height: 186px;
+}
+
 .primary-training-actions {
   position: relative;
   z-index: 1;
@@ -2003,7 +2007,37 @@ a {
   line-height: 1.35;
 }
 
-.plan-choice-card b {
+.plan-choice-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.current-plan-badge,
+.set-current-plan-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.current-plan-badge {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.set-current-plan-button {
+  border: 1px solid rgba(43, 214, 106, 0.24);
+  color: var(--accent);
+  background: rgba(43, 214, 106, 0.08);
+}
+
+.plan-choice-open {
   display: grid;
   place-items: center;
   width: 42px;

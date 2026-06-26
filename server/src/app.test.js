@@ -43,6 +43,7 @@ const sampleSession = {
 function createMemoryStores() {
   const plans = new Map();
   const sessions = new Map();
+  let currentPlanId = null;
 
   return {
     customPlanStore: {
@@ -63,6 +64,13 @@ function createMemoryStores() {
       },
       remove: async (id) => {
         sessions.delete(id);
+      },
+    },
+    preferenceStore: {
+      getCurrentPlanId: async () => currentPlanId,
+      setCurrentPlanId: async (planId) => {
+        currentPlanId = planId;
+        return currentPlanId;
       },
     },
   };
@@ -115,6 +123,23 @@ test('workout sessions can be deleted through the API', async () => {
 
   assert.deepEqual(deleteResponse.body, { code: 0, data: { id: 'session-1' } });
   assert.deepEqual(listResponse.body, { code: 0, data: [] });
+});
+
+test('current follow plan preference round-trips through the API', async () => {
+  const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
+  const auth = { Authorization: 'Bearer secret-token' };
+
+  const initialResponse = await request(app).get('/api/preferences/current-plan').set(auth).expect(200);
+  const saveResponse = await request(app)
+    .put('/api/preferences/current-plan')
+    .set(auth)
+    .send({ planId: 'tanchengyi-private-coaching-follow-along' })
+    .expect(200);
+  const nextResponse = await request(app).get('/api/preferences/current-plan').set(auth).expect(200);
+
+  assert.deepEqual(initialResponse.body, { code: 0, data: { planId: null } });
+  assert.deepEqual(saveResponse.body, { code: 0, data: { planId: 'tanchengyi-private-coaching-follow-along' } });
+  assert.deepEqual(nextResponse.body, { code: 0, data: { planId: 'tanchengyi-private-coaching-follow-along' } });
 });
 
 test('serves the built frontend shell when a static directory is configured', async () => {
