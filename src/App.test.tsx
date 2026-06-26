@@ -198,6 +198,24 @@ describe('fitness PWA user flows', () => {
     // 勾完第 1 组 → 第 2 组重量/次数自动带入（此前为空）
     expect((screen.getByLabelText('第 2 组重量') as HTMLInputElement).value).toBe('60');
     expect((screen.getByLabelText('第 2 组次数') as HTMLInputElement).value).toBe('10');
+    expect(screen.getByLabelText('第 1 组重量').closest('.set-row')).toHaveClass('completed');
+    expect(screen.getByLabelText('第 2 组重量').closest('.set-row')).toHaveClass('active');
+    expect(screen.getByText('休息后录 杠铃卧推 · 第 2 组')).toBeInTheDocument();
+  });
+
+  it('moves the active target to the next exercise after the last set is completed', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    for (const setNumber of [1, 2, 3, 4, 5]) {
+      fireEvent.click(screen.getByLabelText(`切换第 ${setNumber} 组完成状态`));
+    }
+
+    expect(screen.getByText('休息后录 上斜哑铃卧推 · 第 1 组')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('第 1 组重量')).toHaveLength(2);
+    expect(screen.getAllByLabelText('第 1 组重量')[1].closest('.set-row')).toHaveClass('active');
   });
 
   it('uses compact workout input mode while editing set numbers', () => {

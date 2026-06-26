@@ -30,6 +30,7 @@ type CalendarDay = {
   inCurrentMonth: boolean;
   sessions: WorkoutSession[];
 };
+type SetTarget = { exerciseId: string; setNumber: number };
 type Route =
   | { name: 'home' }
   | { name: 'custom-library' }
@@ -1120,6 +1121,7 @@ function WorkoutView({
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [addQuery, setAddQuery] = useState('');
   const [addFilter, setAddFilter] = useState<ExerciseFilter>('全部');
+  const [activeSetTarget, setActiveSetTarget] = useState<SetTarget | null>(null);
   const [restSeconds, setRestSeconds] = useState<number | null>(null);
   // 训练页动作卡片各自独立展开/折叠；进入时默认只展开第一个动作。
   const [expandedExerciseIds, setExpandedExerciseIds] = useState<Set<string>>(
@@ -1151,10 +1153,49 @@ function WorkoutView({
   const totalSets = session.exerciseLogs.flatMap((log) => log.sets).length;
   const addResults = useMemo(() => filterExercises(addQuery, addFilter), [addFilter, addQuery]);
   const existingExerciseIds = new Set(session.exerciseLogs.map((log) => log.exerciseId));
+  const activeSetLabel = activeSetTarget
+    ? `${getExerciseById(activeSetTarget.exerciseId)?.name ?? activeSetTarget.exerciseId} · 第 ${activeSetTarget.setNumber} 组`
+    : undefined;
+
+  function findNextSetTarget(exerciseIndex: number, setIndex: number): SetTarget | null {
+    const currentLog = session.exerciseLogs[exerciseIndex];
+    const nextSameExerciseSet = currentLog?.sets.slice(setIndex + 1).find((set) => !set.completed);
+    if (currentLog && nextSameExerciseSet) {
+      return { exerciseId: currentLog.exerciseId, setNumber: nextSameExerciseSet.setNumber };
+    }
+
+    for (const log of session.exerciseLogs.slice(exerciseIndex + 1)) {
+      const nextSet = log.sets.find((set) => !set.completed);
+      if (nextSet) {
+        return { exerciseId: log.exerciseId, setNumber: nextSet.setNumber };
+      }
+    }
+
+    return null;
+  }
+
+  useEffect(() => {
+    if (!activeSetTarget) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const target = document.querySelector<HTMLElement>(
+        `[data-exercise-id="${activeSetTarget.exerciseId}"][data-set-number="${activeSetTarget.setNumber}"]`,
+      );
+      if (target && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSetTarget]);
 
   function updateSet(exerciseIndex: number, setIndex: number, patch: Partial<SetLog>) {
-    const previousSet = session.exerciseLogs[exerciseIndex]?.sets[setIndex];
+    const currentLog = session.exerciseLogs[exerciseIndex];
+    const previousSet = currentLog?.sets[setIndex];
     const justCompleted = patch.completed === true && previousSet && !previousSet.completed;
+    const nextTarget = justCompleted ? findNextSetTarget(exerciseIndex, setIndex) : null;
 
     const nextLogs = session.exerciseLogs.map((log, currentExerciseIndex) => {
       if (currentExerciseIndex !== exerciseIndex) {
@@ -1186,6 +1227,10 @@ function WorkoutView({
     // 从「未完成」切到「完成」时启动组间休息计时。
     if (justCompleted) {
       setRestSeconds(90);
+      setActiveSetTarget(nextTarget);
+      if (nextTarget) {
+        setExpandedExerciseIds((current) => new Set(current).add(nextTarget.exerciseId));
+      }
     }
 
     onChange({ ...session, exerciseLogs: nextLogs });
@@ -1247,7 +1292,8 @@ function WorkoutView({
     setIsAddingExercise(false);
   }
 
-  function focusSetInput(target: HTMLInputElement) {
+  function focusSetInput(target: HTMLInputElement, nextTarget: SetTarget) {
+    setActiveSetTarget(nextTarget);
     onInputFocusChange(true);
     window.requestAnimationFrame(() => {
       const stepper = target.closest('.stepper');
@@ -1272,7 +1318,7 @@ function WorkoutView({
       </div>
 
       {restSeconds !== null ? (
-        <RestTimer initialSeconds={restSeconds} onClose={() => setRestSeconds(null)} />
+        <RestTimer initialSeconds={restSeconds} nextSetLabel={activeSetLabel} onClose={() => setRestSeconds(null)} />
       ) : null}
 
       <div className="workout-tools">
@@ -1352,45 +1398,51 @@ function WorkoutView({
 
             {isExpanded ? (
               <div className="exercise-log-body">
-            {coachNote ? <CoachCueCard note={coachNote} /> : null}
+                {coachNote ? <CoachCueCard note={coachNote} /> : null}
 
-            <div className="set-grid">
-              <span>组</span>
-              <span>重量</span>
-              <span>次数</span>
-              <span>完成</span>
-              {log.sets.map((set, setIndex) => (
-                <SetRow
-                  key={set.setNumber}
-                  set={set}
-                  lastSet={lastSetsByExercise[log.exerciseId]?.[setIndex]}
-                  onChange={(patch) => updateSet(exerciseIndex, setIndex, patch)}
-                  onInputFocus={focusSetInput}
-                  onInputBlur={() => onInputFocusChange(false)}
+                <div className="set-grid">
+                  <div className="set-grid-header">
+                    <span>组</span>
+                    <span>重量</span>
+                    <span>次数</span>
+                    <span>完成</span>
+                  </div>
+                  {log.sets.map((set, setIndex) => (
+                    <SetRow
+                      key={set.setNumber}
+                      exerciseId={log.exerciseId}
+                      isActive={
+                        activeSetTarget?.exerciseId === log.exerciseId && activeSetTarget.setNumber === set.setNumber
+                      }
+                      set={set}
+                      lastSet={lastSetsByExercise[log.exerciseId]?.[setIndex]}
+                      onChange={(patch) => updateSet(exerciseIndex, setIndex, patch)}
+                      onInputFocus={(target) => focusSetInput(target, { exerciseId: log.exerciseId, setNumber: set.setNumber })}
+                      onInputBlur={() => onInputFocusChange(false)}
+                    />
+                  ))}
+                </div>
+
+                <div className="set-actions">
+                  <button type="button" onClick={() => addSet(exerciseIndex)} aria-label={`给${exerciseName}增加一组`}>
+                    + 组
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeLastSet(exerciseIndex)}
+                    disabled={log.sets.length <= 1}
+                    aria-label={`删除${exerciseName}最后一组`}
+                  >
+                    - 组
+                  </button>
+                </div>
+
+                <textarea
+                  value={log.note}
+                  onChange={(event) => updateNote(exerciseIndex, event.target.value)}
+                  placeholder="备注"
+                  rows={2}
                 />
-              ))}
-            </div>
-
-            <div className="set-actions">
-              <button type="button" onClick={() => addSet(exerciseIndex)} aria-label={`给${exerciseName}增加一组`}>
-                + 组
-              </button>
-              <button
-                type="button"
-                onClick={() => removeLastSet(exerciseIndex)}
-                disabled={log.sets.length <= 1}
-                aria-label={`删除${exerciseName}最后一组`}
-              >
-                - 组
-              </button>
-            </div>
-
-            <textarea
-              value={log.note}
-              onChange={(event) => updateNote(exerciseIndex, event.target.value)}
-              placeholder="备注"
-              rows={2}
-            />
               </div>
             ) : null}
           </article>
@@ -1466,7 +1518,15 @@ function playBeep() {
   }
 }
 
-function RestTimer({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) {
+function RestTimer({
+  initialSeconds,
+  nextSetLabel,
+  onClose,
+}: {
+  initialSeconds: number;
+  nextSetLabel?: string;
+  onClose: () => void;
+}) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [running, setRunning] = useState(true);
   const doneRef = useRef(false);
@@ -1511,7 +1571,9 @@ function RestTimer({ initialSeconds, onClose }: { initialSeconds: number; onClos
     <div className={seconds === 0 ? 'rest-timer done' : 'rest-timer'} role="timer" aria-label="组间休息计时器">
       <div className="rest-timer-display">
         <span className="rest-timer-time">{mm}:{ss}</span>
-        <span className="rest-timer-hint">{seconds === 0 ? '休息结束' : '组间休息'}</span>
+        <span className="rest-timer-hint">
+          {seconds === 0 ? `继续${nextSetLabel ? ` ${nextSetLabel}` : ''}` : nextSetLabel ? `休息后录 ${nextSetLabel}` : '组间休息'}
+        </span>
       </div>
       <div className="rest-timer-controls">
         <button type="button" onClick={() => adjust(-15)} aria-label="减少 15 秒">-15s</button>
@@ -1528,12 +1590,16 @@ function RestTimer({ initialSeconds, onClose }: { initialSeconds: number; onClos
 }
 
 function SetRow({
+  exerciseId,
+  isActive,
   set,
   lastSet,
   onChange,
   onInputFocus,
   onInputBlur,
 }: {
+  exerciseId: string;
+  isActive: boolean;
   set: SetLog;
   lastSet?: { weight: number | null; reps: number | null };
   onChange: (patch: Partial<SetLog>) => void;
@@ -1555,7 +1621,11 @@ function SetRow({
   }
 
   return (
-    <>
+    <div
+      className={set.completed ? 'set-row completed' : isActive ? 'set-row active' : 'set-row'}
+      data-exercise-id={exerciseId}
+      data-set-number={set.setNumber}
+    >
       <strong>{set.setNumber}</strong>
       <div className="stepper">
         <button type="button" onClick={() => stepWeight(-2.5)} aria-label={`第 ${set.setNumber} 组重量减 2.5`}>−</button>
@@ -1591,7 +1661,7 @@ function SetRow({
       >
         {set.completed ? '✓' : '○'}
       </button>
-    </>
+    </div>
   );
 }
 
