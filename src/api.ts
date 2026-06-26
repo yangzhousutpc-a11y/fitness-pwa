@@ -7,7 +7,7 @@ type ApiResponse<T> = {
   message?: string;
 };
 
-const defaultApiBaseUrl = 'http://localhost:3000';
+const defaultApiBaseUrl = '';
 
 function getApiBaseUrl(): string {
   return (import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl).replace(/\/$/, '');

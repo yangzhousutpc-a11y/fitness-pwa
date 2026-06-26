@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import request from 'supertest';
 import { createApp } from './app.js';
@@ -95,4 +98,19 @@ test('workout sessions round-trip through the API using the current frontend sha
   const response = await request(app).get('/api/workout-sessions').set(auth).expect(200);
 
   assert.deepEqual(response.body, { code: 0, data: [sampleSession] });
+});
+
+test('serves the built frontend shell when a static directory is configured', async () => {
+  const staticDir = await mkdtemp(path.join(tmpdir(), 'fitness-pwa-static-'));
+
+  try {
+    await writeFile(path.join(staticDir, 'index.html'), '<!doctype html><title>Fitness PWA</title>');
+    const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token', staticDir });
+
+    const response = await request(app).get('/workout/today').expect(200);
+
+    assert.equal(response.text, '<!doctype html><title>Fitness PWA</title>');
+  } finally {
+    await rm(staticDir, { recursive: true, force: true });
+  }
 });

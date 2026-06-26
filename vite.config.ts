@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
+declare const process: { env: Record<string, string | undefined> };
+
 export default defineConfig({
-  // GitHub Pages 子路径部署：站点根为 /fitness-pwa/
-  base: '/fitness-pwa/',
+  base: process.env.VITE_BASE_PATH ?? '/fitness-pwa/',
   plugins: [react()],
   test: {
     environment: 'jsdom',

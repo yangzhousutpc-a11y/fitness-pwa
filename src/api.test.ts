@@ -55,7 +55,7 @@ describe('database API client', () => {
     await expect(getCustomPlans()).resolves.toEqual([plan]);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/api/custom-plans',
+      '/api/custom-plans',
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: 'Bearer secret-token' }),
       }),
@@ -85,7 +85,7 @@ describe('database API client', () => {
     await expect(saveWorkoutSession(session)).resolves.toEqual(session);
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/api/workout-sessions',
+      '/api/workout-sessions',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(session),
