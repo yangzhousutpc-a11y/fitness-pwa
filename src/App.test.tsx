@@ -85,6 +85,53 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByText('杠铃卧推')).not.toBeInTheDocument();
   });
 
+  it('opens an exercise profile with personal records from workout history', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-bench',
+        date: '2026-06-26T08:00:00.000Z',
+        planId: 'split-3-day',
+        dayId: 'day-1',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [
+              { setNumber: 1, weight: 60, reps: 10, completed: true },
+              { setNumber: 2, weight: 65, reps: 8, completed: true },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '◉动作库' }));
+    expect(await screen.findByText('最近 65kg × 8')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '打开杠铃卧推动作详情' }));
+
+    expect(screen.getByRole('heading', { name: '杠铃卧推', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('我的表现')).toBeInTheDocument();
+    expect(screen.getByText('65kg')).toBeInTheDocument();
+    expect(screen.getByText('10次')).toBeInTheDocument();
+    expect(screen.getAllByText('1,120kg').length).toBeGreaterThan(0);
+    expect(screen.getByText('最近 5 次')).toBeInTheDocument();
+  });
+
+  it('uses action-specific generated images instead of a generic placeholder', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '◉动作库' }));
+    fireEvent.change(screen.getByPlaceholderText('⌕ 搜索动作'), { target: { value: '俯卧撑' } });
+    fireEvent.click(await screen.findByRole('button', { name: '打开俯卧撑动作详情' }));
+
+    const image = screen.getByAltText('俯卧撑动作插图') as HTMLImageElement;
+    expect(image.src).toContain('/coach-shots/push-up-cue.jpg');
+    expect(image.src).not.toContain('action-profile-hero');
+  });
+
+
   it('shows a daily fitness quote on the plan home header', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-26T08:00:00+08:00'));
@@ -314,16 +361,17 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
   });
 
-  it('shows personal records and weekly overview in history after a workout', () => {
+  it('shows personal records and weekly recap in history after a workout', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     fireEvent.change(screen.getAllByLabelText('第 1 组重量')[0], { target: { value: '60' } });
     fireEvent.change(screen.getAllByLabelText('第 1 组次数')[0], { target: { value: '10' } });
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
     fireEvent.click(screen.getByRole('button', { name: '完成' }));
 
-    expect(screen.getByText('本周概览')).toBeInTheDocument();
+    expect(screen.getByText('本周复盘')).toBeInTheDocument();
     expect(screen.getByText('个人最好成绩')).toBeInTheDocument();
     expect(screen.getByText('动作进度')).toBeInTheDocument();
     // 杠铃卧推 60kg 应作为 PR 出现

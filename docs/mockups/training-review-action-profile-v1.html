@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>训练复盘与动作档案 UI 方案</title>
+    <style>
+      :root {
+        --bg-0: #05070d;
+        --bg-1: #0b1018;
+        --surface-1: #121a26;
+        --surface-2: #182433;
+        --line: rgba(148, 163, 184, 0.16);
+        --line-strong: rgba(148, 163, 184, 0.28);
+        --ink-1: #f4f7fb;
+        --ink-2: #9aa7b8;
+        --ink-3: #66748a;
+        --accent: #2bd66a;
+        --accent-strong: #14b85a;
+        --accent-soft: rgba(43, 214, 106, 0.14);
+        --accent-ink: #062712;
+        --warm: #f2c86b;
+        --blue: #79a9ff;
+        --radius-s: 12px;
+        --radius-m: 16px;
+        --radius-l: 22px;
+        --font-body:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        --font-num: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 50% -10%, rgba(43, 214, 106, 0.18), transparent 34%),
+          linear-gradient(180deg, #071018 0%, #02040a 100%);
+        color: var(--ink-1);
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .board {
+        width: 1320px;
+        min-height: 920px;
+        margin: 0 auto;
+        padding: 32px 28px;
+      }
+
+      .board-title {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin: 0 0 22px;
+      }
+
+      .board-title h1,
+      .board-title p {
+        margin: 0;
+      }
+
+      .board-title h1 {
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .board-title p {
+        color: var(--ink-2);
+        font-size: 13px;
+      }
+
+      .screens {
+        display: grid;
+        grid-template-columns: repeat(3, 390px);
+        gap: 36px;
+        align-items: start;
+      }
+
+      .phone {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 36px;
+        background:
+          radial-gradient(120% 58% at 50% -10%, rgba(43, 214, 106, 0.14), transparent 58%),
+          var(--bg-1);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 34px;
+        padding: 11px 22px 0;
+        color: rgba(244, 247, 251, 0.88);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .signal {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.85;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 30px 22px 17px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(11, 16, 24, 0.98), rgba(11, 16, 24, 0.76));
+      }
+
+      .topbar h2,
+      .topbar p {
+        margin: 0;
+      }
+
+      .topbar h2 {
+        font-size: 31px;
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .topbar p {
+        margin-top: 10px;
+        color: var(--ink-2);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .back {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: rgba(30, 41, 59, 0.86);
+        color: var(--ink-1);
+        font-size: 25px;
+        font-weight: 700;
+      }
+
+      .screen {
+        height: calc(100% - 34px - 130px - 78px);
+        overflow: hidden;
+        padding: 17px 22px 22px;
+      }
+
+      .screen.detail {
+        height: calc(100% - 34px - 130px);
+        padding-bottom: 26px;
+      }
+
+      .section {
+        margin-bottom: 18px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .section-title h3 {
+        margin: 0;
+        font-size: 15px;
+        letter-spacing: 0;
+      }
+
+      .section-title span {
+        color: var(--ink-3);
+        font-size: 12px;
+      }
+
+      .recap {
+        border: 1px solid rgba(43, 214, 106, 0.34);
+        border-radius: var(--radius-l);
+        background:
+          linear-gradient(120deg, rgba(43, 214, 106, 0.16), rgba(18, 26, 38, 0.94) 45%),
+          var(--surface-1);
+        padding: 18px;
+      }
+
+      .recap-main {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+      }
+
+      .big-number {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+      }
+
+      .big-number strong {
+        font-family: var(--font-num);
+        font-size: 42px;
+        line-height: 0.9;
+      }
+
+      .big-number span {
+        color: var(--ink-2);
+        font-size: 13px;
+      }
+
+      .volume {
+        text-align: right;
+      }
+
+      .volume strong {
+        display: block;
+        font-family: var(--font-num);
+        font-size: 24px;
+      }
+
+      .volume span {
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 13px;
+      }
+
+      .metric {
+        min-height: 58px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 14px;
+        padding: 10px 9px;
+        background: rgba(5, 7, 13, 0.28);
+      }
+
+      .metric strong {
+        display: block;
+        font-family: var(--font-num);
+        font-size: 18px;
+      }
+
+      .metric span {
+        color: var(--ink-3);
+        font-size: 11px;
+      }
+
+      .calendar-strip {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 7px;
+      }
+
+      .day {
+        height: 54px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 14px;
+        background: rgba(18, 26, 38, 0.74);
+        color: var(--ink-3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 11px;
+      }
+
+      .day.done {
+        border-color: rgba(43, 214, 106, 0.34);
+        background: rgba(43, 214, 106, 0.13);
+        color: var(--ink-1);
+      }
+
+      .day i {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.5;
+      }
+
+      .history-card,
+      .exercise-card,
+      .profile-card,
+      .trend-row {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: rgba(18, 26, 38, 0.78);
+      }
+
+      .history-card {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 13px 14px;
+        margin-bottom: 10px;
+      }
+
+      .date-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(43, 214, 106, 0.12);
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+        font-family: var(--font-num);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .history-card h4,
+      .history-card p,
+      .exercise-card h4,
+      .exercise-card p,
+      .profile-card h4,
+      .profile-card p {
+        margin: 0;
+      }
+
+      .history-card h4,
+      .exercise-card h4 {
+        font-size: 16px;
+      }
+
+      .history-card p,
+      .exercise-card p,
+      .profile-card p {
+        margin-top: 4px;
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: rgba(43, 214, 106, 0.12);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .filters {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .filter {
+        height: 33px;
+        padding: 0 13px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 999px;
+        color: var(--ink-2);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+      }
+
+      .filter.active {
+        border-color: rgba(43, 214, 106, 0.44);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .exercise-card {
+        display: grid;
+        grid-template-columns: 54px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 13px;
+        margin-bottom: 11px;
+      }
+
+      .thumb {
+        width: 54px;
+        height: 54px;
+        border-radius: 15px;
+        object-fit: cover;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+      }
+
+      .record-line {
+        margin-top: 8px;
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        height: 23px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: rgba(5, 7, 13, 0.3);
+        color: var(--ink-2);
+        font-family: var(--font-num);
+        font-size: 11px;
+      }
+
+      .pill.best {
+        background: rgba(242, 200, 107, 0.13);
+        color: var(--warm);
+      }
+
+      .chev {
+        color: var(--ink-3);
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .hero-image {
+        position: relative;
+        height: 176px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: #05070d;
+      }
+
+      .hero-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.86;
+      }
+
+      .hero-image::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 30%, rgba(5, 7, 13, 0.88));
+      }
+
+      .hero-caption {
+        position: absolute;
+        left: 15px;
+        right: 15px;
+        bottom: 14px;
+        z-index: 1;
+      }
+
+      .hero-caption h3,
+      .hero-caption p {
+        margin: 0;
+      }
+
+      .hero-caption h3 {
+        font-size: 24px;
+      }
+
+      .hero-caption p {
+        margin-top: 5px;
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+
+      .profile-card {
+        padding: 15px;
+      }
+
+      .pr-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 13px;
+      }
+
+      .pr {
+        min-height: 64px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 15px;
+        padding: 10px;
+        background: rgba(5, 7, 13, 0.32);
+      }
+
+      .pr strong {
+        display: block;
+        color: var(--ink-1);
+        font-family: var(--font-num);
+        font-size: 22px;
+      }
+
+      .pr span {
+        color: var(--ink-3);
+        font-size: 11px;
+      }
+
+      .trend-row {
+        display: grid;
+        grid-template-columns: 46px 1fr 62px;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 12px;
+        margin-bottom: 8px;
+      }
+
+      .trend-date {
+        color: var(--ink-2);
+        font-family: var(--font-num);
+        font-size: 12px;
+      }
+
+      .trend-main strong {
+        display: block;
+        font-family: var(--font-num);
+        font-size: 14px;
+      }
+
+      .trend-main span {
+        display: block;
+        margin-top: 5px;
+        width: var(--bar);
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), rgba(43, 214, 106, 0.14));
+      }
+
+      .trend-volume {
+        color: var(--ink-2);
+        font-family: var(--font-num);
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .tips {
+        display: grid;
+        gap: 8px;
+      }
+
+      .tip {
+        border-left: 3px solid rgba(43, 214, 106, 0.72);
+        border-radius: 11px;
+        background: rgba(18, 26, 38, 0.72);
+        padding: 10px 11px;
+        color: var(--ink-2);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .tabbar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        height: 78px;
+        padding: 9px 18px 12px;
+        border-top: 1px solid var(--line);
+        background: rgba(8, 13, 20, 0.96);
+        backdrop-filter: blur(18px);
+      }
+
+      .tab {
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        color: var(--ink-2);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tab.active {
+        background: rgba(43, 214, 106, 0.14);
+        color: var(--accent);
+      }
+
+      .phone:nth-child(3) .section {
+        margin-bottom: 12px;
+      }
+
+      .phone:nth-child(3) .hero-image {
+        height: 140px;
+      }
+
+      .phone:nth-child(3) .profile-card {
+        padding: 12px;
+      }
+
+      .phone:nth-child(3) .pr-grid {
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .phone:nth-child(3) .pr {
+        min-height: 54px;
+        padding: 8px;
+      }
+
+      .phone:nth-child(3) .pr strong {
+        font-size: 20px;
+      }
+
+      .phone:nth-child(3) .trend-row {
+        padding: 8px 10px;
+        margin-bottom: 7px;
+      }
+
+      .phone:nth-child(3) .tip {
+        padding: 8px 10px;
+        line-height: 1.35;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board">
+      <div class="board-title">
+        <div>
+          <h1>训练复盘与动作档案 UI 方向</h1>
+          <p>个人自用版本：减少报表感，强调“最近练了什么、动作有没有进步、下一次怎么练”。</p>
+        </div>
+        <p>390 × 844 手机稿 · 深色健身房黑绿风格</p>
+      </div>
+
+      <section class="screens" aria-label="三张手机界面设计稿">
+        <article class="phone">
+          <div class="status"><span>10:55</span><span class="signal"><i class="dot"></i><i class="dot"></i><i class="dot"></i>77%</span></div>
+          <header class="topbar">
+            <div>
+              <h2>力量日记</h2>
+              <p>今天的训练，会成为下次加重的底气</p>
+            </div>
+          </header>
+          <div class="screen">
+            <section class="section">
+              <div class="section-title">
+                <h3>本周复盘</h3>
+                <span>06/22 - 06/28</span>
+              </div>
+              <div class="recap">
+                <div class="recap-main">
+                  <div>
+                    <div class="big-number"><strong>3</strong><span>次训练</span></div>
+                    <p style="margin: 8px 0 0; color: var(--ink-2); font-size: 12px">最近一次：胸 / 肩 / 三头</p>
+                  </div>
+                  <div class="volume">
+                    <strong>12,450</strong>
+                    <span>kg 总容量</span>
+                  </div>
+                </div>
+                <div class="metric-grid">
+                  <div class="metric"><strong>68</strong><span>完成组</span></div>
+                  <div class="metric"><strong>5</strong><span>训练动作</span></div>
+                  <div class="metric"><strong>+8%</strong><span>较上周</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>训练节奏</h3>
+                <span>只显示完成日</span>
+              </div>
+              <div class="calendar-strip">
+                <div class="day done">一<i></i></div>
+                <div class="day">二<i></i></div>
+                <div class="day done">三<i></i></div>
+                <div class="day">四<i></i></div>
+                <div class="day done">五<i></i></div>
+                <div class="day">六<i></i></div>
+                <div class="day">日<i></i></div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>最近训练</h3>
+                <span>进入详情</span>
+              </div>
+              <div class="history-card">
+                <div class="date-badge">06<br />26</div>
+                <div><h4>Day 1 胸 / 肩 / 三头</h4><p>25 组 · 5 个动作 · 4,380kg</p></div>
+                <span class="tag">已完成</span>
+              </div>
+              <div class="history-card">
+                <div class="date-badge">06<br />24</div>
+                <div><h4>Day 2 背 / 二头</h4><p>22 组 · 5 个动作 · 3,920kg</p></div>
+                <span class="chev">›</span>
+              </div>
+            </section>
+          </div>
+          <nav class="tabbar">
+            <div class="tab">计划</div>
+            <div class="tab">动作库</div>
+            <div class="tab active">历史</div>
+          </nav>
+        </article>
+
+        <article class="phone">
+          <div class="status"><span>10:55</span><span class="signal"><i class="dot"></i><i class="dot"></i><i class="dot"></i>77%</span></div>
+          <header class="topbar">
+            <div>
+              <h2>动作档案</h2>
+              <p>每个动作，都留下自己的训练轨迹</p>
+            </div>
+          </header>
+          <div class="screen">
+            <div class="filters">
+              <div class="filter active">全部</div>
+              <div class="filter">胸</div>
+              <div class="filter">背</div>
+              <div class="filter">腿</div>
+              <div class="filter">肩</div>
+            </div>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>最近练过</h3>
+                <span>按训练时间</span>
+              </div>
+              <div class="exercise-card">
+                <img class="thumb" src="../../public/coach-shots/bench.jpg" alt="" />
+                <div>
+                  <h4>杠铃卧推</h4>
+                  <p>胸 / 三头 / 肩 · 杠铃</p>
+                  <div class="record-line">
+                    <span class="pill">最近 60kg × 8</span>
+                    <span class="pill best">最佳 70kg × 5</span>
+                  </div>
+                </div>
+                <span class="chev">›</span>
+              </div>
+
+              <div class="exercise-card">
+                <img class="thumb" src="../../public/coach-shots/lat-pulldown.jpg" alt="" />
+                <div>
+                  <h4>高位下拉</h4>
+                  <p>背 / 二头 · 器械</p>
+                  <div class="record-line">
+                    <span class="pill">最近 55kg × 10</span>
+                    <span class="pill best">最佳 60kg × 8</span>
+                  </div>
+                </div>
+                <span class="chev">›</span>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>胸部动作</h3>
+                <span>训练资料 + 我的记录</span>
+              </div>
+              <div class="exercise-card">
+                <img class="thumb" src="../../public/coach-shots/incline.jpg" alt="" />
+                <div>
+                  <h4>上斜哑铃卧推</h4>
+                  <p>胸 / 肩 / 三头 · 哑铃</p>
+                  <div class="record-line"><span class="pill">暂无训练记录</span></div>
+                </div>
+                <span class="chev">›</span>
+              </div>
+              <div class="exercise-card">
+                <img class="thumb" src="../../public/coach-shots/dumbbell-fly-cue.jpg" alt="" />
+                <div>
+                  <h4>哑铃飞鸟</h4>
+                  <p>胸 · 哑铃</p>
+                  <div class="record-line"><span class="pill">最近 12.5kg × 12</span></div>
+                </div>
+                <span class="chev">›</span>
+              </div>
+            </section>
+          </div>
+          <nav class="tabbar">
+            <div class="tab">计划</div>
+            <div class="tab active">动作库</div>
+            <div class="tab">历史</div>
+          </nav>
+        </article>
+
+        <article class="phone">
+          <div class="status"><span>10:55</span><span class="signal"><i class="dot"></i><i class="dot"></i><i class="dot"></i>77%</span></div>
+          <header class="topbar">
+            <div>
+              <h2>杠铃卧推</h2>
+              <p>胸 / 三头 / 肩 · 杠铃</p>
+            </div>
+            <div class="back">←</div>
+          </header>
+          <div class="screen detail">
+            <section class="section">
+              <div class="hero-image">
+                <img src="../../public/coach-shots/bench.jpg" alt="" />
+                <div class="hero-caption">
+                  <h3>肩胛稳定，推起更稳</h3>
+                  <p>下放到胸部附近，手腕保持中立</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>我的表现</h3>
+                <span>已完成组统计</span>
+              </div>
+              <div class="profile-card">
+                <h4>个人最佳</h4>
+                <p>用历史训练记录自动计算，不需要手动维护。</p>
+                <div class="pr-grid">
+                  <div class="pr"><strong>70kg</strong><span>最大重量</span></div>
+                  <div class="pr"><strong>12次</strong><span>最大次数</span></div>
+                  <div class="pr"><strong>1,850</strong><span>单次最大容量</span></div>
+                  <div class="pr"><strong>82kg</strong><span>估算 1RM</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>最近 5 次</h3>
+                <span>看趋势，不做复杂图表</span>
+              </div>
+              <div class="trend-row">
+                <div class="trend-date">06/26</div>
+                <div class="trend-main"><strong>60kg × 8 · 5组</strong><span style="--bar: 92%"></span></div>
+                <div class="trend-volume">1,850kg</div>
+              </div>
+              <div class="trend-row">
+                <div class="trend-date">06/20</div>
+                <div class="trend-main"><strong>57.5kg × 8 · 5组</strong><span style="--bar: 84%"></span></div>
+                <div class="trend-volume">1,720kg</div>
+              </div>
+              <div class="trend-row">
+                <div class="trend-date">06/16</div>
+                <div class="trend-main"><strong>55kg × 10 · 4组</strong><span style="--bar: 76%"></span></div>
+                <div class="trend-volume">1,650kg</div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-title">
+                <h3>训练提示</h3>
+                <span>动作详情增强</span>
+              </div>
+              <div class="tips">
+                <div class="tip">发力重点：肩胛后收下沉，推起时保持手腕中立。</div>
+                <div class="tip">常见错误：臀部离凳、手腕后折、下放路径过高。</div>
+              </div>
+            </section>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

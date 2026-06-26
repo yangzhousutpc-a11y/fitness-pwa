@@ -1698,6 +1698,326 @@ a {
   color: var(--ink-2);
 }
 
+/* ===== 训练复盘与动作档案 ===== */
+.weekly-recap-card {
+  border: 1px solid rgba(43, 214, 106, 0.32);
+  border-radius: var(--radius-l);
+  background:
+    linear-gradient(120deg, rgba(43, 214, 106, 0.13), rgba(18, 26, 38, 0.9) 46%),
+    var(--surface-1);
+}
+
+.weekly-recap-main {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+}
+
+.weekly-recap-main strong {
+  color: var(--ink-1);
+  font-family: var(--font-num);
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 0.9;
+}
+
+.weekly-recap-main span {
+  margin-left: 6px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.weekly-recap-main p {
+  margin: 10px 0 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.weekly-recap-volume {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.weekly-recap-volume strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.weekly-recap-volume span {
+  margin: 4px 0 0;
+  display: block;
+}
+
+.weekly-recap-metrics,
+.exercise-pr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.exercise-pr-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0;
+}
+
+.metric-card {
+  min-width: 0;
+  min-height: 58px;
+  padding: 10px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  background: rgba(5, 7, 13, 0.28);
+}
+
+.metric-card strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ink-1);
+  font-family: var(--font-num);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-card span {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.exercise-profile-card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 82px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  color: inherit;
+  background: rgba(18, 26, 38, 0.78);
+  text-align: left;
+}
+
+.exercise-profile-thumb {
+  width: 54px;
+  height: 54px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 15px;
+  object-fit: cover;
+  background: var(--bg-0);
+}
+
+.exercise-profile-thumb.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.exercise-profile-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.exercise-profile-copy strong {
+  overflow: hidden;
+  color: var(--ink-1);
+  font-size: 16px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exercise-profile-copy small {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exercise-record-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.exercise-record-tags em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  background: rgba(5, 7, 13, 0.3);
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.exercise-record-tags em.best {
+  color: #f2c86b;
+  background: rgba(242, 200, 107, 0.13);
+}
+
+.exercise-profile-arrow {
+  color: var(--ink-3);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.exercise-detail-screen {
+  display: grid;
+  gap: 16px;
+}
+
+.exercise-detail-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(43, 214, 106, 0.08), transparent 60%),
+    var(--bg-0);
+}
+
+.exercise-detail-hero img {
+  width: 100%;
+  height: min(58vh, 360px);
+  display: block;
+  padding: 12px;
+  object-fit: contain;
+  opacity: 0.94;
+}
+
+.exercise-detail-hero > div {
+  padding: 0 16px 16px;
+}
+
+.exercise-detail-hero span {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.exercise-detail-hero h2,
+.exercise-detail-hero p {
+  margin: 0;
+}
+
+.exercise-detail-hero h2 {
+  margin-top: 5px;
+  color: var(--ink-1);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.exercise-detail-hero p {
+  margin-top: 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.exercise-pr-panel {
+  margin-bottom: 0;
+}
+
+.exercise-trend-list,
+.exercise-tip-list {
+  display: grid;
+  gap: 8px;
+}
+
+.exercise-trend-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(18, 26, 38, 0.78);
+}
+
+.exercise-trend-row > span {
+  color: var(--ink-2);
+  font-family: var(--font-num);
+  font-size: 12px;
+}
+
+.exercise-trend-row strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ink-1);
+  font-family: var(--font-num);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exercise-trend-row i {
+  display: block;
+  height: 6px;
+  max-width: 100%;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), rgba(43, 214, 106, 0.16));
+}
+
+.exercise-trend-row em {
+  color: var(--ink-2);
+  font-family: var(--font-num);
+  font-size: 12px;
+  font-style: normal;
+  text-align: right;
+}
+
+.exercise-tip-card {
+  border-left: 3px solid rgba(43, 214, 106, 0.72);
+  border-radius: 12px;
+  background: rgba(18, 26, 38, 0.72);
+  padding: 11px 12px;
+}
+
+.exercise-tip-card h3,
+.exercise-tip-card p {
+  margin: 0;
+}
+
+.exercise-tip-card h3 {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.exercise-tip-card p,
+.exercise-tip-card li {
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.exercise-tip-card ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
 /* ===== 组间休息计时器 ===== */
 .rest-timer {
   position: sticky;

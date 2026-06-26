@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getExerciseHistory,
+  getExercisePerformanceSummary,
   getExerciseProgress,
   getLastExerciseSets,
   getPersonalRecords,
@@ -63,16 +65,42 @@ describe('getPersonalRecords', () => {
 
     const bench = prs.find((p) => p.exerciseId === 'bench');
     expect(bench?.bestWeight).toBe(70);
+    expect(bench?.bestReps).toBe(10);
     expect(bench?.bestWeightDate).toBe('2026-06-10T08:00:00.000Z');
     expect(bench?.sessionCount).toBe(2);
     expect(bench?.bestVolume).toBe(60 * 10);
+    expect(Math.round(bench?.bestEstimatedOneRepMax ?? 0)).toBe(89);
   });
 
-  it('ignores empty sets', () => {
+  it('ignores empty and unfinished sets', () => {
     const sessions: WorkoutSession[] = [
       session('s1', '2026-06-03T08:00:00.000Z', 'bench', [set(null, null, false)]),
+      session('s2', '2026-06-04T08:00:00.000Z', 'bench', [set(80, 8, false)]),
     ];
     expect(getPersonalRecords(sessions)).toHaveLength(0);
+  });
+});
+
+describe('exercise history and summary', () => {
+  it('returns recent exercise sessions with best set, volume and estimated 1RM', () => {
+    const sessions: WorkoutSession[] = [
+      session('old', '2026-06-03T08:00:00.000Z', 'bench', [set(50, 10), set(55, 8)]),
+      session('new', '2026-06-10T08:00:00.000Z', 'bench', [set(60, 10), set(65, 8), set(80, 2, false)]),
+    ];
+
+    const history = getExerciseHistory(sessions, 'bench');
+
+    expect(history).toHaveLength(2);
+    expect(history[0].sessionId).toBe('new');
+    expect(history[0].bestSet).toEqual({ weight: 65, reps: 8 });
+    expect(history[0].totalVolume).toBe(60 * 10 + 65 * 8);
+    expect(Math.round(history[0].estimatedOneRepMax)).toBe(82);
+
+    const summary = getExercisePerformanceSummary(sessions, 'bench');
+    expect(summary?.latest.sessionId).toBe('new');
+    expect(summary?.bestWeight).toBe(65);
+    expect(summary?.bestReps).toBe(10);
+    expect(summary?.bestVolume).toBe(60 * 10 + 65 * 8);
   });
 });
 

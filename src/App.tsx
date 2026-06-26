@@ -3,6 +3,8 @@ import { setApiToken } from './auth';
 import { coachPlans, filterExercises, getExerciseById } from './data';
 import {
   getExerciseProgress,
+  getExerciseHistory,
+  getExercisePerformanceSummary,
   getLastExerciseSets,
   getPersonalRecords,
   getWeeklyStats,
@@ -54,6 +56,7 @@ type Route =
   | { name: 'custom-library' }
   | { name: 'builtin-plan'; planId: string; expandedDayId?: string }
   | { name: 'custom-plan'; planId: string; expandedDayId?: string }
+  | { name: 'exercise-detail'; exerciseId: string }
   | { name: 'workout'; planKind: 'builtin' | 'custom'; planId: string; dayId: string; session: WorkoutSession };
 
 function App() {
@@ -137,6 +140,11 @@ function App() {
   function openCustomLibrary() {
     setActiveTab('plans');
     setRoute({ name: 'custom-library' });
+  }
+
+  function openExerciseDetail(exerciseId: string) {
+    setActiveTab('exercises');
+    setRoute({ name: 'exercise-detail', exerciseId });
   }
 
   function createCustomPlan() {
@@ -224,6 +232,12 @@ function App() {
   }
 
   function goBack() {
+    if (route.name === 'exercise-detail') {
+      setActiveTab('exercises');
+      setRoute({ name: 'home' });
+      return;
+    }
+
     setActiveTab('plans');
     if (route.name === 'custom-plan') {
       // 离开编辑器时，若是没填任何内容的空计划，自动丢弃，避免留下"未命名计划"垃圾卡。
@@ -296,9 +310,14 @@ function App() {
         <ExerciseLibrary
           query={exerciseQuery}
           filter={exerciseFilter}
+          sessions={sessions}
           onQueryChange={setExerciseQuery}
           onFilterChange={setExerciseFilter}
+          onOpenExercise={openExerciseDetail}
         />
+      ) : null}
+      {route.name === 'exercise-detail' ? (
+        <ExerciseDetail exerciseId={route.exerciseId} sessions={sessions} />
       ) : null}
       {route.name === 'home' && activeTab === 'history' ? (
         <History sessions={sessions} customPlans={customPlans} onDeleteSession={deleteSession} />
@@ -1800,13 +1819,17 @@ function SetRow({
 function ExerciseLibrary({
   query,
   filter,
+  sessions,
   onQueryChange,
   onFilterChange,
+  onOpenExercise,
 }: {
   query: string;
   filter: ExerciseFilter;
+  sessions: WorkoutSession[];
   onQueryChange: (query: string) => void;
   onFilterChange: (filter: ExerciseFilter) => void;
+  onOpenExercise: (exerciseId: string) => void;
 }) {
   const results = useMemo(() => filterExercises(query, filter), [filter, query]);
   const muscleFilters: ExerciseFilter[] = ['全部', '胸', '背', '肩', '腿', '手臂'];
@@ -1835,34 +1858,155 @@ function ExerciseLibrary({
       </div>
 
       <div className="exercise-list">
-        {results.map((exercise) => (
-          <details className="exercise-card" key={exercise.id}>
-            <summary>
-              <span>{exercise.name}</span>
-              <small>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</small>
-            </summary>
-            <div className="detail-grid">
-              <div>
-                <h4>要领</h4>
-                <ul>
-                  {exercise.cues.map((cue) => (
-                    <li key={cue}>{cue}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4>常见错误</h4>
-                <ul>
-                  {exercise.commonMistakes.map((mistake) => (
-                    <li key={mistake}>{mistake}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </details>
-        ))}
+        {results.map((exercise) => {
+          const summary = getExercisePerformanceSummary(sessions, exercise.id);
+          const imageUrl = getExerciseImageUrl(exercise.id);
+          return (
+            <button
+              type="button"
+              className="exercise-profile-card"
+              key={exercise.id}
+              onClick={() => onOpenExercise(exercise.id)}
+              aria-label={`打开${exercise.name}动作详情`}
+            >
+              {imageUrl ? (
+                <img className="exercise-profile-thumb" src={withBase(imageUrl)} alt="" loading="lazy" />
+              ) : (
+                <span className="exercise-profile-thumb placeholder" aria-hidden="true">无图</span>
+              )}
+              <span className="exercise-profile-copy">
+                <strong>{exercise.name}</strong>
+                <small>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</small>
+                <span className="exercise-record-tags">
+                  {summary ? (
+                    <>
+                      <em>最近 {formatSetLabel(summary.latest.bestSet.weight, summary.latest.bestSet.reps)}</em>
+                      <em className="best">最佳 {formatWeight(summary.bestWeight)} × {summary.bestReps}</em>
+                    </>
+                  ) : (
+                    <em>暂无训练记录</em>
+                  )}
+                </span>
+              </span>
+              <span className="exercise-profile-arrow" aria-hidden="true">›</span>
+            </button>
+          );
+        })}
       </div>
     </section>
+  );
+}
+
+function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions: WorkoutSession[] }) {
+  const exercise = getExerciseById(exerciseId);
+  const coachNote = getCoachNoteForExercise(exerciseId);
+  const imageUrl = getExerciseImageUrl(exerciseId);
+  const history = useMemo(() => getExerciseHistory(sessions, exerciseId), [sessions, exerciseId]);
+  const summary = useMemo(() => getExercisePerformanceSummary(sessions, exerciseId), [sessions, exerciseId]);
+  const recentHistory = history.slice(0, 5);
+  const maxRecentVolume = Math.max(...recentHistory.map((item) => item.totalVolume), 1);
+
+  if (!exercise) {
+    return (
+      <section className="screen with-nav">
+        <div className="empty-state">没有找到这个动作。</div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="screen with-nav exercise-detail-screen">
+      <section className="exercise-detail-hero">
+        {imageUrl ? (
+          <img src={withBase(imageUrl)} alt={`${exercise.name}动作插图`} loading="lazy" />
+        ) : null}
+        <div>
+          <span>动作档案</span>
+          <h2>{coachNote?.goal ?? `${exercise.name} · ${exercise.equipment}`}</h2>
+          <p>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</p>
+        </div>
+      </section>
+
+      <section className="section-block exercise-pr-panel">
+        <div className="section-title">
+          <h2>我的表现</h2>
+          <span>{summary ? '已完成组统计' : '等待第一次记录'}</span>
+        </div>
+        {summary ? (
+          <div className="exercise-pr-grid">
+            <MetricCard label="最大重量" value={formatWeight(summary.bestWeight)} />
+            <MetricCard label="最大次数" value={`${summary.bestReps}次`} />
+            <MetricCard label="单次最大容量" value={formatVolume(summary.bestVolume)} />
+            <MetricCard label="估算 1RM" value={formatWeight(summary.bestEstimatedOneRepMax)} />
+          </div>
+        ) : (
+          <div className="empty-state">完成一次包含这个动作的训练后，这里会显示你的个人记录。</div>
+        )}
+      </section>
+
+      <section className="section-block">
+        <div className="section-title">
+          <h2>最近 5 次</h2>
+          <span>看趋势，不做复杂图表</span>
+        </div>
+        {recentHistory.length > 0 ? (
+          <div className="exercise-trend-list">
+            {recentHistory.map((item) => (
+              <article className="exercise-trend-row" key={item.sessionId}>
+                <span>{formatDateShort(item.date)}</span>
+                <div>
+                  <strong>{formatSetLabel(item.bestSet.weight, item.bestSet.reps)} · {item.completedSets}组</strong>
+                  <i style={{ width: `${Math.max(12, Math.round((item.totalVolume / maxRecentVolume) * 100))}%` }} />
+                </div>
+                <em>{formatVolume(item.totalVolume)}</em>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">这个动作还没有训练记录。</div>
+        )}
+      </section>
+
+      <section className="section-block exercise-tips-panel">
+        <div className="section-title">
+          <h2>训练提示</h2>
+          <span>动作详情增强</span>
+        </div>
+        <div className="exercise-tip-list">
+          <div className="exercise-tip-card">
+            <h3>发力重点</h3>
+            <ul>
+              {(coachNote?.keyCues ?? exercise.cues).map((cue) => (
+                <li key={cue}>{cue}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="exercise-tip-card">
+            <h3>常见错误</h3>
+            <ul>
+              {(coachNote?.commonMistakes ?? exercise.commonMistakes).map((mistake) => (
+                <li key={mistake}>{mistake}</li>
+              ))}
+            </ul>
+          </div>
+          {coachNote?.regression ? (
+            <div className="exercise-tip-card">
+              <h3>退阶方式</h3>
+              <p>{coachNote.regression}</p>
+            </div>
+          ) : null}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metric-card">
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
   );
 }
 
@@ -1983,24 +2127,14 @@ function History({
 
   return (
     <section className="screen with-nav">
+      <WeeklyRecapCard weekly={weekly} latestSession={sessions[0]} customPlans={customPlans} />
+
       <TrainingCalendar
         sessions={sessions}
         customPlans={customPlans}
         selectedDateKey={selectedCalendarDate}
         onSelectDate={setSelectedCalendarDate}
       />
-
-      <section className="section-block">
-        <div className="section-title">
-          <h2>本周概览</h2>
-          <span>近 7 天</span>
-        </div>
-        <div className="stat-grid">
-          <StatTile label="训练次数" value={weekly.recentSessions} delta={weekly.recentSessions - weekly.previousSessions} />
-          <StatTile label="完成组数" value={weekly.recentCompletedSets} delta={weekly.recentCompletedSets - weekly.previousCompletedSets} />
-          <StatTile label="总容量 (kg)" value={Math.round(weekly.recentVolume)} delta={Math.round(weekly.recentVolume - weekly.previousVolume)} />
-        </div>
-      </section>
 
       {personalRecords.length > 0 ? (
         <section className="section-block">
@@ -2077,6 +2211,45 @@ function History({
           })}
         </div>
       </section>
+    </section>
+  );
+}
+
+function WeeklyRecapCard({
+  weekly,
+  latestSession,
+  customPlans,
+}: {
+  weekly: ReturnType<typeof getWeeklyStats>;
+  latestSession: WorkoutSession | undefined;
+  customPlans: CoachPlan[];
+}) {
+  const volumeDelta = weekly.previousVolume > 0
+    ? Math.round(((weekly.recentVolume - weekly.previousVolume) / weekly.previousVolume) * 100)
+    : null;
+
+  return (
+    <section className="section-block weekly-recap-card" aria-label="本周训练复盘">
+      <div className="section-title">
+        <h2>本周复盘</h2>
+        <span>近 7 天</span>
+      </div>
+      <div className="weekly-recap-main">
+        <div>
+          <strong>{weekly.recentSessions}</strong>
+          <span>次训练</span>
+          <p>最近一次：{latestSession ? findDayName(latestSession, customPlans) : '暂无记录'}</p>
+        </div>
+        <div className="weekly-recap-volume">
+          <strong>{formatVolume(weekly.recentVolume)}</strong>
+          <span>总容量</span>
+        </div>
+      </div>
+      <div className="weekly-recap-metrics">
+        <MetricCard label="完成组" value={`${weekly.recentCompletedSets}`} />
+        <MetricCard label="训练次数变化" value={`${weekly.recentSessions - weekly.previousSessions >= 0 ? '+' : ''}${weekly.recentSessions - weekly.previousSessions}`} />
+        <MetricCard label="较上周容量" value={volumeDelta === null ? '新记录' : `${volumeDelta >= 0 ? '+' : ''}${volumeDelta}%`} />
+      </div>
     </section>
   );
 }
@@ -2299,6 +2472,14 @@ function getHeaderCopy(
     };
   }
 
+  if (route.name === 'exercise-detail') {
+    const exercise = getExerciseById(route.exerciseId);
+    return {
+      title: exercise?.name ?? '动作详情',
+      subtitle: exercise ? `${exercise.muscleGroups.join(' / ')} · ${exercise.equipment}` : '动作档案',
+    };
+  }
+
   if (activeTab === 'exercises') {
     return { title: '动作库', subtitle: '搜索动作、肌群和器械' };
   }
@@ -2419,6 +2600,72 @@ function findDayName(session: WorkoutSession, customPlans: CoachPlan[]): string 
 
 function findCoachNote(day: TrainingDayTemplate, exerciseId: string): CoachExerciseNote | undefined {
   return day.coachNotes.find((note) => note.exerciseId === exerciseId);
+}
+
+function getCoachNoteForExercise(exerciseId: string): CoachExerciseNote | undefined {
+  return coachPlans.flatMap((plan) => plan.days).flatMap((day) => day.coachNotes).find((note) => note.exerciseId === exerciseId);
+}
+
+function getExerciseImageUrl(exerciseId: string): string {
+  return exerciseImageUrls[exerciseId] ?? getCoachNoteForExercise(exerciseId)?.imageUrl ?? '';
+}
+
+const exerciseImageUrls: Record<string, string> = {
+  'barbell-bench-press': '/coach-shots/bench-cue.jpg',
+  'incline-dumbbell-press': '/coach-shots/incline-dumbbell-press-cue.jpg',
+  'parallel-bar-dip': '/coach-shots/dip-cue.jpg',
+  'skull-crusher': '/coach-shots/triceps-cue.jpg',
+  'y-raise': '/coach-shots/raise-cue.jpg',
+  'push-up': '/coach-shots/push-up-cue.jpg',
+  'pull-up': '/coach-shots/pull-cue.jpg',
+  'lat-pulldown': '/coach-shots/lat-pulldown-cue.jpg',
+  'barbell-row': '/coach-shots/row-cue.jpg',
+  'one-arm-dumbbell-row': '/coach-shots/one-arm-dumbbell-row-cue.jpg',
+  'seated-cable-row': '/coach-shots/seated-cable-row-cue.jpg',
+  'straight-arm-pulldown': '/coach-shots/straight-arm-pulldown-cue.jpg',
+  'face-pull': '/coach-shots/face-pull-cue.jpg',
+  'rear-delt-fly': '/coach-shots/rear-delt-fly-cue.jpg',
+  'barbell-curl': '/coach-shots/curl-cue.jpg',
+  'dumbbell-curl': '/coach-shots/dumbbell-curl-cue.jpg',
+  'hammer-curl': '/coach-shots/hammer-curl-cue.jpg',
+  'overhead-press': '/coach-shots/overhead-press-cue.jpg',
+  'triceps-pushdown': '/coach-shots/triceps-pushdown-cue.jpg',
+  'close-grip-bench': '/coach-shots/close-grip-bench-cue.jpg',
+  'squat': '/coach-shots/squat-cue.jpg',
+  'front-squat': '/coach-shots/front-squat-cue.jpg',
+  'leg-press': '/coach-shots/leg-machine-cue.jpg',
+  'romanian-deadlift': '/coach-shots/hinge-cue.jpg',
+  'deadlift': '/coach-shots/deadlift-cue.jpg',
+  'leg-extension': '/coach-shots/leg-extension-cue.jpg',
+  'leg-curl': '/coach-shots/leg-curl-cue.jpg',
+  'walking-lunge': '/coach-shots/walking-lunge-cue.jpg',
+  'bulgarian-split-squat': '/coach-shots/bulgarian-split-squat-cue.jpg',
+  'hip-thrust': '/coach-shots/hip-thrust-cue.jpg',
+  'standing-calf-raise': '/coach-shots/calf-cue.jpg',
+  'plank': '/coach-shots/plank-cue.jpg',
+  'hanging-leg-raise': '/coach-shots/hanging-leg-raise-cue.jpg',
+  'cable-crunch': '/coach-shots/cable-crunch-cue.jpg',
+  'farmer-carry': '/coach-shots/farmer-carry-cue.jpg',
+  'kettlebell-swing': '/coach-shots/kettlebell-swing-cue.jpg',
+  'ab-wheel-rollout': '/coach-shots/ab-wheel-rollout-cue.jpg',
+  'dumbbell-fly': '/coach-shots/dumbbell-fly-cue.jpg',
+  'cable-crossover': '/coach-shots/cable-crossover-cue.jpg',
+  'dumbbell-shoulder-press': '/coach-shots/shoulder-press-cue.jpg',
+  'lateral-raise': '/coach-shots/lateral-raise-cue.jpg',
+  'cable-lateral-raise': '/coach-shots/cable-lateral-raise-cue.jpg',
+};
+
+function formatWeight(weight: number): string {
+  const rounded = Math.round(weight * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}kg`;
+}
+
+function formatSetLabel(weight: number, reps: number): string {
+  return `${formatWeight(weight)} × ${reps}`;
+}
+
+function formatVolume(volume: number): string {
+  return `${Math.round(volume).toLocaleString('zh-CN')}kg`;
 }
 
 function formatDate(date: string): string {

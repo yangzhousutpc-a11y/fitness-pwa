@@ -29,4 +29,10 @@ describe('app shell layout', () => {
     expect(ruleFor('.coach-cue-shot')).not.toContain('max-height');
     expect(ruleFor('.coach-cue-shot')).not.toContain('object-fit: cover');
   });
+
+  it('shows action profile hero images without cropping vertical artwork', () => {
+    expect(ruleFor('.exercise-detail-hero img')).toContain('object-fit: contain');
+    expect(ruleFor('.exercise-detail-hero img')).not.toContain('object-fit: cover');
+    expect(ruleFor('.exercise-detail-hero > div')).not.toContain('position: absolute');
+  });
 });

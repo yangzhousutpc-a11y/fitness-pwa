@@ -1,16 +1,36 @@
 import type { ExerciseLog, SetLog, WorkoutSession } from './types';
 
-/** 一组有效数据的判定：填了重量且填了次数（completed 与否都计入，因为记录了就算练过）。 */
+/** 一组已填写重量和次数的数据，可用作下次训练参考。 */
 function isLoggedSet(set: SetLog): boolean {
   return set.weight !== null && set.weight > 0 && set.reps !== null && set.reps > 0;
 }
 
+/** 复盘与 PR 只统计已完成组，避免把临时输入当成有效成绩。 */
+function isCompletedLoggedSet(set: SetLog): boolean {
+  return set.completed && isLoggedSet(set);
+}
+
 /** 单组容量 = 重量 × 次数。 */
 function setVolume(set: SetLog): number {
-  if (!isLoggedSet(set)) {
+  if (!isCompletedLoggedSet(set)) {
     return 0;
   }
   return (set.weight as number) * (set.reps as number);
+}
+
+function estimateOneRepMax(set: SetLog): number {
+  if (!isCompletedLoggedSet(set)) {
+    return 0;
+  }
+  return (set.weight as number) * (1 + (set.reps as number) / 30);
+}
+
+function compareBestSet(a: SetLog, b: SetLog): number {
+  const weightDiff = (a.weight ?? 0) - (b.weight ?? 0);
+  if (weightDiff !== 0) {
+    return weightDiff;
+  }
+  return (a.reps ?? 0) - (b.reps ?? 0);
 }
 
 export interface ExerciseProgressPoint {
@@ -35,7 +55,7 @@ export function getExerciseProgress(sessions: WorkoutSession[], exerciseId: stri
       continue;
     }
 
-    const loggedSets = log.sets.filter(isLoggedSet);
+    const loggedSets = log.sets.filter(isCompletedLoggedSet);
     if (loggedSets.length === 0) {
       continue;
     }
@@ -53,8 +73,12 @@ export interface ExercisePR {
   exerciseId: string;
   /** 历史最大单组重量。 */
   bestWeight: number;
+  /** 历史最大单组次数。 */
+  bestReps: number;
   /** 历史单次训练最大容量。 */
   bestVolume: number;
+  /** 历史最佳估算 1RM。 */
+  bestEstimatedOneRepMax: number;
   /** 出现 bestWeight 的训练日期。 */
   bestWeightDate: string;
   /** 该动作累计训练次数（有有效数据的训练）。 */
@@ -70,20 +94,24 @@ export function getPersonalRecords(sessions: WorkoutSession[]): ExercisePR[] {
 
   for (const session of sessions) {
     for (const log of session.exerciseLogs) {
-      const loggedSets = log.sets.filter(isLoggedSet);
+      const loggedSets = log.sets.filter(isCompletedLoggedSet);
       if (loggedSets.length === 0) {
         continue;
       }
 
       const maxWeight = Math.max(...loggedSets.map((set) => set.weight as number));
+      const maxReps = Math.max(...loggedSets.map((set) => set.reps as number));
       const volume = loggedSets.reduce((sum, set) => sum + setVolume(set), 0);
+      const estimatedOneRepMax = Math.max(...loggedSets.map(estimateOneRepMax));
       const current = byExercise.get(log.exerciseId);
 
       if (!current) {
         byExercise.set(log.exerciseId, {
           exerciseId: log.exerciseId,
           bestWeight: maxWeight,
+          bestReps: maxReps,
           bestVolume: volume,
+          bestEstimatedOneRepMax: estimatedOneRepMax,
           bestWeightDate: session.date,
           sessionCount: 1,
         });
@@ -91,7 +119,9 @@ export function getPersonalRecords(sessions: WorkoutSession[]): ExercisePR[] {
       }
 
       current.sessionCount += 1;
+      current.bestReps = Math.max(current.bestReps, maxReps);
       current.bestVolume = Math.max(current.bestVolume, volume);
+      current.bestEstimatedOneRepMax = Math.max(current.bestEstimatedOneRepMax, estimatedOneRepMax);
       if (maxWeight > current.bestWeight) {
         current.bestWeight = maxWeight;
         current.bestWeightDate = session.date;
@@ -100,6 +130,85 @@ export function getPersonalRecords(sessions: WorkoutSession[]): ExercisePR[] {
   }
 
   return [...byExercise.values()].sort((a, b) => b.bestWeight - a.bestWeight);
+}
+
+export interface ExerciseHistoryEntry {
+  sessionId: string;
+  date: string;
+  completedSets: number;
+  totalSets: number;
+  totalVolume: number;
+  maxReps: number;
+  bestSet: {
+    weight: number;
+    reps: number;
+  };
+  estimatedOneRepMax: number;
+}
+
+export interface ExercisePerformanceSummary {
+  exerciseId: string;
+  sessionCount: number;
+  bestWeight: number;
+  bestReps: number;
+  bestVolume: number;
+  bestEstimatedOneRepMax: number;
+  latest: ExerciseHistoryEntry;
+}
+
+export function getExerciseHistory(sessions: WorkoutSession[], exerciseId: string): ExerciseHistoryEntry[] {
+  const history: ExerciseHistoryEntry[] = [];
+
+  for (const session of sessions) {
+    const log = session.exerciseLogs.find((item) => item.exerciseId === exerciseId);
+    if (!log) {
+      continue;
+    }
+
+    const completedSets = log.sets.filter((set) => set.completed);
+    const completedLoggedSets = log.sets.filter(isCompletedLoggedSet);
+    if (completedLoggedSets.length === 0) {
+      continue;
+    }
+
+    const bestSet = completedLoggedSets.reduce((best, set) => (compareBestSet(set, best) > 0 ? set : best));
+
+    history.push({
+      sessionId: session.id,
+      date: session.date,
+      completedSets: completedSets.length,
+      totalSets: log.sets.length,
+      totalVolume: completedLoggedSets.reduce((sum, set) => sum + setVolume(set), 0),
+      maxReps: Math.max(...completedLoggedSets.map((set) => set.reps as number)),
+      bestSet: {
+        weight: bestSet.weight as number,
+        reps: bestSet.reps as number,
+      },
+      estimatedOneRepMax: Math.max(...completedLoggedSets.map(estimateOneRepMax)),
+    });
+  }
+
+  return history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export function getExercisePerformanceSummary(
+  sessions: WorkoutSession[],
+  exerciseId: string,
+): ExercisePerformanceSummary | null {
+  const history = getExerciseHistory(sessions, exerciseId);
+  if (history.length === 0) {
+    return null;
+  }
+
+  return {
+    exerciseId,
+    sessionCount: history.length,
+    latest: history[0],
+    bestWeight: Math.max(...history.map((item) => item.bestSet.weight)),
+    bestReps: Math.max(...history.map((item) => item.maxReps)),
+    bestVolume: Math.max(...history.map((item) => item.totalVolume)),
+    bestEstimatedOneRepMax: Math.max(...history.map((item) => item.estimatedOneRepMax)),
+  };
 }
 
 export interface WeeklyStat {
