@@ -85,6 +85,17 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByText('杠铃卧推')).not.toBeInTheDocument();
   });
 
+  it('shows a daily fitness quote on the plan home header', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-26T08:00:00+08:00'));
+
+    render(<App />);
+    await vi.runAllTimersAsync();
+
+    expect(screen.getByRole('heading', { name: '力量日记', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('少一点犹豫，多完成一组')).toBeInTheDocument();
+  });
+
   it('starts a coach-plan workout, records a set, and saves it to history', () => {
     render(<App />);
 

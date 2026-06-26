@@ -33,6 +33,16 @@ type CalendarDay = {
   inCurrentMonth: boolean;
   sessions: WorkoutSession[];
 };
+const dailyTrainingQuotes = [
+  '重量会说话，坚持会留下痕迹',
+  '不是每天都轻松，但每组都算数',
+  '把今天交给动作，把进步交给时间',
+  '训练不靠情绪，靠一次次完成',
+  '真正的变化，藏在下一组里',
+  '少一点犹豫，多完成一组',
+  '稳住节奏，身体会记住你的投入',
+];
+
 type SetTarget = { exerciseId: string; setNumber: number };
 type RecommendedWorkout = {
   plan: CoachPlan;
@@ -2297,7 +2307,12 @@ function getHeaderCopy(
     return { title: '历史训练', subtitle: '查看过往训练日、动作和逐组数据' };
   }
 
-  return { title: '健身计划', subtitle: '推荐可直接开始，也可以自己选择今天练什么' };
+  return { title: '力量日记', subtitle: getDailyTrainingQuote() };
+}
+
+function getDailyTrainingQuote(date = new Date()): string {
+  const dayKey = date.getFullYear() * 372 + (date.getMonth() + 1) * 31 + date.getDate();
+  return dailyTrainingQuotes[dayKey % dailyTrainingQuotes.length];
 }
 
 function parseOptionalNumber(value: string): number | null {
