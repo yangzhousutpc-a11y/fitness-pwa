@@ -73,5 +73,10 @@ export function createWorkoutSessionStore(pool) {
         connection.release();
       }
     },
+
+    async remove(id) {
+      await ensureSchema(pool);
+      await pool.query('DELETE FROM workout_sessions WHERE id = ?', [id]);
+    },
   };
 }

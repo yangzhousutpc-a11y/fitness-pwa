@@ -1320,6 +1320,24 @@ a {
   gap: 12px;
 }
 
+.history-card .history-card-header {
+  align-items: flex-start;
+}
+
+.history-card .history-card-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.history-delete {
+  flex: 0 0 auto;
+  min-width: 70px;
+  min-height: 34px;
+  border-radius: var(--radius-s);
+  font-size: 13px;
+  font-weight: 850;
+}
+
 .history-card strong {
   color: var(--ink-1);
 }

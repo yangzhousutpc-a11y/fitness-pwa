@@ -95,6 +95,21 @@ describe('database API client', () => {
     expect(localStorage.getItem('fitness-pwa.sessions.v1')).toBeNull();
   });
 
+  it('deletes workout sessions through the API', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ code: 0, data: { id: 'session-1' } }),
+    });
+    const { deleteWorkoutSession } = await import('./api');
+
+    await expect(deleteWorkoutSession('session-1')).resolves.toEqual({ id: 'session-1' });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/workout-sessions/session-1',
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
   it('clears the saved token when the API returns 401', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,

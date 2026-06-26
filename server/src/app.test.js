@@ -61,6 +61,9 @@ function createMemoryStores() {
         sessions.set(session.id, session);
         return session;
       },
+      remove: async (id) => {
+        sessions.delete(id);
+      },
     },
   };
 }
@@ -77,6 +80,7 @@ test('business endpoints reject requests without the bearer token', async () => 
   const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
 
   const response = await request(app).get('/api/custom-plans').expect(401);
+  await request(app).delete('/api/workout-sessions/session-1').expect(401);
 
   assert.deepEqual(response.body, { code: 1, message: 'Unauthorized' });
 });
@@ -99,6 +103,18 @@ test('workout sessions round-trip through the API using the current frontend sha
   const response = await request(app).get('/api/workout-sessions').set(auth).expect(200);
 
   assert.deepEqual(response.body, { code: 0, data: [sampleSession] });
+});
+
+test('workout sessions can be deleted through the API', async () => {
+  const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
+  const auth = { Authorization: 'Bearer secret-token' };
+
+  await request(app).post('/api/workout-sessions').set(auth).send(sampleSession).expect(200);
+  const deleteResponse = await request(app).delete('/api/workout-sessions/session-1').set(auth).expect(200);
+  const listResponse = await request(app).get('/api/workout-sessions').set(auth).expect(200);
+
+  assert.deepEqual(deleteResponse.body, { code: 0, data: { id: 'session-1' } });
+  assert.deepEqual(listResponse.body, { code: 0, data: [] });
 });
 
 test('serves the built frontend shell when a static directory is configured', async () => {

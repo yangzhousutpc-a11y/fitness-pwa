@@ -30,6 +30,10 @@ vi.mock('./api', () => ({
     apiState.sessions = [session, ...apiState.sessions.filter((item: any) => item.id !== session.id)];
     return session;
   }),
+  deleteWorkoutSession: vi.fn(async (sessionId: string) => {
+    apiState.sessions = apiState.sessions.filter((item: any) => item.id !== sessionId);
+    return { id: sessionId };
+  }),
 }));
 
 describe('fitness PWA user flows', () => {
@@ -306,6 +310,39 @@ describe('fitness PWA user flows', () => {
     expect(screen.getByText('动作进度')).toBeInTheDocument();
     // 杠铃卧推 60kg 应作为 PR 出现
     expect(screen.getByText('60')).toBeInTheDocument();
+  });
+
+  it('deletes a workout session from history after confirmation', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-1',
+        date: '2026-06-26T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [{ setNumber: 1, weight: 60, reps: 10, completed: true }],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /历史/ }));
+
+    expect(await screen.findByText('训练记录')).toBeInTheDocument();
+    expect(screen.getByText('Day 1 胸 / 肩 / 三头')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '删除Day 1 胸 / 肩 / 三头训练记录' }));
+    fireEvent.click(screen.getByRole('button', { name: '确认删除Day 1 胸 / 肩 / 三头训练记录' }));
+
+    await waitFor(() => {
+      expect(apiState.sessions).toHaveLength(0);
+      expect(screen.getByText('还没有训练记录。进入计划并完成一次训练后会自动保存。')).toBeInTheDocument();
+    });
   });
 
   it('shows the training calendar even when there is no history yet', () => {

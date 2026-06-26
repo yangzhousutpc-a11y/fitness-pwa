@@ -63,3 +63,9 @@ export function saveWorkoutSession(session: WorkoutSession): Promise<WorkoutSess
     body: JSON.stringify(session),
   });
 }
+
+export function deleteWorkoutSession(sessionId: string): Promise<{ id: string }> {
+  return requestJson<{ id: string }>(`/api/workout-sessions/${encodeURIComponent(sessionId)}`, {
+    method: 'DELETE',
+  });
+}

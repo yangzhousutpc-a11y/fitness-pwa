@@ -19,5 +19,14 @@ export function createWorkoutSessionRouter(workoutSessionStore) {
     }
   });
 
+  router.delete('/:id', async (req, res, next) => {
+    try {
+      await workoutSessionStore.remove(req.params.id);
+      res.json({ code: 0, data: { id: req.params.id } });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   return router;
 }

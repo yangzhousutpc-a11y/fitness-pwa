@@ -10,6 +10,7 @@ import {
 } from './analytics';
 import {
   deleteCustomPlan as deleteCustomPlanFromApi,
+  deleteWorkoutSession as deleteWorkoutSessionFromApi,
   getCustomPlans,
   getWorkoutSessions,
   saveCustomPlan,
@@ -158,6 +159,15 @@ function App() {
     setRoute({ name: 'home' });
   }
 
+  function deleteSession(sessionId: string) {
+    const previousSessions = sessions;
+    setSessions((current) => current.filter((item) => item.id !== sessionId));
+    deleteWorkoutSessionFromApi(sessionId).catch((error) => {
+      setSessions(previousSessions);
+      reportSyncError(error);
+    });
+  }
+
   function updateCustomPlan(nextPlan: CoachPlan) {
     setCustomPlans((current) => [nextPlan, ...current.filter((item) => item.id !== nextPlan.id)]);
     saveCustomPlan(nextPlan).catch(reportSyncError);
@@ -253,7 +263,9 @@ function App() {
           onFilterChange={setExerciseFilter}
         />
       ) : null}
-      {route.name === 'home' && activeTab === 'history' ? <History sessions={sessions} customPlans={customPlans} /> : null}
+      {route.name === 'home' && activeTab === 'history' ? (
+        <History sessions={sessions} customPlans={customPlans} onDeleteSession={deleteSession} />
+      ) : null}
       {route.name === 'builtin-plan' && selectedPlan ? (
         <PlanDetail
           plan={selectedPlan}
@@ -1750,17 +1762,53 @@ function ExerciseLibrary({
   );
 }
 
-function History({ sessions, customPlans }: { sessions: WorkoutSession[]; customPlans: CoachPlan[] }) {
+function History({
+  sessions,
+  customPlans,
+  onDeleteSession,
+}: {
+  sessions: WorkoutSession[];
+  customPlans: CoachPlan[];
+  onDeleteSession: (sessionId: string) => void;
+}) {
   const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
   const weekly = useMemo(() => getWeeklyStats(sessions), [sessions]);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(() => sessions[0]?.date ? getDateKey(sessions[0].date) : getDateKey(new Date()));
+  const [confirmingSessionId, setConfirmingSessionId] = useState<string | null>(null);
+  const confirmDeleteTimer = useRef<number | null>(null);
 
   const trackedExerciseId = selectedExerciseId || personalRecords[0]?.exerciseId || '';
   const progress = useMemo(
     () => (trackedExerciseId ? getExerciseProgress(sessions, trackedExerciseId) : []),
     [sessions, trackedExerciseId],
   );
+
+  useEffect(() => () => {
+    if (confirmDeleteTimer.current) {
+      window.clearTimeout(confirmDeleteTimer.current);
+    }
+  }, []);
+
+  function askDeleteSession(sessionId: string) {
+    setConfirmingSessionId(sessionId);
+    if (confirmDeleteTimer.current) {
+      window.clearTimeout(confirmDeleteTimer.current);
+    }
+    confirmDeleteTimer.current = window.setTimeout(() => {
+      setConfirmingSessionId(null);
+      confirmDeleteTimer.current = null;
+    }, 3000);
+  }
+
+  function confirmDeleteSession(sessionId: string) {
+    if (confirmDeleteTimer.current) {
+      window.clearTimeout(confirmDeleteTimer.current);
+      confirmDeleteTimer.current = null;
+    }
+    setConfirmingSessionId(null);
+    onDeleteSession(sessionId);
+  }
 
   if (sessions.length === 0) {
     return (
@@ -1847,15 +1895,29 @@ function History({ sessions, customPlans }: { sessions: WorkoutSession[]; custom
           <span>{sessions.length} 次</span>
         </div>
         <div className="history-list">
-          {sessions.map((session) => (
-            <article className="history-card" key={session.id}>
-              <div>
-                <strong>{findDayName(session, customPlans)}</strong>
-                <span>{formatDate(session.date)}</span>
-              </div>
-              <p>{summarizeSession(session)}</p>
-            </article>
-          ))}
+          {sessions.map((session) => {
+            const sessionName = findDayName(session, customPlans);
+            const isConfirmingDelete = confirmingSessionId === session.id;
+            return (
+              <article className="history-card" key={session.id}>
+                <div className="history-card-header">
+                  <div className="history-card-copy">
+                    <strong>{sessionName}</strong>
+                    <span>{formatDate(session.date)}</span>
+                  </div>
+                  <button
+                    className={isConfirmingDelete ? 'danger-button history-delete confirming' : 'danger-button history-delete'}
+                    type="button"
+                    onClick={() => (isConfirmingDelete ? confirmDeleteSession(session.id) : askDeleteSession(session.id))}
+                    aria-label={`${isConfirmingDelete ? '确认删除' : '删除'}${sessionName}训练记录`}
+                  >
+                    {isConfirmingDelete ? '确认删除？' : '删除'}
+                  </button>
+                </div>
+                <p>{summarizeSession(session)}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
     </section>
