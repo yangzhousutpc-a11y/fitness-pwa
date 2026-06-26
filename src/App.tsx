@@ -359,15 +359,31 @@ function PlanHome({
   const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
   // 首页只放速览：PR 取前 3，看全部去历史页。
   const topRecords = personalRecords.slice(0, 3);
+  const primaryPlan = builtinPlans[0];
+  const secondaryPlans = builtinPlans.slice(1);
 
   return (
-    <section className="screen with-nav">
-      <div className="entry-grid">
-        {builtinPlans.map((plan, index) => (
+    <section className="screen with-nav home-screen">
+      {primaryPlan ? (
+        <button
+          type="button"
+          className="primary-training-card"
+          aria-label="进入名师计划"
+          onClick={() => onOpenBuiltinPlan(primaryPlan.id)}
+        >
+          <span className="entry-eyebrow">推荐训练</span>
+          <strong>{primaryPlan.days[0]?.name ?? primaryPlan.title}</strong>
+          <span>{primaryPlan.coachName} · {primaryPlan.days.length} 天 · {primaryPlan.title}</span>
+          <em>开始训练 →</em>
+        </button>
+      ) : null}
+
+      <div className="entry-grid secondary-entry-grid">
+        {secondaryPlans.map((plan) => (
           <button
             type="button"
             className="entry-card entry-builtin"
-            aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
+            aria-label={`进入${plan.title}`}
             onClick={() => onOpenBuiltinPlan(plan.id)}
             key={plan.id}
           >
@@ -387,7 +403,7 @@ function PlanHome({
       </div>
 
       {sessions.length > 0 ? (
-        <section className="section-block">
+        <section className="section-block home-weekly">
           <div className="section-title">
             <h2>本周概览</h2>
             <span>近 7 天</span>
@@ -401,7 +417,7 @@ function PlanHome({
       ) : null}
 
       {topRecords.length > 0 ? (
-        <section className="section-block">
+        <section className="section-block home-pr">
           <div className="section-title">
             <h2>个人最好成绩</h2>
             <button type="button" className="link-button" onClick={onOpenHistory}>
@@ -425,7 +441,7 @@ function PlanHome({
         </section>
       ) : null}
 
-      <section className="section-block">
+      <section className="section-block home-recent">
         <div className="section-title">
           <h2>最近记录</h2>
           {sessions.length > 0 ? (
@@ -1398,8 +1414,6 @@ function WorkoutView({
 
             {isExpanded ? (
               <div className="exercise-log-body">
-                {coachNote ? <CoachCueCard note={coachNote} /> : null}
-
                 <div className="set-grid">
                   <div className="set-grid-header">
                     <span>组</span>
@@ -1436,6 +1450,8 @@ function WorkoutView({
                     - 组
                   </button>
                 </div>
+
+                {coachNote ? <CoachCueCard note={coachNote} /> : null}
 
                 <textarea
                   value={log.note}
