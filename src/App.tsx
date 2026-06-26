@@ -1247,6 +1247,16 @@ function WorkoutView({
     setIsAddingExercise(false);
   }
 
+  function focusSetInput(target: HTMLInputElement) {
+    onInputFocusChange(true);
+    window.requestAnimationFrame(() => {
+      const stepper = target.closest('.stepper');
+      if (stepper instanceof HTMLElement && typeof stepper.scrollIntoView === 'function') {
+        stepper.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
+    });
+  }
+
   return (
     <section className="screen workout-screen">
       <div className="workout-summary">
@@ -1355,7 +1365,7 @@ function WorkoutView({
                   set={set}
                   lastSet={lastSetsByExercise[log.exerciseId]?.[setIndex]}
                   onChange={(patch) => updateSet(exerciseIndex, setIndex, patch)}
-                  onInputFocus={() => onInputFocusChange(true)}
+                  onInputFocus={focusSetInput}
                   onInputBlur={() => onInputFocusChange(false)}
                 />
               ))}
@@ -1527,7 +1537,7 @@ function SetRow({
   set: SetLog;
   lastSet?: { weight: number | null; reps: number | null };
   onChange: (patch: Partial<SetLog>) => void;
-  onInputFocus?: () => void;
+  onInputFocus?: (target: HTMLInputElement) => void;
   onInputBlur?: () => void;
 }) {
   // 窄输入框里占位文字要短：有历史就直接显示上次数值作参考，否则用单位提示。
@@ -1555,7 +1565,7 @@ function SetRow({
           value={set.weight ?? ''}
           placeholder={weightHint}
           onChange={(event) => onChange({ weight: parseOptionalNumber(event.target.value) })}
-          onFocus={onInputFocus}
+          onFocus={(event) => onInputFocus?.(event.currentTarget)}
           onBlur={onInputBlur}
         />
         <button type="button" onClick={() => stepWeight(2.5)} aria-label={`第 ${set.setNumber} 组重量加 2.5`}>＋</button>
@@ -1568,7 +1578,7 @@ function SetRow({
           value={set.reps ?? ''}
           placeholder={repsHint}
           onChange={(event) => onChange({ reps: parseOptionalNumber(event.target.value) })}
-          onFocus={onInputFocus}
+          onFocus={(event) => onInputFocus?.(event.currentTarget)}
           onBlur={onInputBlur}
         />
         <button type="button" onClick={() => stepReps(1)} aria-label={`第 ${set.setNumber} 组次数加 1`}>＋</button>
