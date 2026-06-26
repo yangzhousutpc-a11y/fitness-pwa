@@ -1,3 +1,5 @@
+import { ensureSchema } from '../schema.js';
+
 function parseFocus(value) {
   if (Array.isArray(value)) {
     return value;
@@ -11,6 +13,7 @@ function parseFocus(value) {
 export function createCustomPlanStore(pool) {
   return {
     async list() {
+      await ensureSchema(pool);
       const [planRows] = await pool.query('SELECT * FROM custom_plans ORDER BY created_at DESC');
       const [dayRows] = await pool.query('SELECT * FROM custom_plan_days ORDER BY sort_order ASC');
       const [exerciseRows] = await pool.query('SELECT * FROM custom_plan_day_exercises ORDER BY sort_order ASC');
@@ -40,6 +43,7 @@ export function createCustomPlanStore(pool) {
     },
 
     async upsert(plan) {
+      await ensureSchema(pool);
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();
@@ -83,6 +87,7 @@ export function createCustomPlanStore(pool) {
     },
 
     async remove(id) {
+      await ensureSchema(pool);
       await pool.query('DELETE FROM custom_plans WHERE id = ?', [id]);
     },
   };

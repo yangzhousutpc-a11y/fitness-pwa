@@ -8,6 +8,22 @@ import { createWorkoutSessionRouter } from './routes/workoutSessions.js';
 import { createCustomPlanStore } from './stores/customPlanStore.js';
 import { createWorkoutSessionStore } from './stores/workoutSessionStore.js';
 
+function getClientError(error) {
+  if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
+    return { status: 500, message: '数据库账号或密码错误，请检查 MYSQL_USER/MYSQL_PASSWORD' };
+  }
+  if (error?.code === 'ER_BAD_DB_ERROR') {
+    return { status: 500, message: '数据库不存在，请检查 MYSQL_DATABASE' };
+  }
+  if (['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT'].includes(error?.code)) {
+    return { status: 500, message: '数据库连接失败，请检查 MYSQL_HOST/MYSQL_PORT' };
+  }
+  if (error?.code === 'ER_NO_SUCH_TABLE') {
+    return { status: 500, message: '数据库表未初始化' };
+  }
+  return { status: 500, message: 'Internal Server Error' };
+}
+
 export function createApp({
   apiToken = process.env.API_TOKEN,
   customPlanStore = createCustomPlanStore(pool),
@@ -39,7 +55,8 @@ export function createApp({
 
   app.use((error, _req, res, _next) => {
     console.error(error);
-    res.status(500).json({ code: 1, message: 'Internal Server Error' });
+    const clientError = getClientError(error);
+    res.status(clientError.status).json({ code: 1, message: clientError.message });
   });
 
   return app;

@@ -1,3 +1,5 @@
+import { ensureSchema } from '../schema.js';
+
 function normalizeWeight(weight) {
   if (weight === null || weight === undefined) {
     return null;
@@ -8,6 +10,7 @@ function normalizeWeight(weight) {
 export function createWorkoutSessionStore(pool) {
   return {
     async list() {
+      await ensureSchema(pool);
       const [sessionRows] = await pool.query('SELECT * FROM workout_sessions ORDER BY date DESC');
       const [exerciseRows] = await pool.query('SELECT * FROM workout_exercise_logs ORDER BY sort_order ASC');
       const [setRows] = await pool.query('SELECT * FROM workout_set_logs ORDER BY set_number ASC');
@@ -35,6 +38,7 @@ export function createWorkoutSessionStore(pool) {
     },
 
     async upsert(session) {
+      await ensureSchema(pool);
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();

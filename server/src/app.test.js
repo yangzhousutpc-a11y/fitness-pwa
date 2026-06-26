@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import request from 'supertest';
 import { createApp } from './app.js';
+import { createCustomPlanStore } from './stores/customPlanStore.js';
 
 const samplePlan = {
   id: 'custom-plan-1',
@@ -113,4 +114,50 @@ test('serves the built frontend shell when a static directory is configured', as
   } finally {
     await rm(staticDir, { recursive: true, force: true });
   }
+});
+
+test('initializes database tables before reading custom plans', async () => {
+  const queries = [];
+  const store = createCustomPlanStore({
+    query: async (sql) => {
+      queries.push(sql);
+      if (sql.startsWith('SELECT * FROM custom_plans')) {
+        return [[]];
+      }
+      if (sql.startsWith('SELECT * FROM custom_plan_days')) {
+        return [[]];
+      }
+      if (sql.startsWith('SELECT * FROM custom_plan_day_exercises')) {
+        return [[]];
+      }
+      return [{}];
+    },
+  });
+
+  const plans = await store.list();
+
+  assert.deepEqual(plans, []);
+  assert.ok(queries.some((sql) => sql.startsWith('CREATE TABLE IF NOT EXISTS custom_plans')));
+  assert.ok(queries.some((sql) => sql.startsWith('SELECT * FROM custom_plans')));
+});
+
+test('returns a clear database connection error message', async () => {
+  const app = createApp({
+    ...createMemoryStores(),
+    apiToken: 'secret-token',
+    customPlanStore: {
+      list: async () => {
+        const error = new Error('connect failed');
+        error.code = 'ECONNREFUSED';
+        throw error;
+      },
+    },
+  });
+
+  const response = await request(app)
+    .get('/api/custom-plans')
+    .set({ Authorization: 'Bearer secret-token' })
+    .expect(500);
+
+  assert.deepEqual(response.body, { code: 1, message: '数据库连接失败，请检查 MYSQL_HOST/MYSQL_PORT' });
 });
