@@ -456,38 +456,41 @@ function PlanHome({
           <span>查看全部</span>
         </div>
         <div className="plan-choice-list">
-          {builtinPlans.map((plan, index) => (
-            <article
-              className={index === 0 ? 'plan-choice-card primary' : 'plan-choice-card'}
-              key={plan.id}
-            >
-              <span>
-                <small>{index === 0 ? '三分化完整计划' : '名师计划'}</small>
-                <strong>{index === 0 ? plan.coachName : plan.title}</strong>
-                <em>{index === 0 ? 'Day 1 / Day 2 / Day 3 全部训练内容' : `${plan.days.length} 天 · 按视频结构训练`}</em>
-              </span>
-              <div className="plan-choice-actions">
-                {currentPlanId === plan.id ? <span className="current-plan-badge">当前跟练</span> : (
+          {builtinPlans.map((plan) => {
+            const isCurrentPlan = currentPlanId === plan.id;
+            return (
+              <article
+                className={isCurrentPlan ? 'plan-choice-card primary' : 'plan-choice-card'}
+                key={plan.id}
+              >
+                <span>
+                  <small>{isCurrentPlan ? '当前跟练' : '名师计划'}</small>
+                  <strong>{plan.title}</strong>
+                  <em>{getPlanChoiceSummary(plan)}</em>
+                </span>
+                <div className="plan-choice-actions">
+                  {isCurrentPlan ? <span className="current-plan-badge">当前跟练</span> : (
+                    <button
+                      type="button"
+                      className="set-current-plan-button"
+                      onClick={() => onSetCurrentPlan(plan.id)}
+                      aria-label={`设为当前跟练${plan.title}`}
+                    >
+                      设为当前
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="set-current-plan-button"
-                    onClick={() => onSetCurrentPlan(plan.id)}
-                    aria-label={`设为当前跟练${plan.title}`}
+                    className="plan-choice-open"
+                    aria-label={`进入${plan.title}`}
+                    onClick={() => onOpenPlan(plan, plan.days[0]?.id)}
                   >
-                    设为当前
+                    ›
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="plan-choice-open"
-                  aria-label={index === 0 ? '进入名师计划' : `进入${plan.title}`}
-                  onClick={() => onOpenPlan(plan, plan.days[0]?.id)}
-                >
-                  ›
-                </button>
-              </div>
-            </article>
-          ))}
+                </div>
+              </article>
+            );
+          })}
 
           <button
             type="button"
@@ -1899,6 +1902,11 @@ function splitDayTitle(dayName: string): { prefix: string; title: string } {
     return { prefix: '', title: dayName };
   }
   return { prefix: match[1], title: match[2] };
+}
+
+function getPlanChoiceSummary(plan: CoachPlan): string {
+  const daySummary = plan.days.map((day) => splitDayTitle(day.name).title).join(' / ');
+  return `${plan.coachName} · ${plan.days.length} 天 · ${daySummary}`;
 }
 
 function History({

@@ -66,7 +66,7 @@ describe('fitness PWA user flows', () => {
 
     await waitFor(() => {
       expect(localStorage.getItem('fitness-pwa.api-token.v1')).toBe('phone-secret');
-      expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '进入三分化训练计划' })).toBeInTheDocument();
     });
   });
 
@@ -88,7 +88,7 @@ describe('fitness PWA user flows', () => {
   it('starts a coach-plan workout, records a set, and saves it to history', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('fitness PWA user flows', () => {
   it('expands training days independently and lets plan exercises fold open like workout cards', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
 
     // 默认展开 Day 1
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe('fitness PWA user flows', () => {
   it('keeps plan exercise collapse on the sticky heading instead of adding a bottom action', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
 
     expect(screen.getByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '收起杠铃卧推' })).not.toBeInTheDocument();
@@ -148,7 +148,7 @@ describe('fitness PWA user flows', () => {
   it('starts workouts with five sets and supports adding and deleting sets per exercise', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     // 进入训练默认只展开第一个动作（杠铃卧推），故只有它的 5 组可见
@@ -169,7 +169,7 @@ describe('fitness PWA user flows', () => {
   it('expands the first exercise by default and lets each be toggled independently', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     // 默认：第一个动作展开（有逐组输入），第二个折叠（无输入但有标题）
@@ -185,7 +185,7 @@ describe('fitness PWA user flows', () => {
   it('keeps workout exercise collapse on the sticky heading instead of adding a bottom action', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     expect(screen.getByLabelText('第 1 组重量')).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('fitness PWA user flows', () => {
   it('auto-fills the next set when the previous set is checked complete', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
@@ -217,7 +217,7 @@ describe('fitness PWA user flows', () => {
   it('moves the active target to the next exercise after the last set is completed', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     for (const setNumber of [1, 2, 3, 4, 5]) {
@@ -232,7 +232,7 @@ describe('fitness PWA user flows', () => {
   it('uses compact workout input mode while editing set numbers', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     const shell = screen.getByRole('main');
@@ -250,7 +250,7 @@ describe('fitness PWA user flows', () => {
   it('steps weight by 2.5 and reps by 1 via plus buttons', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
@@ -265,7 +265,7 @@ describe('fitness PWA user flows', () => {
   it('adds exercises from the library to the current workout only', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     fireEvent.click(screen.getByRole('button', { name: '添加动作' }));
 
@@ -289,7 +289,7 @@ describe('fitness PWA user flows', () => {
   it('starts a rest timer when a set is checked complete', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
@@ -306,7 +306,7 @@ describe('fitness PWA user flows', () => {
   it('shows personal records and weekly overview in history after a workout', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     fireEvent.change(screen.getAllByLabelText('第 1 组重量')[0], { target: { value: '60' } });
     fireEvent.change(screen.getAllByLabelText('第 1 组次数')[0], { target: { value: '10' } });
@@ -418,7 +418,7 @@ describe('fitness PWA user flows', () => {
   it('shows coach note cue illustrations based on exercise form', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     const firstCoachNote = screen.getAllByText('名师要点')[0].closest('.coach-cue-card');
 
@@ -430,7 +430,7 @@ describe('fitness PWA user flows', () => {
     render(<App />);
 
     expect(screen.getByText('选择训练计划')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入三分化训练计划' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入谭成义私教跟练' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入我的计划' })).toBeInTheDocument();
 
@@ -463,7 +463,7 @@ describe('fitness PWA user flows', () => {
     expect(screen.getByText('Day 2')).toBeInTheDocument();
     expect(screen.getByText('背 / 后束 / 二头')).toBeInTheDocument();
     expect(screen.getByText('根据最近一次训练：上次完成 Day 1 胸 / 肩 / 三头')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入三分化训练计划' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '开始推荐训练' }));
 
@@ -502,6 +502,14 @@ describe('fitness PWA user flows', () => {
       expect(screen.getByText('背部')).toBeInTheDocument();
       expect(screen.queryByText('背 / 后束 / 二头')).not.toBeInTheDocument();
     });
+
+    const splitPlanCard = screen.getByRole('button', { name: '进入三分化训练计划' }).closest('.plan-choice-card');
+    const privatePlanCard = screen.getByRole('button', { name: '进入谭成义私教跟练' }).closest('.plan-choice-card');
+
+    expect(splitPlanCard).not.toHaveClass('primary');
+    expect(privatePlanCard).toHaveClass('primary');
+    expect(screen.queryByText('三分化完整计划')).not.toBeInTheDocument();
+    expect(screen.queryByText('Day 1 / Day 2 / Day 3 全部训练内容')).not.toBeInTheDocument();
   });
 
   it('opens the Tan Chengyi private coaching plan and starts a workout from it', () => {
@@ -525,7 +533,7 @@ describe('fitness PWA user flows', () => {
   it('keeps bottom navigation height on detail, custom editor, and workout pages', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     expect(screen.getByRole('navigation', { name: '主导航' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /返回/ }));
@@ -672,7 +680,7 @@ describe('fitness PWA user flows', () => {
   it('gives each exercise its own coach cue image within a day', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     // 先收起默认展开的 Day 1，再单独展开 Day 2（含 引体向上 / 高位下拉，曾共用 pull 图）
     fireEvent.click(screen.getByRole('button', { name: 'Day 1 胸 / 肩 / 三头' }));
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
@@ -698,7 +706,7 @@ describe('fitness PWA user flows', () => {
     expect(screen.queryByText('个人最好成绩')).not.toBeInTheDocument();
 
     // 完成一次训练
-    fireEvent.click(screen.getByRole('button', { name: '进入名师计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
     fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
     fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
@@ -709,7 +717,7 @@ describe('fitness PWA user flows', () => {
     fireEvent.click(screen.getByRole('button', { name: /计划/ }));
 
     // 首页现在应同时出现 本周概览 + 个人最好成绩 + 双入口
-    expect(screen.getByRole('button', { name: '进入名师计划' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入三分化训练计划' })).toBeInTheDocument();
     expect(screen.getByText('本周概览')).toBeInTheDocument();
     expect(screen.getByText('个人最好成绩')).toBeInTheDocument();
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
