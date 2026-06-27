@@ -592,7 +592,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['手微外旋，手腕全程不乱动', '约 20 度后仰，深吸气让背预先发力', '向下拉而不是向后拉，放到背阔被拉长即可'],
             commonMistakes: ['向后缩成手臂发力', '过度侧屈或旋转借力', '把肩胛放到关节最大位置，背阔张力反而丢掉'],
             illustration: 'pull',
-            imageUrl: '/coach-shots/straight-arm-pulldown-cue.jpg',
+            imageUrl: '/coach-shots/one-arm-lat-pulldown-cue.jpg',
           },
           {
             exerciseId: 'lat-pulldown',
@@ -614,7 +614,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['腿蹬住稳定骨盆，另一只手撑住身体', '身体推向远端找中立位，再沿背阔方向拉', '最后一组可做 10 次到接近力竭，再休 5 秒补 5 次'],
             commonMistakes: ['身体侧屈旋转代偿', '肘往上提，变成斜方肌主导', '感觉不好还强行加重'],
             illustration: 'row',
-            imageUrl: '/coach-shots/one-arm-dumbbell-row-cue.jpg',
+            imageUrl: '/coach-shots/one-arm-cable-row-cue.jpg',
           },
           {
             exerciseId: 'chest-supported-row',
@@ -625,7 +625,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['开肘，在水平面向后拉', '微微后仰对抗绳索向前拉的力，不要甩', '用中下斜方感受肩胛内收，按体态调角度'],
             commonMistakes: ['轮、甩、借力', '把动作做成普通窄肘背阔划船', '完全不后仰导致核心压力过大、感觉丢失'],
             illustration: 'row',
-            imageUrl: '/coach-shots/seated-cable-row-cue.jpg',
+            imageUrl: '/coach-shots/chest-supported-row-cue.jpg',
           },
           {
             exerciseId: 'cable-curl',
@@ -667,7 +667,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['支撑脚踩稳，骨盆保持稳定', '髋部向后折叠，躯干和后腿形成整体', '先用轻重量找稳定，不追求下放越低越好'],
             commonMistakes: ['身体旋转或侧屈', '支撑膝内扣', '为了够地面而弓背'],
             illustration: 'hinge',
-            imageUrl: '/coach-shots/hinge-cue.jpg',
+            imageUrl: '/coach-shots/single-leg-deadlift-cue.jpg',
           },
           {
             exerciseId: 'bulgarian-split-squat',
@@ -701,7 +701,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['胸腔和骨盆保持中立，不要玩命挺胸或骨盆乱倾', '背阔收紧让杠铃无限接近身体', '主动屈髋，小腿基本垂直，感到后侧链被拉长后再蹬地站起'],
             commonMistakes: ['把杠放远导致腰压力变大', '膝盖前引太多，变成蹲', '抬头或含胸低头，让腰背压力增加'],
             illustration: 'hinge',
-            imageUrl: '/coach-shots/deadlift-cue.jpg',
+            imageUrl: '/coach-shots/romanian-deadlift-cue.jpg',
           },
           {
             exerciseId: 'back-extension',
@@ -712,7 +712,7 @@ export const coachPlans: CoachPlan[] = [
             keyCues: ['髋部主导折叠和伸展，不用腰椎反复弯折', '顶端用臀和后侧链收紧，不要猛甩', '保持上背刚性，动作慢一点更容易找感觉'],
             commonMistakes: ['靠惯性弹起', '过度抬头压腰', '只模仿幅度，没有后侧链张力'],
             illustration: 'hinge',
-            imageUrl: '/coach-shots/hip-thrust-cue.jpg',
+            imageUrl: '/coach-shots/back-extension-cue.jpg',
           },
         ],
       },
@@ -764,7 +764,7 @@ days: [
             keyCues: ['腿蹬住、稳定骨盆', '另一只手撑住、把身体推向远端找中立位', '微微反手、向后做出尽量大的肩屈幅度', '顶端做一点点小停顿'],
             commonMistakes: ['身体侧屈、旋转借力', '肘往上提、肩胛往里翻', '还原放太多导致张力松掉'],
             illustration: 'row',
-            imageUrl: '/coach-shots/one-arm-dumbbell-row-cue.jpg',
+            imageUrl: '/coach-shots/one-arm-cable-row-cue.jpg',
           },
           {
             exerciseId: 'lat-pulldown',
@@ -786,7 +786,7 @@ days: [
             keyCues: ['手稍微带一点外旋、手腕全程不动', '约20度后仰即可、不要前倾', '深吸气让背预先发力，向下拉而不是向后拉'],
             commonMistakes: ['过度侧屈或旋转', '向后缩变成手臂发力', '手腕乱动、放着放着变成内旋'],
             illustration: 'pull',
-            imageUrl: '/coach-shots/straight-arm-pulldown-cue.jpg',
+            imageUrl: '/coach-shots/one-arm-lat-pulldown-cue.jpg',
           },
           {
             exerciseId: 'chest-supported-row',
@@ -797,7 +797,7 @@ days: [
             keyCues: ['胸口贴住靠垫、躯干固定不动', '只做肩胛骨后缩、把幅度做到位', '屁股可往前坐一点找到稳定位'],
             commonMistakes: ['用顶腰代替肩胛后缩', '躯干跟着一起晃', '后缩幅度不足、做得不到位'],
             illustration: 'row',
-            imageUrl: '/coach-shots/seated-cable-row-cue.jpg',
+            imageUrl: '/coach-shots/chest-supported-row-cue.jpg',
           },
         ],
       },
@@ -964,7 +964,7 @@ days: [
             keyCues: ['轻重量、俯身', '做肩屈的同时肩胛骨不要往前翻、保持下沉', '幅度不要太大、从后束已发力的位置开始'],
             commonMistakes: ['肩胛往前翻、整个肩耸起', '重量过大', '放得太低张力松掉'],
             illustration: 'raise',
-            imageUrl: '/coach-shots/face-pull-cue.jpg',
+            imageUrl: '/coach-shots/rear-delt-fly-cue.jpg',
           },
           {
             exerciseId: 'reverse-pec-deck',
@@ -975,7 +975,7 @@ days: [
             keyCues: ['座椅调高、让手与肩同高保持稳定', '内旋位让后束更孤立', '兼顾重量、有效幅度和目标肌感受'],
             commonMistakes: ['座椅过低变成上提、稳定性差', '耸肩抢发力', '重量过大失控'],
             illustration: 'raise',
-            imageUrl: '/coach-shots/rear-delt-fly-cue.jpg',
+            imageUrl: '/coach-shots/reverse-pec-deck-cue.jpg',
           },
           {
             exerciseId: 'dumbbell-shoulder-press',

@@ -952,9 +952,9 @@ describe('fitness PWA user flows', () => {
 
     const imgs = screen.getAllByRole('img') as HTMLImageElement[];
     const srcs = imgs.map((img) => img.getAttribute('src'));
-    expect(srcs).toContain('/coach-shots/straight-arm-pulldown-cue.jpg');
+    expect(srcs).toContain('/coach-shots/one-arm-lat-pulldown-cue.jpg');
     expect(srcs).toContain('/coach-shots/lat-pulldown-cue.jpg');
-    expect(srcs).toContain('/coach-shots/seated-cable-row-cue.jpg');
+    expect(srcs).toContain('/coach-shots/chest-supported-row-cue.jpg');
     expect(new Set(srcs).size).toBe(srcs.length);
   });
 
