@@ -829,6 +829,46 @@ a {
   margin-top: 14px;
 }
 
+.warmup-block {
+  padding: 12px 14px;
+  border: 1px dashed rgba(43, 214, 106, 0.4);
+  border-radius: var(--radius-m);
+  background: rgba(43, 214, 106, 0.06);
+}
+
+.warmup-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.warmup-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.warmup-list li {
+  display: grid;
+  gap: 2px;
+}
+
+.warmup-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.warmup-detail {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
 .plan-exercise-card {
   padding: 14px 16px;
   border: 1px solid rgba(148, 163, 184, 0.14);

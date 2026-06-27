@@ -1346,6 +1346,19 @@ function PlanDetail({
                   </ol>
                 ) : (
                   <div className="plan-exercise-list">
+                    {day.warmup && day.warmup.length > 0 ? (
+                      <div className="warmup-block">
+                        <div className="warmup-title">热身激活</div>
+                        <ul className="warmup-list">
+                          {day.warmup.map((item) => (
+                            <li key={item.name}>
+                              <span className="warmup-name">{item.name}</span>
+                              <span className="warmup-detail">{item.detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     {day.exerciseIds.map((exerciseId) => {
                       const key = `${day.id}:${exerciseId}`;
                       return (

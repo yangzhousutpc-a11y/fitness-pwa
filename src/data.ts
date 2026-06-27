@@ -722,6 +722,10 @@ days: [
         name: 'Day 1 背部',
         focus: ['背', '二头'],
         sourceUrl: privateCoachingBackUrl,
+        warmup: [
+          { name: '泡沫轴前锯肌推', detail: '跪姿、小臂放泡沫轴上向前推，躯干和重心不动、只动肩，把肩胛骨顶起来激活前锯肌和肩胛稳定。重心越靠前越难，做 2 组。' },
+          { name: '健腹轮前推（可选）', detail: '动作模式同上但手参与，能顺带提高手腕和小臂能力；手腕不适的人优先用这个，保持肩胛外展、核心发力。' },
+        ],
         exerciseIds: [
           'straight-arm-pulldown',
           'one-arm-cable-row',
@@ -792,6 +796,9 @@ days: [
         name: 'Day 2 手臂',
         focus: ['三头', '二头'],
         sourceUrl: privateCoachingArmsUrl,
+        warmup: [
+          { name: '直接开练 + 热身组', detail: '谭成义原话：手臂训练不需要特别热身，直接开练即可，只需在正式动作前用轻重量多做 1-2 组热身组激活；若三头起步手腕不适，先用更轻的重量多激活几次。' },
+        ],
         exerciseIds: [
           'triceps-pushdown',
           'skull-crusher',
@@ -862,6 +869,11 @@ days: [
         name: 'Day 3 胸部',
         focus: ['胸', '三头'],
         sourceUrl: privateCoachingChestUrl,
+        warmup: [
+          { name: '俯卧 TYW（侧重 Y 字）', detail: '泡沫轴垫高、只动肩不动躯干，激活下斜方与肩胛联动。最推荐 Y 字、尽量抬高，胸口抵住泡沫轴吸气做扩张对抗。' },
+          { name: '俯卧 Y 字推举', detail: '在胸廓扩张位做 Y 字推举，让肩在更协调的位置上活动，顺带调整肩肱节律。' },
+          { name: '弹力带绕肩', detail: '保持弹力带张力，从肩正前方绕到肩正后方，幅度不用大、全程别松掉，给肩关节升温。' },
+        ],
         exerciseIds: [
           'parallel-bar-dip',
           'chest-press-machine',
@@ -921,6 +933,10 @@ days: [
         name: 'Day 4 肩部',
         focus: ['肩'],
         sourceUrl: privateCoachingShouldersUrl,
+        warmup: [
+          { name: '弹力带绕肩', detail: '黄色等较轻弹力带，从肩正前方到肩正后方保持张力做约 20 次，让肩关节升温、分泌滑液，也是一种保养。' },
+          { name: 'TRX / 泡沫轴 Y 字提拉', detail: '向头顶方向走出 Y 字、激活肩胛和下斜方；脚越往前越难。没有 TRX 就用胸口抵泡沫轴、只动肩做 Y 字，别顶腰、保持脊柱不动。' },
+        ],
         exerciseIds: [
           'rear-delt-fly',
           'reverse-pec-deck',

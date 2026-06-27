@@ -19,6 +19,11 @@ export interface Exercise {
   planFit: string[];
 }
 
+export interface WarmupItem {
+  name: string;
+  detail: string;
+}
+
 export interface TrainingDayTemplate {
   id: string;
   name: string;
@@ -26,6 +31,7 @@ export interface TrainingDayTemplate {
   sourceUrl: string;
   exerciseIds: string[];
   coachNotes: CoachExerciseNote[];
+  warmup?: WarmupItem[];
 }
 
 export interface CoachPlan {
