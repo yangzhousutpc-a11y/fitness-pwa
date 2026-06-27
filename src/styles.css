@@ -83,9 +83,80 @@ a {
   overflow: hidden;
   color: var(--ink-1);
   /* 顶部一抹绿色光晕，制造深度与运动感，避免纯平涂 */
-  background:
-    radial-gradient(120% 60% at 50% -10%, rgba(43, 214, 106, 0.12), transparent 60%),
-    var(--bg-1);
+  background: var(--shell-bg, radial-gradient(120% 60% at 50% -10%, rgba(43, 214, 106, 0.12), transparent 60%), var(--bg-1));
+}
+
+.app-shell[data-ui-theme="dark-log"] {
+  --bg-0: #050505;
+  --bg-1: #070707;
+  --surface-1: #111;
+  --surface-2: #191919;
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --ink-1: #f8fafc;
+  --ink-2: #9ba1a8;
+  --ink-3: #676e76;
+  --accent: #26d46b;
+  --accent-strong: #18b85b;
+  --accent-soft: rgba(38, 212, 107, 0.14);
+  --accent-ink: #031109;
+  --card-bg: #111;
+  --control-bg: #151515;
+  --topbar-bg: linear-gradient(180deg, rgba(7, 7, 7, 0.98), rgba(7, 7, 7, 0.82));
+  --nav-bg: linear-gradient(0deg, rgba(7, 7, 7, 0.98), rgba(7, 7, 7, 0.86));
+  --primary-card-bg: linear-gradient(180deg, #0b0b0b, #050505);
+  --primary-card-border: rgba(255, 255, 255, 0.2);
+  --shell-bg: #070707;
+  --shadow-card: none;
+}
+
+.app-shell[data-ui-theme="paper-log"] {
+  --bg-0: #e9e4d8;
+  --bg-1: #fbfaf6;
+  --surface-1: #fffdf8;
+  --surface-2: #f1efe7;
+  --line: rgba(23, 23, 21, 0.1);
+  --line-strong: rgba(23, 23, 21, 0.16);
+  --ink-1: #171715;
+  --ink-2: #6f6a61;
+  --ink-3: #9b958a;
+  --accent: #171715;
+  --accent-strong: #2d2a25;
+  --accent-soft: rgba(23, 23, 21, 0.08);
+  --accent-ink: #fbfaf6;
+  --card-bg: #fffdf8;
+  --control-bg: #f1efe7;
+  --font-display: "Songti SC", "STSong", var(--font-body);
+  --topbar-bg: linear-gradient(180deg, rgba(251, 250, 246, 0.98), rgba(251, 250, 246, 0.86));
+  --nav-bg: linear-gradient(0deg, rgba(251, 250, 246, 0.98), rgba(251, 250, 246, 0.86));
+  --primary-card-bg: #fffdf8;
+  --primary-card-border: rgba(23, 23, 21, 0.16);
+  --shell-bg: #fbfaf6;
+  --shadow-card: none;
+}
+
+.app-shell[data-ui-theme="pro-gray"] {
+  --bg-0: #0d1116;
+  --bg-1: #11161d;
+  --surface-1: #171d25;
+  --surface-2: #202833;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --ink-1: #eef2f5;
+  --ink-2: #97a1ac;
+  --ink-3: #66717d;
+  --accent: #d8f56d;
+  --accent-strong: #bde34b;
+  --accent-soft: rgba(216, 245, 109, 0.12);
+  --accent-ink: #11170b;
+  --card-bg: rgba(255, 255, 255, 0.045);
+  --control-bg: rgba(255, 255, 255, 0.055);
+  --topbar-bg: linear-gradient(180deg, rgba(17, 22, 29, 0.98), rgba(17, 22, 29, 0.82));
+  --nav-bg: linear-gradient(0deg, rgba(17, 22, 29, 0.98), rgba(17, 22, 29, 0.86));
+  --primary-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+  --primary-card-border: rgba(255, 255, 255, 0.12);
+  --shell-bg: radial-gradient(circle at 72% 0%, rgba(216, 245, 109, 0.12), transparent 34%), #11161d;
+  --shadow-card: none;
 }
 
 .topbar {
@@ -99,7 +170,7 @@ a {
   gap: 16px;
   min-height: 128px;
   padding: max(54px, env(safe-area-inset-top)) 22px 16px;
-  background: linear-gradient(180deg, rgba(11, 16, 24, 0.96), rgba(11, 16, 24, 0.78));
+  background: var(--topbar-bg, linear-gradient(180deg, rgba(11, 16, 24, 0.96), rgba(11, 16, 24, 0.78)));
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--line);
 }
@@ -146,6 +217,247 @@ a {
   width: 32px;
   height: 32px;
   border-radius: 9px;
+}
+
+.login-shell {
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-screen {
+  display: grid;
+  gap: 28px;
+  width: 100%;
+}
+
+.login-brand span {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.login-brand h1,
+.login-brand p {
+  margin: 0;
+}
+
+.login-brand h1 {
+  margin-top: 12px;
+  color: var(--ink-1);
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.login-brand p {
+  margin-top: 12px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.login-form label span {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.login-form input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 0 14px;
+  color: var(--ink-1);
+  background: var(--control-bg, var(--surface-2));
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.login-form input::placeholder {
+  color: var(--ink-3);
+}
+
+.login-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(246, 115, 107, 0.36);
+  border-radius: 12px;
+  color: var(--danger);
+  background: rgba(246, 115, 107, 0.1);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.login-primary,
+.login-secondary {
+  min-height: 50px;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+.login-primary {
+  border: 0;
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.login-secondary {
+  border: 1px solid var(--line-strong);
+  color: var(--ink-1);
+  background: var(--control-bg, var(--surface-2));
+}
+
+.login-primary:disabled,
+.login-secondary:disabled,
+.login-form input:disabled {
+  opacity: 0.65;
+}
+
+.appearance-button {
+  flex: 0 0 auto;
+  min-width: 58px;
+  min-height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink-1);
+  background: var(--control-bg, rgba(30, 41, 59, 0.92));
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.appearance-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.appearance-sheet {
+  width: min(100%, 390px);
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  padding: 16px;
+  color: var(--ink-1);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-pop);
+}
+
+.appearance-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.appearance-sheet-head strong,
+.appearance-sheet-head span {
+  display: block;
+}
+
+.appearance-sheet-head strong {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.appearance-sheet-head span {
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.appearance-sheet-head button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink-1);
+  background: var(--control-bg, var(--surface-2));
+  font-size: 20px;
+  line-height: 1;
+}
+
+.appearance-options {
+  display: grid;
+  gap: 10px;
+}
+
+.appearance-options button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 66px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: var(--ink-1);
+  background: var(--control-bg, var(--surface-2));
+  text-align: left;
+}
+
+.appearance-options button.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.appearance-options strong,
+.appearance-options small {
+  display: block;
+}
+
+.appearance-options strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.appearance-options small {
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.theme-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+}
+
+.theme-swatch.dark-log {
+  background: linear-gradient(135deg, #050505 0 58%, #26d46b 58% 100%);
+}
+
+.theme-swatch.paper-log {
+  background: linear-gradient(135deg, #fbfaf6 0 58%, #171715 58% 100%);
+}
+
+.theme-swatch.pro-gray {
+  background: linear-gradient(135deg, #11161d 0 58%, #d8f56d 58% 100%);
 }
 
 .sync-banner {
@@ -206,6 +518,56 @@ a {
   padding: 6px 10px;
 }
 
+.install-app-prompt {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 22px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(43, 214, 106, 0.26);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(43, 214, 106, 0.12), rgba(18, 26, 38, 0.92)),
+    var(--surface-1);
+}
+
+.install-app-prompt strong {
+  display: block;
+  color: var(--ink-1);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.install-app-prompt p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.install-app-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ghost-button {
+  border: 1px solid var(--line-strong);
+  color: var(--ink-1);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.primary-button.compact,
+.ghost-button.compact {
+  min-height: 32px;
+  border-radius: 9px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .sync-banner {
   margin: 8px 22px 0;
   padding: 9px 10px;
@@ -230,6 +592,14 @@ a {
 
   .sync-actions button {
     min-height: 32px;
+  }
+
+  .install-app-prompt {
+    grid-template-columns: 1fr;
+  }
+
+  .install-app-actions {
+    justify-content: flex-end;
   }
 }
 
@@ -276,7 +646,7 @@ a {
 .coming-soon-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-m);
-  background: var(--surface-1);
+  background: var(--card-bg, var(--surface-1));
   box-shadow: var(--shadow-card);
 }
 
@@ -1329,6 +1699,14 @@ a {
   gap: 4px;
 }
 
+.history-card-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-reuse,
 .history-delete {
   flex: 0 0 auto;
   min-width: 70px;
@@ -1364,7 +1742,7 @@ a {
   margin: 0 auto;
   padding: 12px 24px max(18px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: linear-gradient(0deg, rgba(11, 16, 24, 0.98), rgba(11, 16, 24, 0.86));
+  background: var(--nav-bg, linear-gradient(0deg, rgba(11, 16, 24, 0.98), rgba(11, 16, 24, 0.86)));
   backdrop-filter: blur(18px);
   transition: opacity 0.16s ease, transform 0.16s ease;
 }
@@ -1508,9 +1886,9 @@ a {
 }
 
 .calendar-session-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   padding: 10px 0 0;
   border-top: 1px solid var(--line);
@@ -1523,9 +1901,25 @@ a {
 }
 
 .calendar-session-card span {
-  flex: 0 0 auto;
+  min-width: 0;
   color: var(--ink-2);
   font-size: 12px;
+}
+
+.calendar-reuse {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  min-height: 34px;
+  border-radius: var(--radius-s);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.reuse-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .stat-grid {
@@ -2833,6 +3227,158 @@ a {
   font-size: 16px;
   font-weight: 800;
   color: var(--ink-1);
+}
+
+/* ===== Appearance themes ===== */
+.app-shell[data-ui-theme="dark-log"] .primary-training-card {
+  border-color: var(--primary-card-border);
+  background: var(--primary-card-bg);
+}
+
+.app-shell[data-ui-theme="dark-log"] .primary-training-card::after {
+  color: rgba(255, 255, 255, 0.06);
+}
+
+.app-shell[data-ui-theme="dark-log"] .plan-choice-card,
+.app-shell[data-ui-theme="dark-log"] .exercise-log-card,
+.app-shell[data-ui-theme="dark-log"] .training-day-card,
+.app-shell[data-ui-theme="dark-log"] .custom-plan-card,
+.app-shell[data-ui-theme="dark-log"] .history-card,
+.app-shell[data-ui-theme="dark-log"] .stat-tile,
+.app-shell[data-ui-theme="dark-log"] .pr-card,
+.app-shell[data-ui-theme="dark-log"] .training-calendar,
+.app-shell[data-ui-theme="dark-log"] .calendar-detail,
+.app-shell[data-ui-theme="dark-log"] .progress-chart {
+  background: #111;
+  box-shadow: none;
+}
+
+.app-shell[data-ui-theme="paper-log"] .topbar {
+  backdrop-filter: none;
+}
+
+.app-shell[data-ui-theme="paper-log"] .topbar h1 {
+  font-size: 32px;
+  font-weight: 760;
+}
+
+.app-shell[data-ui-theme="paper-log"] .primary-training-card {
+  min-height: 210px;
+  border-color: var(--primary-card-border);
+  color: var(--ink-1);
+  background: var(--primary-card-bg);
+}
+
+.app-shell[data-ui-theme="paper-log"] .primary-training-card::after {
+  content: "";
+}
+
+.app-shell[data-ui-theme="paper-log"] .primary-training-card h2,
+.app-shell[data-ui-theme="paper-log"] .primary-training-card h2 span {
+  color: var(--ink-1);
+}
+
+.app-shell[data-ui-theme="paper-log"] .primary-training-card p,
+.app-shell[data-ui-theme="paper-log"] .plan-choice-card em,
+.app-shell[data-ui-theme="paper-log"] .workout-summary span {
+  color: var(--ink-2);
+}
+
+.app-shell[data-ui-theme="paper-log"] .recommended-adjust-button {
+  border-color: var(--line-strong);
+  color: var(--ink-1);
+  background: var(--surface-2);
+}
+
+.app-shell[data-ui-theme="paper-log"] .plan-choice-card,
+.app-shell[data-ui-theme="paper-log"] .exercise-log-card,
+.app-shell[data-ui-theme="paper-log"] .training-day-card,
+.app-shell[data-ui-theme="paper-log"] .custom-plan-card,
+.app-shell[data-ui-theme="paper-log"] .history-card,
+.app-shell[data-ui-theme="paper-log"] .exercise-card,
+.app-shell[data-ui-theme="paper-log"] .stat-tile,
+.app-shell[data-ui-theme="paper-log"] .pr-card,
+.app-shell[data-ui-theme="paper-log"] .training-calendar,
+.app-shell[data-ui-theme="paper-log"] .calendar-detail,
+.app-shell[data-ui-theme="paper-log"] .progress-chart,
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-hero {
+  background: var(--surface-1);
+  box-shadow: none;
+}
+
+.app-shell[data-ui-theme="paper-log"] .plan-choice-card.primary {
+  background: #fffdf8;
+}
+
+.app-shell[data-ui-theme="paper-log"] .bottom-nav button.active,
+.app-shell[data-ui-theme="paper-log"] .calendar-day.selected,
+.app-shell[data-ui-theme="paper-log"] .set-row.active,
+.app-shell[data-ui-theme="paper-log"] .set-row.completed {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.app-shell[data-ui-theme="paper-log"] .set-row,
+.app-shell[data-ui-theme="paper-log"] .stepper input,
+.app-shell[data-ui-theme="paper-log"] .stepper button,
+.app-shell[data-ui-theme="paper-log"] .check-button,
+.app-shell[data-ui-theme="paper-log"] .rest-timer-controls button {
+  background: var(--surface-2);
+}
+
+.app-shell[data-ui-theme="paper-log"] .rest-timer,
+.app-shell[data-ui-theme="paper-log"] .rest-timer.done {
+  color: var(--ink-1);
+  background: var(--surface-1);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame {
+  background: var(--surface-2);
+}
+
+.app-shell[data-ui-theme="pro-gray"] .primary-training-card {
+  border-color: var(--primary-card-border);
+  background: var(--primary-card-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.app-shell[data-ui-theme="pro-gray"] .primary-training-card::after {
+  color: rgba(216, 245, 109, 0.08);
+}
+
+.app-shell[data-ui-theme="pro-gray"] .primary-training-card h2 span {
+  color: var(--ink-2);
+}
+
+.app-shell[data-ui-theme="pro-gray"] .plan-choice-card,
+.app-shell[data-ui-theme="pro-gray"] .exercise-log-card,
+.app-shell[data-ui-theme="pro-gray"] .training-day-card,
+.app-shell[data-ui-theme="pro-gray"] .custom-plan-card,
+.app-shell[data-ui-theme="pro-gray"] .history-card,
+.app-shell[data-ui-theme="pro-gray"] .exercise-card,
+.app-shell[data-ui-theme="pro-gray"] .stat-tile,
+.app-shell[data-ui-theme="pro-gray"] .pr-card,
+.app-shell[data-ui-theme="pro-gray"] .training-calendar,
+.app-shell[data-ui-theme="pro-gray"] .calendar-detail,
+.app-shell[data-ui-theme="pro-gray"] .progress-chart,
+.app-shell[data-ui-theme="pro-gray"] .exercise-detail-hero {
+  background: var(--card-bg);
+  box-shadow: none;
+}
+
+.app-shell[data-ui-theme="pro-gray"] .plan-choice-card.primary {
+  background:
+    linear-gradient(90deg, rgba(216, 245, 109, 0.08), transparent 46%),
+    var(--card-bg);
+}
+
+.app-shell[data-ui-theme="pro-gray"] .recommended-adjust-button,
+.app-shell[data-ui-theme="pro-gray"] .set-row,
+.app-shell[data-ui-theme="pro-gray"] .stepper input,
+.app-shell[data-ui-theme="pro-gray"] .stepper button,
+.app-shell[data-ui-theme="pro-gray"] .check-button,
+.app-shell[data-ui-theme="pro-gray"] .rest-timer-controls button {
+  background: var(--control-bg);
 }
 
 .custom-empty p {

@@ -60,14 +60,48 @@ describe('fitness PWA user flows', () => {
     render(<App />);
 
     expect(await screen.findByText('访问密钥无效，请重新输入')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '主导航' })).not.toBeInTheDocument();
+    expect(screen.getByText('输入访问密钥后同步你的训练数据')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('访问密钥'), { target: { value: 'phone-secret' } });
-    fireEvent.click(screen.getByRole('button', { name: '保存并重试' }));
+    fireEvent.click(screen.getByRole('button', { name: '进入' }));
 
     await waitFor(() => {
       expect(localStorage.getItem('fitness-pwa.api-token.v1')).toBe('phone-secret');
       expect(screen.getByRole('button', { name: '进入三分化训练计划' })).toBeInTheDocument();
     });
+  });
+
+  it('shows a dismissible add-to-home-screen prompt on the plan home', async () => {
+    render(<App />);
+
+    expect(await screen.findByText('添加到主屏幕')).toBeInTheDocument();
+    expect(screen.getByText('从桌面图标打开，训练时就像独立 App。iPhone 可用分享菜单添加。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '我知道了' }));
+
+    expect(screen.queryByText('添加到主屏幕')).not.toBeInTheDocument();
+    expect(localStorage.getItem('fitness-pwa.install-prompt-dismissed.v1')).toBe('1');
+  });
+
+  it('switches the app appearance and remembers the selected UI theme', async () => {
+    const { unmount } = render(<App />);
+
+    const shell = await screen.findByRole('main');
+    expect(shell).toHaveAttribute('data-ui-theme', 'dark-log');
+
+    fireEvent.click(screen.getByRole('button', { name: '切换外观' }));
+    expect(screen.getByRole('dialog', { name: '选择外观' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /纸感训练册/ }));
+
+    expect(shell).toHaveAttribute('data-ui-theme', 'paper-log');
+    expect(localStorage.getItem('fitness-pwa.ui-theme.v1')).toBe('paper-log');
+
+    unmount();
+    render(<App />);
+
+    expect(await screen.findByRole('main')).toHaveAttribute('data-ui-theme', 'paper-log');
   });
 
   it('filters the exercise library by selected muscle group and search query', () => {
@@ -130,6 +164,8 @@ describe('fitness PWA user flows', () => {
     expect(image.src).toContain('/coach-shots/push-up-cue.jpg');
     expect(image.src).not.toContain('action-profile-hero');
     expect(image).not.toHaveAttribute('loading', 'lazy');
+    expect(screen.getByText('用自重推举补胸、三头和核心控制，适合作为热身、收尾或无器械训练。')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '俯卧撑 · 自重', level: 2 })).not.toBeInTheDocument();
   });
 
   it('does not show instructional helper copy on the exercise detail page', async () => {
@@ -286,6 +322,127 @@ describe('fitness PWA user flows', () => {
     expect(screen.getByText('休息后录 杠铃卧推 · 第 2 组')).toBeInTheDocument();
   });
 
+  it('keeps an unfinished workout draft when returning to the plan', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
+    fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
+    fireEvent.click(screen.getByLabelText('切换第 1 组完成状态'));
+
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('60');
+    expect((screen.getByLabelText('第 1 组次数') as HTMLInputElement).value).toBe('10');
+    expect(screen.getByLabelText('第 1 组重量').closest('.set-row')).toHaveClass('completed');
+  });
+
+  it('reuses a historical workout for today with weights and reps reset to unfinished', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-history-day-1',
+        date: '2026-06-20T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '肩胛收紧',
+            sets: [
+              { setNumber: 1, weight: 50, reps: 15, completed: true },
+              { setNumber: 2, weight: 55, reps: 12, completed: true },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '▤历史' }));
+    fireEvent.click(await screen.findByRole('button', { name: '复用Day 1 胸 / 肩 / 三头到今天' }));
+
+    expect(screen.getByRole('heading', { name: 'Day 1', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText('0/2 组完成')).toBeInTheDocument();
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('50');
+    expect((screen.getByLabelText('第 1 组次数') as HTMLInputElement).value).toBe('15');
+    expect(screen.getByLabelText('第 1 组重量').closest('.set-row')).not.toHaveClass('completed');
+  });
+
+  it('asks before reusing history over an unfinished draft for the same day', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-history-day-1',
+        date: '2026-06-20T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [
+              { setNumber: 1, weight: 50, reps: 15, completed: true },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
+
+    fireEvent.click(screen.getByRole('button', { name: '▤历史' }));
+    fireEvent.click(await screen.findByRole('button', { name: '复用Day 1 胸 / 肩 / 三头到今天' }));
+
+    expect(screen.getByRole('dialog', { name: '确认复用历史训练' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '取消' }));
+    expect(screen.queryByRole('dialog', { name: '确认复用历史训练' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '复用Day 1 胸 / 肩 / 三头到今天' }));
+    fireEvent.click(screen.getByRole('button', { name: '继续复用' }));
+
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('50');
+    expect(screen.getByText('0/1 组完成')).toBeInTheDocument();
+  });
+
+  it('can reuse a workout from the calendar selected-day summary', async () => {
+    apiState.sessions = [
+      {
+        id: 'session-history-day-1',
+        date: '2026-06-20T08:00:00.000Z',
+        planId: 'kaishengwang-tanchengyi-three-day-split',
+        dayId: 'day-1-push',
+        exerciseLogs: [
+          {
+            exerciseId: 'barbell-bench-press',
+            note: '',
+            sets: [
+              { setNumber: 1, weight: 45, reps: 10, completed: true },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '▤历史' }));
+    fireEvent.click(await screen.findByRole('button', { name: /06月20日 有训练/ }));
+
+    const selectedDaySummary = screen.getByRole('region', { name: '所选日期训练摘要' });
+    fireEvent.click(within(selectedDaySummary).getByRole('button', { name: '复用Day 1 胸 / 肩 / 三头到今天' }));
+
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('45');
+    expect(screen.getByText('0/1 组完成')).toBeInTheDocument();
+  });
+
   it('moves the active target to the next exercise after the last set is completed', () => {
     render(<App />);
 
@@ -387,6 +544,27 @@ describe('fitness PWA user flows', () => {
 
     act(() => {
       vi.advanceTimersByTime(90_000);
+    });
+
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+  });
+
+  it('catches up the rest timer when returning from the background', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-27T10:00:00+08:00'));
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
+
+    expect(screen.getByRole('timer', { name: '组间休息计时器' })).toBeInTheDocument();
+    expect(screen.getByText('01:30')).toBeInTheDocument();
+
+    act(() => {
+      vi.setSystemTime(new Date('2026-06-27T10:01:35+08:00'));
+      document.dispatchEvent(new Event('visibilitychange'));
     });
 
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();

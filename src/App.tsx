@@ -23,12 +23,14 @@ import {
 import {
   createEmptyCustomPlan,
   createExerciseLog,
+  createSessionFromHistory,
   createSessionFromDay,
 } from './storage';
-import type { CoachExerciseNote, CoachPlan, ExerciseLog, SetLog, TrainingDayTemplate, WorkoutSession } from './types';
+import type { CoachExerciseNote, CoachPlan, Exercise, ExerciseLog, SetLog, TrainingDayTemplate, WorkoutSession } from './types';
 
 type Tab = 'plans' | 'exercises' | 'history';
 type ExerciseFilter = '全部' | '胸' | '背' | '肩' | '腿' | '手臂';
+type UiTheme = 'dark-log' | 'paper-log' | 'pro-gray';
 type CalendarDay = {
   date: Date;
   dateKey: string;
@@ -58,17 +60,34 @@ type Route =
   | { name: 'custom-plan'; planId: string; expandedDayId?: string }
   | { name: 'exercise-detail'; exerciseId: string }
   | { name: 'workout'; planKind: 'builtin' | 'custom'; planId: string; dayId: string; session: WorkoutSession };
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
+
+const INSTALL_PROMPT_DISMISSED_KEY = 'fitness-pwa.install-prompt-dismissed.v1';
+const UI_THEME_STORAGE_KEY = 'fitness-pwa.ui-theme.v1';
+const uiThemeOptions: Array<{ id: UiTheme; name: string; description: string }> = [
+  { id: 'dark-log', name: '墨黑训练日志', description: '黑白高对比，训练中最清晰' },
+  { id: 'paper-log', name: '纸感训练册', description: '浅色手账感，复盘更舒服' },
+  { id: 'pro-gray', name: '专业灰阶仪表', description: '深灰数据感，长期扩展更稳' },
+];
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('plans');
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
+  const [workoutDrafts, setWorkoutDrafts] = useState<Record<string, WorkoutSession>>({});
+  const [pendingReuseSession, setPendingReuseSession] = useState<WorkoutSession | null>(null);
   const [customPlans, setCustomPlans] = useState<CoachPlan[]>([]);
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [syncError, setSyncError] = useState('');
+  const [showLogin, setShowLogin] = useState(false);
   const [apiTokenDraft, setApiTokenDraft] = useState('');
   const [isWorkoutInputFocused, setIsWorkoutInputFocused] = useState(false);
+  const [uiTheme, setUiTheme] = useState<UiTheme>(readSavedUiTheme);
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [exerciseQuery, setExerciseQuery] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('全部');
 
@@ -79,6 +98,7 @@ function App() {
   function reportSyncError(error: unknown) {
     setSyncStatus('error');
     setSyncError(error instanceof Error ? error.message : '数据库同步失败');
+    setShowLogin(true);
   }
 
   function loadDatabaseState() {
@@ -90,6 +110,7 @@ function App() {
         setSessions(nextSessions);
         setCurrentPlanId(nextPreference.planId);
         setSyncStatus('ready');
+        setShowLogin(false);
       })
       .catch(reportSyncError);
   }
@@ -99,6 +120,7 @@ function App() {
     if (!token) {
       setSyncStatus('error');
       setSyncError('请输入访问密钥');
+      setShowLogin(true);
       return;
     }
 
@@ -164,26 +186,73 @@ function App() {
   }
 
   function startWorkout(currentPlan: CoachPlan, day: TrainingDayTemplate) {
+    const draftKey = getWorkoutDraftKey(currentPlan.id, day.id);
     setRoute({
       name: 'workout',
       planKind: currentPlan.planType,
       planId: currentPlan.id,
       dayId: day.id,
-      session: createSessionFromDay(currentPlan, day),
+      session: workoutDrafts[draftKey] ?? createSessionFromDay(currentPlan, day),
     });
   }
 
   function updateSession(nextSession: WorkoutSession) {
     if (route.name === 'workout') {
+      setWorkoutDrafts((current) => ({
+        ...current,
+        [getWorkoutDraftKey(route.planId, route.dayId)]: nextSession,
+      }));
       setRoute({ ...route, session: nextSession });
     }
   }
 
   function finishWorkout(session: WorkoutSession) {
     setSessions((current) => [session, ...current.filter((item) => item.id !== session.id)]);
+    if (route.name === 'workout') {
+      setWorkoutDrafts((current) => {
+        const next = { ...current };
+        delete next[getWorkoutDraftKey(route.planId, route.dayId)];
+        return next;
+      });
+    }
     saveWorkoutSession(session).catch(reportSyncError);
     setActiveTab('history');
     setRoute({ name: 'home' });
+  }
+
+  function findSessionPlan(session: WorkoutSession): CoachPlan | undefined {
+    return [...coachPlans, ...customPlans].find((item) => item.id === session.planId);
+  }
+
+  function openReusedSession(sourceSession: WorkoutSession) {
+    const sourcePlan = findSessionPlan(sourceSession);
+    const sourceDay = sourcePlan?.days.find((day) => day.id === sourceSession.dayId);
+    if (!sourcePlan || !sourceDay) {
+      reportSyncError(new Error('找不到原训练计划，无法复用这次记录'));
+      return;
+    }
+
+    const nextSession = createSessionFromHistory(sourceSession);
+    const draftKey = getWorkoutDraftKey(nextSession.planId, nextSession.dayId);
+    setWorkoutDrafts((current) => ({ ...current, [draftKey]: nextSession }));
+    setActiveTab('plans');
+    setRoute({
+      name: 'workout',
+      planKind: sourcePlan.planType,
+      planId: nextSession.planId,
+      dayId: nextSession.dayId,
+      session: nextSession,
+    });
+  }
+
+  function reuseSessionForToday(sourceSession: WorkoutSession) {
+    const draftKey = getWorkoutDraftKey(sourceSession.planId, sourceSession.dayId);
+    if (workoutDrafts[draftKey]) {
+      setPendingReuseSession(sourceSession);
+      return;
+    }
+
+    openReusedSession(sourceSession);
   }
 
   function changeCurrentPlan(planId: string) {
@@ -245,15 +314,42 @@ function App() {
       setRoute({ name: 'custom-library' });
       return;
     }
-    if (route.name === 'workout' && route.planKind === 'custom') {
-      setRoute({ name: 'custom-library' });
+    if (route.name === 'workout') {
+      if (route.planKind === 'custom') {
+        setRoute({ name: 'custom-plan', planId: route.planId, expandedDayId: route.dayId });
+      } else {
+        setRoute({ name: 'builtin-plan', planId: route.planId, expandedDayId: route.dayId });
+      }
       return;
     }
     setRoute({ name: 'home' });
   }
 
+  function changeUiTheme(nextTheme: UiTheme) {
+    setUiTheme(nextTheme);
+    localStorage.setItem(UI_THEME_STORAGE_KEY, nextTheme);
+    setIsAppearanceOpen(false);
+  }
+
+  const appShellClassName = isWorkoutRoute && isWorkoutInputFocused ? 'app-shell input-focus-mode' : 'app-shell';
+
+  if (showLogin) {
+    return (
+      <main className="app-shell login-shell" data-ui-theme={uiTheme}>
+        <LoginScreen
+          status={syncStatus}
+          error={syncError}
+          tokenDraft={apiTokenDraft}
+          onTokenDraftChange={setApiTokenDraft}
+          onSaveToken={saveAccessKey}
+          onRetry={loadDatabaseState}
+        />
+      </main>
+    );
+  }
+
   return (
-    <main className={isWorkoutRoute && isWorkoutInputFocused ? 'app-shell input-focus-mode' : 'app-shell'}>
+    <main className={appShellClassName} data-ui-theme={uiTheme}>
       <header className="topbar">
         <div>
           <h1>{header.title}</h1>
@@ -263,17 +359,25 @@ function App() {
           <button className="icon-button" type="button" onClick={() => goBack()} aria-label="返回">
             ←
           </button>
+        ) : route.name === 'home' && activeTab === 'plans' ? (
+          <button
+            className="appearance-button"
+            type="button"
+            onClick={() => setIsAppearanceOpen(true)}
+            aria-label="切换外观"
+          >
+            外观
+          </button>
         ) : null}
       </header>
 
       <SyncStatusBanner
         status={syncStatus}
         error={syncError}
-        tokenDraft={apiTokenDraft}
-        onTokenDraftChange={setApiTokenDraft}
-        onSaveToken={saveAccessKey}
         onRetry={loadDatabaseState}
       />
+
+      {syncStatus === 'ready' && route.name === 'home' && activeTab === 'plans' ? <InstallAppPrompt /> : null}
 
       {route.name === 'home' && activeTab === 'plans' ? (
         <PlanHome
@@ -320,7 +424,12 @@ function App() {
         <ExerciseDetail exerciseId={route.exerciseId} sessions={sessions} />
       ) : null}
       {route.name === 'home' && activeTab === 'history' ? (
-        <History sessions={sessions} customPlans={customPlans} onDeleteSession={deleteSession} />
+        <History
+          sessions={sessions}
+          customPlans={customPlans}
+          onDeleteSession={deleteSession}
+          onReuseSession={reuseSessionForToday}
+        />
       ) : null}
       {route.name === 'builtin-plan' && selectedPlan ? (
         <PlanDetail
@@ -359,11 +468,218 @@ function App() {
           }
         }}
       />
+
+      {isAppearanceOpen ? (
+        <AppearanceSheet
+          currentTheme={uiTheme}
+          onChange={changeUiTheme}
+          onClose={() => setIsAppearanceOpen(false)}
+        />
+      ) : null}
+
+      {pendingReuseSession ? (
+        <ReuseDraftConfirm
+          sessionName={findDayName(pendingReuseSession, customPlans)}
+          onCancel={() => setPendingReuseSession(null)}
+          onConfirm={() => {
+            const sourceSession = pendingReuseSession;
+            setPendingReuseSession(null);
+            openReusedSession(sourceSession);
+          }}
+        />
+      ) : null}
     </main>
   );
 }
 
+function ReuseDraftConfirm({
+  sessionName,
+  onCancel,
+  onConfirm,
+}: {
+  sessionName: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="appearance-backdrop" role="presentation" onClick={onCancel}>
+      <section
+        className="appearance-sheet reuse-confirm-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="确认复用历史训练"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="appearance-sheet-head">
+          <div>
+            <strong>复用到今天</strong>
+            <span>已有未完成的 {sessionName} 草稿，继续会用历史记录覆盖它。</span>
+          </div>
+        </div>
+        <div className="reuse-confirm-actions">
+          <button type="button" className="secondary-button" onClick={onCancel}>取消</button>
+          <button type="button" className="primary-button" onClick={onConfirm}>继续复用</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function readSavedUiTheme(): UiTheme {
+  const savedTheme = localStorage.getItem(UI_THEME_STORAGE_KEY);
+  return uiThemeOptions.some((theme) => theme.id === savedTheme) ? (savedTheme as UiTheme) : 'dark-log';
+}
+
+function AppearanceSheet({
+  currentTheme,
+  onChange,
+  onClose,
+}: {
+  currentTheme: UiTheme;
+  onChange: (theme: UiTheme) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="appearance-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="appearance-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="选择外观"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="appearance-sheet-head">
+          <div>
+            <strong>选择外观</strong>
+            <span>切换后立即应用到整个 App</span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="关闭外观选择">
+            ×
+          </button>
+        </div>
+        <div className="appearance-options">
+          {uiThemeOptions.map((theme) => (
+            <button
+              key={theme.id}
+              type="button"
+              className={theme.id === currentTheme ? 'active' : ''}
+              onClick={() => onChange(theme.id)}
+              aria-pressed={theme.id === currentTheme}
+            >
+              <span className={`theme-swatch ${theme.id}`} aria-hidden="true" />
+              <span>
+                <strong>{theme.name}</strong>
+                <small>{theme.description}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function isStandaloneApp() {
+  const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia?.('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true;
+}
+
+function InstallAppPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(isStandaloneApp);
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem(INSTALL_PROMPT_DISMISSED_KEY) === '1');
+
+  useEffect(() => {
+    const standaloneQuery = window.matchMedia?.('(display-mode: standalone)');
+    const updateStandalone = () => setIsStandalone(isStandaloneApp());
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredPrompt(event as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, '1');
+      setDismissed(true);
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+    };
+
+    updateStandalone();
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    standaloneQuery?.addEventListener('change', updateStandalone);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      standaloneQuery?.removeEventListener('change', updateStandalone);
+    };
+  }, []);
+
+  if (isStandalone || dismissed) {
+    return null;
+  }
+
+  async function installApp() {
+    if (!deferredPrompt) {
+      localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, '1');
+      setDismissed(true);
+      return;
+    }
+
+    await deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice.catch(() => ({ outcome: 'dismissed' as const, platform: '' }));
+    if (choice.outcome === 'accepted') {
+      localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, '1');
+      setDismissed(true);
+    }
+    setDeferredPrompt(null);
+  }
+
+  function dismissPrompt() {
+    localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, '1');
+    setDismissed(true);
+  }
+
+  return (
+    <section className="install-app-prompt" aria-label="添加到主屏幕提示">
+      <div>
+        <strong>添加到主屏幕</strong>
+        <p>从桌面图标打开，训练时就像独立 App。iPhone 可用分享菜单添加。</p>
+      </div>
+      <div className="install-app-actions">
+        <button type="button" className="ghost-button compact" onClick={dismissPrompt}>稍后</button>
+        <button type="button" className="primary-button compact" onClick={installApp}>
+          {deferredPrompt ? '安装' : '我知道了'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function SyncStatusBanner({
+  status,
+  error,
+  onRetry,
+}: {
+  status: 'loading' | 'ready' | 'error';
+  error: string;
+  onRetry: () => void;
+}) {
+  if (status === 'ready') {
+    return null;
+  }
+
+  if (status === 'loading') {
+    return <div className="sync-banner">正在同步数据库…</div>;
+  }
+
+  return <div className="sync-banner error" role="alert">
+    <span>{error || '数据库同步失败'}</span>
+    <button type="button" onClick={onRetry}>重试</button>
+  </div>;
+}
+
+function LoginScreen({
   status,
   error,
   tokenDraft,
@@ -378,30 +694,46 @@ function SyncStatusBanner({
   onSaveToken: () => void;
   onRetry: () => void;
 }) {
-  if (status === 'ready') {
-    return null;
-  }
-
-  if (status === 'loading') {
-    return <div className="sync-banner">正在同步数据库…</div>;
-  }
+  const isLoading = status === 'loading';
 
   return (
-    <div className="sync-banner error" role="alert">
-      <span>{error || '数据库同步失败'}</span>
-      <div className="sync-actions">
-        <input
-          aria-label="访问密钥"
-          type="password"
-          inputMode="text"
-          placeholder="输入访问密钥"
-          value={tokenDraft}
-          onChange={(event) => onTokenDraftChange(event.target.value)}
-        />
-        <button type="button" onClick={onSaveToken}>保存并重试</button>
-        <button type="button" onClick={onRetry}>重试</button>
+    <section className="login-screen" aria-label="访问密钥登录">
+      <div className="login-brand">
+        <span>私人训练记录</span>
+        <h1>力量日记</h1>
+        <p>输入访问密钥后同步你的训练数据</p>
       </div>
-    </div>
+
+      <form
+        className="login-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSaveToken();
+        }}
+      >
+        <label>
+          <span>访问密钥</span>
+          <input
+            aria-label="访问密钥"
+            type="password"
+            inputMode="text"
+            placeholder="输入访问密钥"
+            value={tokenDraft}
+            disabled={isLoading}
+            onChange={(event) => onTokenDraftChange(event.target.value)}
+          />
+        </label>
+
+        {error ? <p className="login-error" role="alert">{error}</p> : null}
+
+        <button type="submit" className="login-primary" disabled={isLoading}>
+          {isLoading ? '连接中...' : '进入'}
+        </button>
+        <button type="button" className="login-secondary" disabled={isLoading} onClick={onRetry}>
+          重试连接
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -1680,22 +2012,44 @@ function RestTimer({
 }) {
   const [seconds, setSeconds] = useState(initialSeconds);
   const [running, setRunning] = useState(true);
+  const deadlineRef = useRef(Date.now() + initialSeconds * 1000);
+  const pausedSecondsRef = useRef(initialSeconds);
   const doneRef = useRef(false);
+
+  function getRemainingSeconds() {
+    return Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
+  }
+
+  function syncRemainingSeconds() {
+    setSeconds(getRemainingSeconds());
+  }
 
   useEffect(() => {
     if (!running) {
       return;
     }
-    const timer = window.setInterval(() => {
-      setSeconds((current) => {
-        if (current <= 1) {
-          window.clearInterval(timer);
-          return 0;
-        }
-        return current - 1;
-      });
-    }, 1000);
+
+    syncRemainingSeconds();
+    const timer = window.setInterval(syncRemainingSeconds, 1000);
     return () => window.clearInterval(timer);
+  }, [running]);
+
+  useEffect(() => {
+    function syncAfterBackground() {
+      if (running) {
+        syncRemainingSeconds();
+      }
+    }
+
+    document.addEventListener('visibilitychange', syncAfterBackground);
+    window.addEventListener('focus', syncAfterBackground);
+    window.addEventListener('pageshow', syncAfterBackground);
+
+    return () => {
+      document.removeEventListener('visibilitychange', syncAfterBackground);
+      window.removeEventListener('focus', syncAfterBackground);
+      window.removeEventListener('pageshow', syncAfterBackground);
+    };
   }, [running]);
 
   useEffect(() => {
@@ -1711,8 +2065,26 @@ function RestTimer({
   }, [onClose, seconds]);
 
   function adjust(delta: number) {
+    const currentSeconds = running ? getRemainingSeconds() : seconds;
+    const nextSeconds = Math.max(0, currentSeconds + delta);
     doneRef.current = false;
-    setSeconds((current) => Math.max(0, current + delta));
+    pausedSecondsRef.current = nextSeconds;
+    deadlineRef.current = Date.now() + nextSeconds * 1000;
+    setSeconds(nextSeconds);
+    setRunning(nextSeconds > 0);
+  }
+
+  function toggleRunning() {
+    if (running) {
+      const remaining = getRemainingSeconds();
+      pausedSecondsRef.current = remaining;
+      setSeconds(remaining);
+      setRunning(false);
+      return;
+    }
+
+    doneRef.current = false;
+    deadlineRef.current = Date.now() + pausedSecondsRef.current * 1000;
     setRunning(true);
   }
 
@@ -1729,7 +2101,7 @@ function RestTimer({
       </div>
       <div className="rest-timer-controls">
         <button type="button" onClick={() => adjust(-15)} aria-label="减少 15 秒">-15s</button>
-        <button type="button" onClick={() => setRunning((value) => !value)} aria-label={running ? '暂停休息' : '继续休息'}>
+        <button type="button" onClick={toggleRunning} aria-label={running ? '暂停休息' : '继续休息'}>
           {running ? '暂停' : '继续'}
         </button>
         <button type="button" onClick={() => adjust(15)} aria-label="增加 15 秒">+15s</button>
@@ -1903,6 +2275,7 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
   const coachNote = getCoachNoteForExercise(exerciseId);
   const imageUrl = getExerciseImageUrl(exerciseId);
   const resolvedImageUrl = imageUrl ? withBase(imageUrl) : '';
+  const profileGoal = exercise ? getExerciseProfileGoal(exercise, coachNote) : '';
   const history = useMemo(() => getExerciseHistory(sessions, exerciseId), [sessions, exerciseId]);
   const summary = useMemo(() => getExercisePerformanceSummary(sessions, exerciseId), [sessions, exerciseId]);
   const recentHistory = history.slice(0, 5);
@@ -1928,7 +2301,7 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
         </div>
         <div className="exercise-detail-copy">
           <span>动作档案</span>
-          <h2>{coachNote?.goal ?? `${exercise.name} · ${exercise.equipment}`}</h2>
+          <h2>{profileGoal}</h2>
           <p>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</p>
         </div>
       </section>
@@ -2070,10 +2443,12 @@ function History({
   sessions,
   customPlans,
   onDeleteSession,
+  onReuseSession,
 }: {
   sessions: WorkoutSession[];
   customPlans: CoachPlan[];
   onDeleteSession: (sessionId: string) => void;
+  onReuseSession: (session: WorkoutSession) => void;
 }) {
   const personalRecords = useMemo(() => getPersonalRecords(sessions), [sessions]);
   const weekly = useMemo(() => getWeeklyStats(sessions), [sessions]);
@@ -2122,6 +2497,7 @@ function History({
           customPlans={customPlans}
           selectedDateKey={selectedCalendarDate}
           onSelectDate={setSelectedCalendarDate}
+          onReuseSession={onReuseSession}
         />
         <div className="empty-state">还没有训练记录。进入计划并完成一次训练后会自动保存。</div>
       </section>
@@ -2137,6 +2513,7 @@ function History({
         customPlans={customPlans}
         selectedDateKey={selectedCalendarDate}
         onSelectDate={setSelectedCalendarDate}
+        onReuseSession={onReuseSession}
       />
 
       {personalRecords.length > 0 ? (
@@ -2199,14 +2576,24 @@ function History({
                     <strong>{sessionName}</strong>
                     <span>{formatDate(session.date)}</span>
                   </div>
-                  <button
-                    className={isConfirmingDelete ? 'danger-button history-delete confirming' : 'danger-button history-delete'}
-                    type="button"
-                    onClick={() => (isConfirmingDelete ? confirmDeleteSession(session.id) : askDeleteSession(session.id))}
-                    aria-label={`${isConfirmingDelete ? '确认删除' : '删除'}${sessionName}训练记录`}
-                  >
-                    {isConfirmingDelete ? '确认删除？' : '删除'}
-                  </button>
+                  <div className="history-card-actions">
+                    <button
+                      className="secondary-button history-reuse"
+                      type="button"
+                      onClick={() => onReuseSession(session)}
+                      aria-label={`复用${sessionName}到今天`}
+                    >
+                      复用
+                    </button>
+                    <button
+                      className={isConfirmingDelete ? 'danger-button history-delete confirming' : 'danger-button history-delete'}
+                      type="button"
+                      onClick={() => (isConfirmingDelete ? confirmDeleteSession(session.id) : askDeleteSession(session.id))}
+                      aria-label={`${isConfirmingDelete ? '确认删除' : '删除'}${sessionName}训练记录`}
+                    >
+                      {isConfirmingDelete ? '确认删除？' : '删除'}
+                    </button>
+                  </div>
                 </div>
                 <p>{summarizeSession(session)}</p>
               </article>
@@ -2262,11 +2649,13 @@ function TrainingCalendar({
   customPlans,
   selectedDateKey,
   onSelectDate,
+  onReuseSession,
 }: {
   sessions: WorkoutSession[];
   customPlans: CoachPlan[];
   selectedDateKey: string;
   onSelectDate: (dateKey: string) => void;
+  onReuseSession: (session: WorkoutSession) => void;
 }) {
   const monthDate = new Date();
   const sessionsByDate = useMemo(() => groupSessionsByDate(sessions), [sessions]);
@@ -2318,12 +2707,23 @@ function TrainingCalendar({
           <p>当天没有训练记录</p>
         ) : (
           <div className="calendar-session-list">
-            {selectedSessions.map((session) => (
-              <article className="calendar-session-card" key={session.id}>
-                <strong>训练：{findDayName(session, customPlans)}</strong>
-                <span>{summarizeCalendarSession(session)}</span>
-              </article>
-            ))}
+            {selectedSessions.map((session) => {
+              const sessionName = findDayName(session, customPlans);
+              return (
+                <article className="calendar-session-card" key={session.id}>
+                  <strong>训练：{sessionName}</strong>
+                  <span>{summarizeCalendarSession(session)}</span>
+                  <button
+                    type="button"
+                    className="secondary-button calendar-reuse"
+                    onClick={() => onReuseSession(session)}
+                    aria-label={`复用${sessionName}到今天`}
+                  >
+                    复用到今天
+                  </button>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
@@ -2613,6 +3013,14 @@ function getExerciseImageUrl(exerciseId: string): string {
   return exerciseImageUrls[exerciseId] ?? getCoachNoteForExercise(exerciseId)?.imageUrl ?? '';
 }
 
+function getWorkoutDraftKey(planId: string, dayId: string): string {
+  return `${planId}:${dayId}`;
+}
+
+function getExerciseProfileGoal(exercise: Exercise, coachNote: CoachExerciseNote | undefined): string {
+  return coachNote?.goal ?? exerciseProfileGoals[exercise.id] ?? `用${exercise.name}补充${exercise.muscleGroups.join('、')}训练容量。`;
+}
+
 const exerciseImageUrls: Record<string, string> = {
   'barbell-bench-press': '/coach-shots/bench-cue.jpg',
   'incline-dumbbell-press': '/coach-shots/incline-dumbbell-press-cue.jpg',
@@ -2656,6 +3064,23 @@ const exerciseImageUrls: Record<string, string> = {
   'dumbbell-shoulder-press': '/coach-shots/shoulder-press-cue.jpg',
   'lateral-raise': '/coach-shots/lateral-raise-cue.jpg',
   'cable-lateral-raise': '/coach-shots/cable-lateral-raise-cue.jpg',
+};
+
+const exerciseProfileGoals: Record<string, string> = {
+  'push-up': '用自重推举补胸、三头和核心控制，适合作为热身、收尾或无器械训练。',
+  'overhead-press': '用站姿推举建立肩部上举力量，同时训练核心抗后仰和全身稳定。',
+  'one-arm-dumbbell-row': '用单侧划船补左右背部控制，减少强侧代偿并强化背阔肌收缩。',
+  'front-squat': '用更直立的蹲姿强化股四头肌和核心支撑，补充深蹲以外的腿部刺激。',
+  'deadlift': '用传统硬拉整合腿、臀、背和握力，训练从地面发力的全身张力。',
+  'walking-lunge': '用行走弓步补单腿稳定和臀腿协调，让左右侧力量更均衡。',
+  'bulgarian-split-squat': '用分腿蹲集中刺激单侧臀腿，适合发现并修正左右力量差。',
+  'hip-thrust': '用臀推把臀部伸髋单独拉出来，补足深蹲和硬拉之外的臀部发力。',
+  'plank': '用平板支撑训练核心抗伸展能力，让躯干在推、拉、蹲中更稳定。',
+  'hanging-leg-raise': '用悬垂举腿强化下腹卷起和骨盆控制，减少单纯甩腿代偿。',
+  'cable-crunch': '用绳索卷腹给腹部稳定阻力，训练脊柱逐节卷曲和主动收缩。',
+  'farmer-carry': '用负重行走整合握力、核心和肩胛稳定，提升全身抗侧屈能力。',
+  'kettlebell-swing': '用壶铃摆荡训练髋部爆发和臀腿协同，不让动作变成蹲起或肩举。',
+  'ab-wheel-rollout': '用健腹轮强化核心抗伸展和骨盆控制，逐步扩展可控活动范围。',
 };
 
 function formatWeight(weight: number): string {

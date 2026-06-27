@@ -1,17 +1,34 @@
 {
-  "name": "力量计划",
-  "short_name": "力量计划",
-  "description": "手机优先的力量训练计划和逐组记录工具",
+  "id": "./",
+  "name": "力量日记",
+  "short_name": "力量日记",
+  "description": "仅自己使用的力量训练记录 App",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f3eb",
-  "theme_color": "#10140f",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#05070d",
+  "theme_color": "#0b1018",
+  "categories": ["health", "fitness"],
   "icons": [
     {
       "src": "./icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

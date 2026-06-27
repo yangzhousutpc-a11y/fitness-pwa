@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>力量日记 - 极简 UI 三套方案</title>
+    <style>
+      :root {
+        --page: #f2f2ef;
+        --ink: #111315;
+        --muted: #7b8188;
+        --line: rgba(18, 20, 22, 0.12);
+        --green: #26d46b;
+        --font:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        --mono: "SF Mono", "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+          var(--page);
+        background-size: 36px 36px;
+        font-family: var(--font);
+      }
+
+      .page {
+        width: min(1480px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 42px 0 56px;
+      }
+
+      .brief {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 24px;
+        margin-bottom: 30px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(32px, 4vw, 58px);
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+      }
+
+      .brief p {
+        max-width: 600px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      .badge {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 10px 14px;
+        color: #4f565d;
+        background: rgba(255, 255, 255, 0.58);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .directions {
+        display: grid;
+        gap: 24px;
+      }
+
+      .direction {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 22px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 26px;
+        background: rgba(255, 255, 255, 0.62);
+        box-shadow: 0 18px 60px rgba(20, 24, 28, 0.08);
+      }
+
+      .direction-copy {
+        padding: 8px 0;
+      }
+
+      .direction-label {
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+      }
+
+      .direction h2 {
+        margin-top: 10px;
+        font-size: 27px;
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+      }
+
+      .direction-copy p {
+        margin-top: 12px;
+        color: #687078;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .tags span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 9px;
+        color: #555c63;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .phones {
+        display: grid;
+        grid-template-columns: repeat(2, 390px);
+        gap: 18px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .phone {
+        width: 390px;
+        min-height: 780px;
+        overflow: hidden;
+        border-radius: 34px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        box-shadow: 0 26px 80px rgba(0, 0, 0, 0.18);
+      }
+
+      .screen {
+        min-height: 780px;
+        padding: 28px 22px 22px;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        font-family: var(--mono);
+        font-size: 12px;
+        opacity: 0.72;
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .nav span {
+        display: grid;
+        min-height: 52px;
+        place-items: center;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .back {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .metric-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .metric {
+        min-height: 84px;
+        padding: 13px;
+        border-radius: 18px;
+      }
+
+      .metric strong {
+        display: block;
+        font-family: var(--mono);
+        font-size: 25px;
+        letter-spacing: -0.05em;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+
+      .set-row {
+        display: grid;
+        grid-template-columns: 34px 1fr 1fr 42px;
+        align-items: center;
+        gap: 10px;
+        min-height: 58px;
+      }
+
+      .set-pill,
+      .check {
+        min-height: 42px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-weight: 800;
+      }
+
+      .timer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 16px 0;
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .timer strong {
+        font-family: var(--mono);
+        font-size: 34px;
+        letter-spacing: -0.08em;
+      }
+
+      .timer span {
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .option-a .screen {
+        color: #f8fafc;
+        background: #060606;
+      }
+
+      .option-a h3 {
+        margin-top: 2px;
+        color: #fff;
+        font-size: 42px;
+        line-height: 0.96;
+        letter-spacing: -0.055em;
+      }
+
+      .option-a .quote {
+        margin-top: 16px;
+        color: #a8adb4;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .option-a .hero-plan {
+        margin-top: 34px;
+        padding: 18px 0 22px;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .option-a .hero-plan small,
+      .option-a .section-kicker {
+        color: #26d46b;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+      }
+
+      .option-a .hero-plan h4 {
+        margin: 12px 0 8px;
+        font-size: 30px;
+        letter-spacing: -0.04em;
+      }
+
+      .option-a .hero-plan p,
+      .option-a .sub {
+        color: #8d949c;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .option-a .metric {
+        margin-top: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .option-a .metric span,
+      .option-a .set-label {
+        color: #8d949c;
+      }
+
+      .option-a .nav span {
+        color: #8d949c;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .option-a .nav span:first-child,
+      .option-a .finish {
+        color: #041108;
+        background: #26d46b;
+      }
+
+      .option-a .back,
+      .option-a .set-pill,
+      .option-a .check {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: #101010;
+      }
+
+      .option-a .timer {
+        color: #041108;
+        background: #26d46b;
+      }
+
+      .option-a .exercise {
+        padding: 16px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .option-a .exercise h4 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: -0.03em;
+      }
+
+      .option-a .done {
+        color: #26d46b;
+      }
+
+      .option-b .screen {
+        color: #171715;
+        background: #fbfaf6;
+      }
+
+      .option-b .status {
+        color: #76746c;
+      }
+
+      .option-b h3 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 40px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+      }
+
+      .option-b .quote {
+        margin: 16px 0 26px;
+        color: #68655e;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .option-b .journal-card {
+        padding: 18px;
+        border: 1px solid rgba(23, 23, 21, 0.12);
+        border-radius: 22px;
+        background: #fffdf8;
+      }
+
+      .option-b .journal-card small {
+        color: #7f7a70;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .option-b .journal-card h4 {
+        margin: 8px 0;
+        font-size: 28px;
+        letter-spacing: -0.035em;
+      }
+
+      .option-b .rule {
+        height: 1px;
+        margin: 18px 0;
+        background: rgba(23, 23, 21, 0.1);
+      }
+
+      .option-b .metric {
+        background: #f1efe7;
+      }
+
+      .option-b .metric span,
+      .option-b .sub,
+      .option-b .set-label {
+        color: #77736a;
+      }
+
+      .option-b .nav span {
+        color: #67635d;
+        background: #f0eee7;
+      }
+
+      .option-b .nav span:first-child,
+      .option-b .finish {
+        color: #fbfaf6;
+        background: #171715;
+      }
+
+      .option-b .back {
+        background: #efede6;
+      }
+
+      .option-b .timer {
+        border: 1px solid rgba(23, 23, 21, 0.12);
+        background: #fffdf8;
+      }
+
+      .option-b .exercise {
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px solid rgba(23, 23, 21, 0.1);
+        border-radius: 20px;
+        background: #fffdf8;
+      }
+
+      .option-b .exercise h4 {
+        margin: 0 0 10px;
+        font-size: 23px;
+      }
+
+      .option-b .set-pill,
+      .option-b .check {
+        background: #f1efe7;
+      }
+
+      .option-b .done {
+        color: #fbfaf6;
+        background: #171715;
+      }
+
+      .option-c .screen {
+        color: #eef2f5;
+        background:
+          radial-gradient(circle at 72% 8%, rgba(83, 197, 130, 0.18), transparent 34%),
+          #11161d;
+      }
+
+      .option-c h3 {
+        font-size: 35px;
+        line-height: 1.02;
+        letter-spacing: -0.045em;
+      }
+
+      .option-c .quote {
+        margin-top: 12px;
+        color: #8f99a4;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .option-c .panel {
+        margin-top: 24px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.045);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .option-c .panel small,
+      .option-c .section-kicker {
+        color: #8f99a4;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .option-c .panel h4 {
+        margin: 10px 0;
+        font-size: 29px;
+        letter-spacing: -0.035em;
+      }
+
+      .option-c .metric {
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .option-c .metric span,
+      .option-c .sub,
+      .option-c .set-label {
+        color: #8f99a4;
+      }
+
+      .option-c .nav span {
+        color: #8f99a4;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .option-c .nav span:first-child,
+      .option-c .finish {
+        color: #08150e;
+        background: #d8f56d;
+      }
+
+      .option-c .back,
+      .option-c .set-pill,
+      .option-c .check {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .option-c .timer {
+        color: #08150e;
+        background: #d8f56d;
+      }
+
+      .option-c .exercise {
+        margin-top: 14px;
+        padding: 16px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .option-c .exercise h4 {
+        margin: 0 0 12px;
+        font-size: 23px;
+      }
+
+      .option-c .done {
+        color: #08150e;
+        background: #d8f56d;
+      }
+
+      @media (max-width: 900px) {
+        .page {
+          width: min(100% - 24px, 760px);
+        }
+
+        .brief,
+        .direction {
+          grid-template-columns: 1fr;
+        }
+
+        .phones {
+          grid-template-columns: repeat(2, 330px);
+        }
+
+        .phone {
+          width: 330px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="brief">
+        <div>
+          <h1>力量日记<br />极简 UI 三套方向</h1>
+          <p>
+            目标不是换皮，而是把个人训练记录变得更安静、更直接。每套都覆盖首页和训练记录页，方便判断每天打开、训练中输入、查看进度这三个场景的气质。
+          </p>
+        </div>
+        <span class="badge">Personal Fitness PWA · UI Direction v1</span>
+      </section>
+
+      <section class="directions">
+        <article class="direction option-a">
+          <div class="direction-copy">
+            <span class="direction-label">OPTION 01</span>
+            <h2>墨黑训练日志</h2>
+            <p>最接近专业训练工具。大字、少色、强对比，训练时不需要思考界面在哪里。适合继续保留当前黑绿基础，但去掉过多发光和厚重卡片。</p>
+            <div class="tags">
+              <span>高对比</span>
+              <span>训练中最清晰</span>
+              <span>冷静硬朗</span>
+            </div>
+          </div>
+
+          <div class="phones">
+            <div class="phone">
+              <div class="screen">
+                <div class="status"><span>10:58</span><span>力量日记</span></div>
+                <h3>力量<br />日记</h3>
+                <p class="quote">重量会说话，坚持会留下痕迹。</p>
+                <div class="hero-plan">
+                  <small>TODAY</small>
+                  <h4>Day 1 胸 / 肩 / 三头</h4>
+                  <p>5 个动作 · 25 组 · 上次训练 06/26</p>
+                </div>
+                <div class="metric-row">
+                  <div class="metric"><strong>1</strong><span>近 7 天训练</span></div>
+                  <div class="metric"><strong>25</strong><span>完成组</span></div>
+                  <div class="metric"><strong>3.8t</strong><span>总容量</span></div>
+                </div>
+                <div class="hero-plan">
+                  <small>NEXT</small>
+                  <h4>杠铃卧推</h4>
+                  <p>胸 / 三头 / 肩 · 目标 5 组</p>
+                </div>
+                <div class="nav"><span>计划</span><span>动作库</span><span>历史</span></div>
+              </div>
+            </div>
+
+            <div class="phone">
+              <div class="screen">
+                <div class="topline">
+                  <div>
+                    <span class="section-kicker">DAY 1</span>
+                    <h3>记录<br />本组</h3>
+                    <p class="quote">当前动作：杠铃卧推</p>
+                  </div>
+                  <div class="back">←</div>
+                </div>
+                <div class="timer"><strong>01:15</strong><span>休息后录第 4 组</span></div>
+                <div class="exercise">
+                  <h4>杠铃卧推</h4>
+                  <p class="sub">胸 / 三头 / 肩 · 3/5 组完成</p>
+                  <div class="set-row">
+                    <strong>1</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>2</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>3</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>4</strong><div class="set-pill">55kg</div><div class="set-pill">12</div><div class="check">○</div>
+                  </div>
+                </div>
+                <div class="nav"><span class="finish">完成训练</span><span>动作</span><span>历史</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction option-b">
+          <div class="direction-copy">
+            <span class="direction-label">OPTION 02</span>
+            <h2>纸感训练册</h2>
+            <p>把产品做成个人训练手账。浅色、克制、低压，历史复盘和动作档案会更舒服。缺点是训练中强光环境下不如黑底醒目。</p>
+            <div class="tags">
+              <span>轻量日记感</span>
+              <span>复盘友好</span>
+              <span>不压迫</span>
+            </div>
+          </div>
+
+          <div class="phones">
+            <div class="phone">
+              <div class="screen">
+                <div class="status"><span>10:58</span><span>力量日记</span></div>
+                <h3>今天<br />练什么</h3>
+                <p class="quote">把今天交给动作，把进步交给时间。</p>
+                <div class="journal-card">
+                  <small>今日计划</small>
+                  <h4>Day 1 胸 / 肩 / 三头</h4>
+                  <p class="sub">三分化完整计划 · 5 个动作</p>
+                  <div class="rule"></div>
+                  <div class="metric-row">
+                    <div class="metric"><strong>1</strong><span>次训练</span></div>
+                    <div class="metric"><strong>25</strong><span>组完成</span></div>
+                    <div class="metric"><strong>3.8t</strong><span>容量</span></div>
+                  </div>
+                </div>
+                <div class="journal-card" style="margin-top: 14px">
+                  <small>最近记录</small>
+                  <h4>杠铃卧推 · 50kg × 15</h4>
+                  <p class="sub">06/26 · 5 组</p>
+                </div>
+                <div class="nav"><span>计划</span><span>动作库</span><span>历史</span></div>
+              </div>
+            </div>
+
+            <div class="phone">
+              <div class="screen">
+                <div class="topline">
+                  <div>
+                    <h3>Day 1</h3>
+                    <p class="quote">胸 / 肩 / 三头</p>
+                  </div>
+                  <div class="back">←</div>
+                </div>
+                <div class="timer"><strong>01:15</strong><span>第 4 组前休息</span></div>
+                <div class="exercise">
+                  <h4>杠铃卧推</h4>
+                  <p class="sub">3/5 组完成</p>
+                  <div class="set-row">
+                    <strong>1</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>2</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>3</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>4</strong><div class="set-pill">55kg</div><div class="set-pill">12</div><div class="check">○</div>
+                  </div>
+                </div>
+                <div class="nav"><span class="finish">完成</span><span>动作</span><span>历史</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="direction option-c">
+          <div class="direction-copy">
+            <span class="direction-label">OPTION 03</span>
+            <h2>专业灰阶仪表</h2>
+            <p>保留深色健身 App 的专业感，但降低绿色占比，用荧光黄绿色只标记关键动作。适合“看起来更高级”，但实现时要严格控制卡片数量。</p>
+            <div class="tags">
+              <span>高级灰阶</span>
+              <span>数据感更强</span>
+              <span>适合长期扩展</span>
+            </div>
+          </div>
+
+          <div class="phones">
+            <div class="phone">
+              <div class="screen">
+                <div class="status"><span>10:58</span><span>力量日记</span></div>
+                <h3>今天的<br />力量数据</h3>
+                <p class="quote">稳住节奏，身体会记住你的投入。</p>
+                <div class="panel">
+                  <small>ACTIVE PLAN</small>
+                  <h4>三分化完整计划</h4>
+                  <p class="sub">Day 1 · 胸 / 肩 / 三头</p>
+                  <div class="metric-row" style="margin-top: 16px">
+                    <div class="metric"><strong>01</strong><span>近 7 天</span></div>
+                    <div class="metric"><strong>25</strong><span>完成组</span></div>
+                    <div class="metric"><strong>3.8t</strong><span>容量</span></div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <small>NEXT EXERCISE</small>
+                  <h4>杠铃卧推</h4>
+                  <p class="sub">目标 5 组 · 上次 50kg × 15</p>
+                </div>
+                <div class="nav"><span>计划</span><span>动作库</span><span>历史</span></div>
+              </div>
+            </div>
+
+            <div class="phone">
+              <div class="screen">
+                <div class="topline">
+                  <div>
+                    <span class="section-kicker">WORKOUT</span>
+                    <h3>Day 1</h3>
+                    <p class="quote">0/25 组完成</p>
+                  </div>
+                  <div class="back">←</div>
+                </div>
+                <div class="timer"><strong>01:15</strong><span>下组：杠铃卧推 4/5</span></div>
+                <div class="exercise">
+                  <h4>杠铃卧推</h4>
+                  <div class="set-row">
+                    <strong>1</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>2</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>3</strong><div class="set-pill">50kg</div><div class="set-pill">15</div><div class="check done">✓</div>
+                  </div>
+                  <div class="set-row">
+                    <strong>4</strong><div class="set-pill">55kg</div><div class="set-pill">12</div><div class="check">○</div>
+                  </div>
+                </div>
+                <div class="exercise">
+                  <h4>上斜哑铃卧推</h4>
+                  <p class="sub">待记录 · 5 组</p>
+                </div>
+                <div class="nav"><span class="finish">完成</span><span>动作</span><span>历史</span></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

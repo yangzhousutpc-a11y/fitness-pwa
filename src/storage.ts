@@ -56,3 +56,25 @@ export function createSessionFromDay(plan: CoachPlan, day: TrainingDayTemplate):
     exerciseLogs: day.exerciseIds.map((exerciseId) => createExerciseLog(exerciseId)),
   };
 }
+
+export function createSessionFromHistory(sourceSession: WorkoutSession): WorkoutSession {
+  const now = new Date();
+  const id = `session-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  return {
+    id,
+    date: now.toISOString(),
+    planId: sourceSession.planId,
+    dayId: sourceSession.dayId,
+    exerciseLogs: sourceSession.exerciseLogs.map((log) => ({
+      exerciseId: log.exerciseId,
+      note: log.note,
+      sets: log.sets.map((set) => ({
+        setNumber: set.setNumber,
+        weight: set.weight,
+        reps: set.reps,
+        completed: false,
+      })),
+    })),
+  };
+}
