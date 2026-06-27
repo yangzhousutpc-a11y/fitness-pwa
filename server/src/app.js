@@ -4,6 +4,7 @@ import path from 'node:path';
 import { requireApiToken } from './auth.js';
 import { pool } from './db.js';
 import { createCustomPlanRouter } from './routes/customPlans.js';
+import { createDiagnosticsRouter } from './routes/diagnostics.js';
 import { createPreferenceRouter } from './routes/preferences.js';
 import { createWorkoutSessionRouter } from './routes/workoutSessions.js';
 import { createCustomPlanStore } from './stores/customPlanStore.js';
@@ -43,6 +44,7 @@ export function createApp({
   });
 
   app.use('/api', requireApiToken(apiToken));
+  app.use('/api/diagnostics', createDiagnosticsRouter(pool));
   app.use('/api/custom-plans', createCustomPlanRouter(customPlanStore));
   app.use('/api/preferences', createPreferenceRouter(preferenceStore));
   app.use('/api/workout-sessions', createWorkoutSessionRouter(workoutSessionStore));
