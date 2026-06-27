@@ -51,7 +51,7 @@ describe('built-in fitness data', () => {
 
     for (const day of plan?.days ?? []) {
       expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
-      expect(day.coachNotes.every((note) => note.sourceBasis.includes('B站公开视频标题、标签与训练主题整理'))).toBe(true);
+      expect(day.coachNotes.every((note) => note.sourceBasis.includes('逐字稿提炼'))).toBe(true);
     }
   });
 

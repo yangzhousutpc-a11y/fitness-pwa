@@ -786,8 +786,8 @@ describe('fitness PWA user flows', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
-    expect(screen.getByText('高位下拉')).toBeInTheDocument();
-    expect(screen.getByText('0/30 组完成')).toBeInTheDocument();
+    expect(screen.getByText('直臂下压')).toBeInTheDocument();
+    expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
   });
 
   it('keeps bottom navigation height on detail, custom editor, and workout pages', () => {
