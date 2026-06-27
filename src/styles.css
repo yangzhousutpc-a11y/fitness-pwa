@@ -1708,7 +1708,8 @@ a {
 }
 
 .weekly-recap-main {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 42%);
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
@@ -1716,10 +1717,14 @@ a {
   border-bottom: 1px solid rgba(148, 163, 184, 0.13);
 }
 
+.weekly-recap-main > div {
+  min-width: 0;
+}
+
 .weekly-recap-main strong {
   color: var(--ink-1);
   font-family: var(--font-num);
-  font-size: 42px;
+  font-size: clamp(32px, 11vw, 42px);
   font-weight: 900;
   line-height: 0.9;
 }
@@ -1735,17 +1740,22 @@ a {
   color: var(--ink-2);
   font-size: 12px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .weekly-recap-volume {
-  flex: 0 0 auto;
+  min-width: 0;
   text-align: right;
 }
 
 .weekly-recap-volume strong {
   display: block;
-  font-size: 24px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(18px, 5.7vw, 24px);
   line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .weekly-recap-volume span {
@@ -1792,6 +1802,8 @@ a {
   margin-top: 5px;
   color: var(--ink-3);
   font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .exercise-profile-card {
@@ -1881,56 +1893,97 @@ a {
 }
 
 .exercise-detail-screen {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.exercise-detail-screen > * {
+  flex: 0 0 auto;
 }
 
 .exercise-detail-hero {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 42%);
+  column-gap: 12px;
+  align-items: flex-end;
+  min-height: 236px;
+  padding: 18px;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background:
-    radial-gradient(120% 80% at 50% 0%, rgba(43, 214, 106, 0.08), transparent 60%),
-    var(--bg-0);
+  border: 1px solid rgba(43, 214, 106, 0.28);
+  border-radius: 22px;
+  background: var(--bg-0);
+  box-shadow: var(--shadow-card);
 }
 
-.exercise-detail-hero img {
-  width: 100%;
-  height: min(58vh, 360px);
+.exercise-detail-image-frame {
+  position: absolute;
+  inset: 0 0 0 auto;
   display: block;
-  padding: 12px;
+  width: 46%;
+  pointer-events: none;
+}
+
+.exercise-detail-image-frame img {
+  width: 100%;
+  height: 100%;
+  display: block;
   object-fit: contain;
-  opacity: 0.94;
+  object-position: center bottom;
+  opacity: 0.76;
+  filter: saturate(0.82) contrast(1.08);
+  transform: scale(1.04);
 }
 
-.exercise-detail-hero > div {
-  padding: 0 16px 16px;
+.exercise-detail-image-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 7, 13, 0.04) 0%, rgba(5, 7, 13, 0.18) 62%, rgba(5, 7, 13, 0.44) 100%),
+    linear-gradient(90deg, rgba(5, 7, 13, 0.64) 0%, rgba(5, 7, 13, 0.08) 58%, rgba(5, 7, 13, 0) 100%);
 }
 
-.exercise-detail-hero span {
+.exercise-detail-image-frame span {
+  position: relative;
+  z-index: 1;
+  color: var(--ink-3);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.exercise-detail-copy {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  width: 100%;
+}
+
+.exercise-detail-copy span {
   color: var(--accent);
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.12em;
 }
 
-.exercise-detail-hero h2,
-.exercise-detail-hero p {
+.exercise-detail-copy h2,
+.exercise-detail-copy p {
   margin: 0;
 }
 
-.exercise-detail-hero h2 {
-  margin-top: 5px;
+.exercise-detail-copy h2 {
+  margin-top: 7px;
   color: var(--ink-1);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 900;
   line-height: 1.18;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.exercise-detail-hero p {
-  margin-top: 6px;
-  color: var(--ink-2);
+.exercise-detail-copy p {
+  margin-top: 9px;
+  color: rgba(202, 213, 226, 0.86);
   font-size: 12px;
 }
 

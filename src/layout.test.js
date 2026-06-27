@@ -31,8 +31,26 @@ describe('app shell layout', () => {
   });
 
   it('shows action profile hero images without cropping vertical artwork', () => {
-    expect(ruleFor('.exercise-detail-hero img')).toContain('object-fit: contain');
-    expect(ruleFor('.exercise-detail-hero img')).not.toContain('object-fit: cover');
-    expect(ruleFor('.exercise-detail-hero > div')).not.toContain('position: absolute');
+    expect(ruleFor('.exercise-detail-screen')).toContain('display: flex');
+    expect(ruleFor('.exercise-detail-screen')).toContain('flex-direction: column');
+    expect(ruleFor('.exercise-detail-screen > *')).toContain('flex: 0 0 auto');
+    expect(ruleFor('.exercise-detail-hero')).toContain('min-height: 236px');
+    expect(ruleFor('.exercise-detail-hero')).toContain('grid-template-columns: minmax(0, 1fr) minmax(118px, 42%)');
+    expect(ruleFor('.exercise-detail-image-frame')).toContain('position: absolute');
+    expect(ruleFor('.exercise-detail-image-frame')).toContain('width: 46%');
+    expect(ruleFor('.exercise-detail-copy')).toContain('z-index: 1');
+    expect(ruleFor('.exercise-detail-copy')).toContain('grid-column: 1');
+    expect(ruleFor('.exercise-detail-image-frame img')).toContain('object-fit: contain');
+    expect(ruleFor('.exercise-detail-image-frame img')).toContain('opacity: 0.76');
+    expect(ruleFor('.exercise-detail-image-frame img')).not.toContain('object-fit: cover');
+  });
+
+  it('keeps the weekly recap card from overflowing on narrow screens', () => {
+    expect(ruleFor('.weekly-recap-main')).toContain('display: grid');
+    expect(ruleFor('.weekly-recap-main')).toContain('grid-template-columns: minmax(0, 1fr) minmax(96px, 42%)');
+    expect(ruleFor('.weekly-recap-main > div')).toContain('min-width: 0');
+    expect(ruleFor('.weekly-recap-volume strong')).toContain('font-size: clamp(18px, 5.7vw, 24px)');
+    expect(ruleFor('.weekly-recap-volume strong')).toContain('text-overflow: ellipsis');
+    expect(ruleFor('.metric-card span')).toContain('overflow-wrap: anywhere');
   });
 });

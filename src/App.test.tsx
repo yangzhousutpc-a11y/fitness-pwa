@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
@@ -129,6 +129,20 @@ describe('fitness PWA user flows', () => {
     const image = screen.getByAltText('俯卧撑动作插图') as HTMLImageElement;
     expect(image.src).toContain('/coach-shots/push-up-cue.jpg');
     expect(image.src).not.toContain('action-profile-hero');
+    expect(image).not.toHaveAttribute('loading', 'lazy');
+  });
+
+  it('does not show instructional helper copy on the exercise detail page', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '◉动作库' }));
+    fireEvent.change(screen.getByPlaceholderText('⌕ 搜索动作'), { target: { value: '俯卧撑' } });
+    fireEvent.click(await screen.findByRole('button', { name: '打开俯卧撑动作详情' }));
+
+    expect(screen.queryByText('等待第一次记录')).not.toBeInTheDocument();
+    expect(screen.queryByText('看趋势，不做复杂图表')).not.toBeInTheDocument();
+    expect(screen.queryByText('动作详情增强')).not.toBeInTheDocument();
+    expect(screen.getAllByText('暂无记录')).toHaveLength(2);
   });
 
 
@@ -305,15 +319,15 @@ describe('fitness PWA user flows', () => {
     expect(shell).not.toHaveClass('input-focus-mode');
   });
 
-  it('steps weight by 2.5 and reps by 1 via plus buttons', () => {
+  it('steps weight by 5 and reps by 1 via plus buttons', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
     fireEvent.change(screen.getByLabelText('第 1 组重量'), { target: { value: '60' } });
-    fireEvent.click(screen.getByLabelText('第 1 组重量加 2.5'));
-    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('62.5');
+    fireEvent.click(screen.getByLabelText('第 1 组重量加 5'));
+    expect((screen.getByLabelText('第 1 组重量') as HTMLInputElement).value).toBe('65');
 
     fireEvent.change(screen.getByLabelText('第 1 组次数'), { target: { value: '10' } });
     fireEvent.click(screen.getByLabelText('第 1 组次数加 1'));
@@ -358,6 +372,23 @@ describe('fitness PWA user flows', () => {
     expect(screen.getByText('01:30')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '关闭休息计时器' }));
+    expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+  });
+
+  it('closes the rest timer automatically when the countdown ends', () => {
+    vi.useFakeTimers();
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
+
+    expect(screen.getByRole('timer', { name: '组间休息计时器' })).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(90_000);
+    });
+
     expect(screen.queryByRole('timer')).not.toBeInTheDocument();
   });
 

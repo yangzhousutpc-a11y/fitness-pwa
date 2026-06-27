@@ -1706,8 +1706,9 @@ function RestTimer({
         navigator.vibrate(200);
       }
       playBeep();
+      onClose();
     }
-  }, [seconds]);
+  }, [onClose, seconds]);
 
   function adjust(delta: number) {
     doneRef.current = false;
@@ -1779,7 +1780,7 @@ function SetRow({
     >
       <strong>{set.setNumber}</strong>
       <div className="stepper">
-        <button type="button" onClick={() => stepWeight(-2.5)} aria-label={`第 ${set.setNumber} 组重量减 2.5`}>−</button>
+        <button type="button" onClick={() => stepWeight(-5)} aria-label={`第 ${set.setNumber} 组重量减 5`}>−</button>
         <input
           inputMode="decimal"
           aria-label={`第 ${set.setNumber} 组重量`}
@@ -1789,7 +1790,7 @@ function SetRow({
           onFocus={(event) => onInputFocus?.(event.currentTarget)}
           onBlur={onInputBlur}
         />
-        <button type="button" onClick={() => stepWeight(2.5)} aria-label={`第 ${set.setNumber} 组重量加 2.5`}>＋</button>
+        <button type="button" onClick={() => stepWeight(5)} aria-label={`第 ${set.setNumber} 组重量加 5`}>＋</button>
       </div>
       <div className="stepper">
         <button type="button" onClick={() => stepReps(-1)} aria-label={`第 ${set.setNumber} 组次数减 1`}>−</button>
@@ -1901,6 +1902,7 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
   const exercise = getExerciseById(exerciseId);
   const coachNote = getCoachNoteForExercise(exerciseId);
   const imageUrl = getExerciseImageUrl(exerciseId);
+  const resolvedImageUrl = imageUrl ? withBase(imageUrl) : '';
   const history = useMemo(() => getExerciseHistory(sessions, exerciseId), [sessions, exerciseId]);
   const summary = useMemo(() => getExercisePerformanceSummary(sessions, exerciseId), [sessions, exerciseId]);
   const recentHistory = history.slice(0, 5);
@@ -1917,10 +1919,14 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
   return (
     <section className="screen with-nav exercise-detail-screen">
       <section className="exercise-detail-hero">
-        {imageUrl ? (
-          <img src={withBase(imageUrl)} alt={`${exercise.name}动作插图`} loading="lazy" />
-        ) : null}
-        <div>
+        <div className="exercise-detail-image-frame">
+          {resolvedImageUrl ? (
+            <img src={resolvedImageUrl} alt={`${exercise.name}动作插图`} />
+          ) : (
+            <span>暂无动作示意图</span>
+          )}
+        </div>
+        <div className="exercise-detail-copy">
           <span>动作档案</span>
           <h2>{coachNote?.goal ?? `${exercise.name} · ${exercise.equipment}`}</h2>
           <p>{exercise.muscleGroups.join(' / ')} · {exercise.equipment}</p>
@@ -1930,7 +1936,6 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
       <section className="section-block exercise-pr-panel">
         <div className="section-title">
           <h2>我的表现</h2>
-          <span>{summary ? '已完成组统计' : '等待第一次记录'}</span>
         </div>
         {summary ? (
           <div className="exercise-pr-grid">
@@ -1940,14 +1945,13 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
             <MetricCard label="估算 1RM" value={formatWeight(summary.bestEstimatedOneRepMax)} />
           </div>
         ) : (
-          <div className="empty-state">完成一次包含这个动作的训练后，这里会显示你的个人记录。</div>
+          <div className="empty-state">暂无记录</div>
         )}
       </section>
 
       <section className="section-block">
         <div className="section-title">
           <h2>最近 5 次</h2>
-          <span>看趋势，不做复杂图表</span>
         </div>
         {recentHistory.length > 0 ? (
           <div className="exercise-trend-list">
@@ -1963,14 +1967,13 @@ function ExerciseDetail({ exerciseId, sessions }: { exerciseId: string; sessions
             ))}
           </div>
         ) : (
-          <div className="empty-state">这个动作还没有训练记录。</div>
+          <div className="empty-state">暂无记录</div>
         )}
       </section>
 
       <section className="section-block exercise-tips-panel">
         <div className="section-title">
           <h2>训练提示</h2>
-          <span>动作详情增强</span>
         </div>
         <div className="exercise-tip-list">
           <div className="exercise-tip-card">
