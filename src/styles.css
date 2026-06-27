@@ -110,55 +110,6 @@ a {
   --shadow-card: none;
 }
 
-.app-shell[data-ui-theme="paper-log"] {
-  --bg-0: #eee8dc;
-  --bg-1: #f8f4ea;
-  --surface-1: #fffdf6;
-  --surface-2: #eee6d6;
-  --line: rgba(39, 45, 38, 0.14);
-  --line-strong: rgba(39, 45, 38, 0.24);
-  --ink-1: #151812;
-  --ink-2: #555d52;
-  --ink-3: #858a7d;
-  --accent: #1f7a4a;
-  --accent-strong: #17623c;
-  --accent-soft: rgba(31, 122, 74, 0.13);
-  --accent-ink: #fffdf6;
-  --card-bg: #fffdf6;
-  --control-bg: #eee6d6;
-  --font-display: "Songti SC", "STSong", var(--font-body);
-  --topbar-bg: linear-gradient(180deg, rgba(248, 244, 234, 0.98), rgba(248, 244, 234, 0.88));
-  --nav-bg: linear-gradient(0deg, rgba(248, 244, 234, 0.98), rgba(248, 244, 234, 0.88));
-  --primary-card-bg: linear-gradient(135deg, #fffdf6, #eee6d6);
-  --primary-card-border: rgba(31, 122, 74, 0.26);
-  --shell-bg: #f8f4ea;
-  --shadow-card: none;
-}
-
-.app-shell[data-ui-theme="pro-gray"] {
-  --bg-0: #0d1116;
-  --bg-1: #11161d;
-  --surface-1: #171d25;
-  --surface-2: #202833;
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.16);
-  --ink-1: #eef2f5;
-  --ink-2: #97a1ac;
-  --ink-3: #66717d;
-  --accent: #d8f56d;
-  --accent-strong: #bde34b;
-  --accent-soft: rgba(216, 245, 109, 0.12);
-  --accent-ink: #11170b;
-  --card-bg: rgba(255, 255, 255, 0.045);
-  --control-bg: rgba(255, 255, 255, 0.055);
-  --topbar-bg: linear-gradient(180deg, rgba(17, 22, 29, 0.98), rgba(17, 22, 29, 0.82));
-  --nav-bg: linear-gradient(0deg, rgba(17, 22, 29, 0.98), rgba(17, 22, 29, 0.86));
-  --primary-card-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
-  --primary-card-border: rgba(255, 255, 255, 0.12);
-  --shell-bg: radial-gradient(circle at 72% 0%, rgba(216, 245, 109, 0.12), transparent 34%), #11161d;
-  --shadow-card: none;
-}
-
 .topbar {
   position: sticky;
   top: 0;
@@ -332,19 +283,7 @@ a {
   opacity: 0.65;
 }
 
-.appearance-button {
-  flex: 0 0 auto;
-  min-width: 58px;
-  min-height: 36px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  color: var(--ink-1);
-  background: var(--control-bg, rgba(30, 41, 59, 0.92));
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.appearance-backdrop {
+.reuse-confirm-backdrop {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -355,7 +294,7 @@ a {
   background: rgba(0, 0, 0, 0.5);
 }
 
-.appearance-sheet {
+.reuse-confirm-sheet {
   width: min(100%, 390px);
   border: 1px solid var(--line-strong);
   border-radius: 22px;
@@ -365,7 +304,7 @@ a {
   box-shadow: var(--shadow-pop);
 }
 
-.appearance-sheet-head {
+.reuse-confirm-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -373,91 +312,20 @@ a {
   margin-bottom: 14px;
 }
 
-.appearance-sheet-head strong,
-.appearance-sheet-head span {
+.reuse-confirm-head strong,
+.reuse-confirm-head span {
   display: block;
 }
 
-.appearance-sheet-head strong {
+.reuse-confirm-head strong {
   font-size: 18px;
   font-weight: 900;
 }
 
-.appearance-sheet-head span {
+.reuse-confirm-head span {
   margin-top: 4px;
   color: var(--ink-2);
   font-size: 12px;
-}
-
-.appearance-sheet-head button {
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  color: var(--ink-1);
-  background: var(--control-bg, var(--surface-2));
-  font-size: 20px;
-  line-height: 1;
-}
-
-.appearance-options {
-  display: grid;
-  gap: 10px;
-}
-
-.appearance-options button {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 66px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 10px 12px;
-  color: var(--ink-1);
-  background: var(--control-bg, var(--surface-2));
-  text-align: left;
-}
-
-.appearance-options button.active {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-.appearance-options strong,
-.appearance-options small {
-  display: block;
-}
-
-.appearance-options strong {
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.appearance-options small {
-  margin-top: 4px;
-  color: var(--ink-2);
-  font-size: 12px;
-}
-
-.theme-swatch {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  border: 1px solid var(--line-strong);
-}
-
-.theme-swatch.dark-log {
-  background: linear-gradient(135deg, #050505 0 58%, #26d46b 58% 100%);
-}
-
-.theme-swatch.paper-log {
-  background: linear-gradient(135deg, #fbfaf6 0 58%, #171715 58% 100%);
-}
-
-.theme-swatch.pro-gray {
-  background: linear-gradient(135deg, #11161d 0 58%, #d8f56d 58% 100%);
 }
 
 .sync-banner {
@@ -3251,184 +3119,6 @@ a {
 .app-shell[data-ui-theme="dark-log"] .progress-chart {
   background: #111;
   box-shadow: none;
-}
-
-.app-shell[data-ui-theme="paper-log"] .topbar {
-  backdrop-filter: none;
-}
-
-.app-shell[data-ui-theme="paper-log"] .topbar h1 {
-  font-size: 32px;
-  font-weight: 760;
-}
-
-.app-shell[data-ui-theme="paper-log"] .primary-training-card {
-  min-height: 210px;
-  border-color: var(--primary-card-border);
-  color: var(--ink-1);
-  background: var(--primary-card-bg);
-}
-
-.app-shell[data-ui-theme="paper-log"] .primary-training-card::after {
-  content: "";
-}
-
-.app-shell[data-ui-theme="paper-log"] .primary-training-card h2,
-.app-shell[data-ui-theme="paper-log"] .primary-training-card h2 span {
-  color: var(--ink-1);
-}
-
-.app-shell[data-ui-theme="paper-log"] .primary-training-card p,
-.app-shell[data-ui-theme="paper-log"] .plan-choice-card em,
-.app-shell[data-ui-theme="paper-log"] .workout-summary span {
-  color: var(--ink-2);
-}
-
-.app-shell[data-ui-theme="paper-log"] .recommended-adjust-button {
-  border-color: var(--line-strong);
-  color: var(--ink-1);
-  background: var(--surface-2);
-}
-
-.app-shell[data-ui-theme="paper-log"] .plan-choice-card,
-.app-shell[data-ui-theme="paper-log"] .exercise-log-card,
-.app-shell[data-ui-theme="paper-log"] .training-day-card,
-.app-shell[data-ui-theme="paper-log"] .custom-plan-card,
-.app-shell[data-ui-theme="paper-log"] .history-card,
-.app-shell[data-ui-theme="paper-log"] .exercise-card,
-.app-shell[data-ui-theme="paper-log"] .stat-tile,
-.app-shell[data-ui-theme="paper-log"] .pr-card,
-.app-shell[data-ui-theme="paper-log"] .training-calendar,
-.app-shell[data-ui-theme="paper-log"] .calendar-detail,
-.app-shell[data-ui-theme="paper-log"] .progress-chart,
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-hero {
-  background: var(--surface-1);
-  border-color: var(--line);
-  box-shadow: none;
-}
-
-.app-shell[data-ui-theme="paper-log"] .plan-choice-card.primary {
-  background: #fffdf6;
-}
-
-.app-shell[data-ui-theme="paper-log"] .bottom-nav button.active,
-.app-shell[data-ui-theme="paper-log"] .calendar-day.selected,
-.app-shell[data-ui-theme="paper-log"] .set-row.active,
-.app-shell[data-ui-theme="paper-log"] .set-row.completed {
-  color: var(--accent-ink);
-  background: var(--accent);
-}
-
-.app-shell[data-ui-theme="paper-log"] .set-row,
-.app-shell[data-ui-theme="paper-log"] .stepper input,
-.app-shell[data-ui-theme="paper-log"] .stepper button,
-.app-shell[data-ui-theme="paper-log"] .check-button,
-.app-shell[data-ui-theme="paper-log"] .rest-timer-controls button {
-  background: var(--surface-2);
-}
-
-.app-shell[data-ui-theme="paper-log"] .rest-timer,
-.app-shell[data-ui-theme="paper-log"] .rest-timer.done {
-  color: var(--ink-1);
-  background: var(--surface-1);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-hero {
-  border-color: rgba(31, 122, 74, 0.26);
-  background: linear-gradient(135deg, rgba(255, 253, 246, 0.98), rgba(238, 230, 214, 0.94));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame {
-  width: 42%;
-  background: transparent;
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame img {
-  opacity: 0.92;
-  filter: saturate(0.9) contrast(1.04);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame::after {
-  background:
-    linear-gradient(90deg, rgba(255, 253, 246, 0.9) 0%, rgba(255, 253, 246, 0.4) 52%, rgba(255, 253, 246, 0.04) 100%),
-    linear-gradient(180deg, rgba(248, 244, 234, 0) 0%, rgba(238, 230, 214, 0.22) 100%);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-copy h2 {
-  color: var(--ink-1);
-  text-shadow: none;
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-detail-copy p {
-  color: var(--ink-2);
-  font-size: 11.5px;
-  line-height: 1.55;
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-trend-row,
-.app-shell[data-ui-theme="paper-log"] .exercise-tip-card,
-.app-shell[data-ui-theme="paper-log"] .single-point-hint {
-  border-color: var(--line);
-  background: rgba(255, 253, 246, 0.9);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-tip-card {
-  border-left-color: var(--accent);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-tip-card p,
-.app-shell[data-ui-theme="paper-log"] .exercise-tip-card li {
-  color: var(--ink-2);
-}
-
-.app-shell[data-ui-theme="paper-log"] .exercise-trend-row i {
-  background: linear-gradient(90deg, var(--accent), rgba(31, 122, 74, 0.16));
-}
-
-.app-shell[data-ui-theme="pro-gray"] .primary-training-card {
-  border-color: var(--primary-card-border);
-  background: var(--primary-card-bg);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.app-shell[data-ui-theme="pro-gray"] .primary-training-card::after {
-  color: rgba(216, 245, 109, 0.08);
-}
-
-.app-shell[data-ui-theme="pro-gray"] .primary-training-card h2 span {
-  color: var(--ink-2);
-}
-
-.app-shell[data-ui-theme="pro-gray"] .plan-choice-card,
-.app-shell[data-ui-theme="pro-gray"] .exercise-log-card,
-.app-shell[data-ui-theme="pro-gray"] .training-day-card,
-.app-shell[data-ui-theme="pro-gray"] .custom-plan-card,
-.app-shell[data-ui-theme="pro-gray"] .history-card,
-.app-shell[data-ui-theme="pro-gray"] .exercise-card,
-.app-shell[data-ui-theme="pro-gray"] .stat-tile,
-.app-shell[data-ui-theme="pro-gray"] .pr-card,
-.app-shell[data-ui-theme="pro-gray"] .training-calendar,
-.app-shell[data-ui-theme="pro-gray"] .calendar-detail,
-.app-shell[data-ui-theme="pro-gray"] .progress-chart,
-.app-shell[data-ui-theme="pro-gray"] .exercise-detail-hero {
-  background: var(--card-bg);
-  box-shadow: none;
-}
-
-.app-shell[data-ui-theme="pro-gray"] .plan-choice-card.primary {
-  background:
-    linear-gradient(90deg, rgba(216, 245, 109, 0.08), transparent 46%),
-    var(--card-bg);
-}
-
-.app-shell[data-ui-theme="pro-gray"] .recommended-adjust-button,
-.app-shell[data-ui-theme="pro-gray"] .set-row,
-.app-shell[data-ui-theme="pro-gray"] .stepper input,
-.app-shell[data-ui-theme="pro-gray"] .stepper button,
-.app-shell[data-ui-theme="pro-gray"] .check-button,
-.app-shell[data-ui-theme="pro-gray"] .rest-timer-controls button {
-  background: var(--control-bg);
 }
 
 .custom-empty p {

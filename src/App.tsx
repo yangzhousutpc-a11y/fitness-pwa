@@ -30,7 +30,6 @@ import type { CoachExerciseNote, CoachPlan, Exercise, ExerciseLog, SetLog, Train
 
 type Tab = 'plans' | 'exercises' | 'history';
 type ExerciseFilter = '全部' | '胸' | '背' | '肩' | '腿' | '手臂';
-type UiTheme = 'dark-log' | 'paper-log' | 'pro-gray';
 type CalendarDay = {
   date: Date;
   dateKey: string;
@@ -66,12 +65,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const INSTALL_PROMPT_DISMISSED_KEY = 'fitness-pwa.install-prompt-dismissed.v1';
-const UI_THEME_STORAGE_KEY = 'fitness-pwa.ui-theme.v1';
-const uiThemeOptions: Array<{ id: UiTheme; name: string; description: string }> = [
-  { id: 'dark-log', name: '墨黑训练日志', description: '黑白高对比，训练中最清晰' },
-  { id: 'paper-log', name: '纸感训练册', description: '浅色手账感，复盘更舒服' },
-  { id: 'pro-gray', name: '专业灰阶仪表', description: '深灰数据感，长期扩展更稳' },
-];
+const UI_THEME = 'dark-log';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('plans');
@@ -86,8 +80,6 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [apiTokenDraft, setApiTokenDraft] = useState('');
   const [isWorkoutInputFocused, setIsWorkoutInputFocused] = useState(false);
-  const [uiTheme, setUiTheme] = useState<UiTheme>(readSavedUiTheme);
-  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [exerciseQuery, setExerciseQuery] = useState('');
   const [exerciseFilter, setExerciseFilter] = useState<ExerciseFilter>('全部');
 
@@ -325,17 +317,11 @@ function App() {
     setRoute({ name: 'home' });
   }
 
-  function changeUiTheme(nextTheme: UiTheme) {
-    setUiTheme(nextTheme);
-    localStorage.setItem(UI_THEME_STORAGE_KEY, nextTheme);
-    setIsAppearanceOpen(false);
-  }
-
   const appShellClassName = isWorkoutRoute && isWorkoutInputFocused ? 'app-shell input-focus-mode' : 'app-shell';
 
   if (showLogin) {
     return (
-      <main className="app-shell login-shell" data-ui-theme={uiTheme}>
+      <main className="app-shell login-shell" data-ui-theme={UI_THEME}>
         <LoginScreen
           status={syncStatus}
           error={syncError}
@@ -349,7 +335,7 @@ function App() {
   }
 
   return (
-    <main className={appShellClassName} data-ui-theme={uiTheme}>
+    <main className={appShellClassName} data-ui-theme={UI_THEME}>
       <header className="topbar">
         <div>
           <h1>{header.title}</h1>
@@ -358,15 +344,6 @@ function App() {
         {route.name !== 'home' ? (
           <button className="icon-button" type="button" onClick={() => goBack()} aria-label="返回">
             ←
-          </button>
-        ) : route.name === 'home' && activeTab === 'plans' ? (
-          <button
-            className="appearance-button"
-            type="button"
-            onClick={() => setIsAppearanceOpen(true)}
-            aria-label="切换外观"
-          >
-            外观
           </button>
         ) : null}
       </header>
@@ -469,14 +446,6 @@ function App() {
         }}
       />
 
-      {isAppearanceOpen ? (
-        <AppearanceSheet
-          currentTheme={uiTheme}
-          onChange={changeUiTheme}
-          onClose={() => setIsAppearanceOpen(false)}
-        />
-      ) : null}
-
       {pendingReuseSession ? (
         <ReuseDraftConfirm
           sessionName={findDayName(pendingReuseSession, customPlans)}
@@ -502,15 +471,15 @@ function ReuseDraftConfirm({
   onConfirm: () => void;
 }) {
   return (
-    <div className="appearance-backdrop" role="presentation" onClick={onCancel}>
+    <div className="reuse-confirm-backdrop" role="presentation" onClick={onCancel}>
       <section
-        className="appearance-sheet reuse-confirm-sheet"
+        className="reuse-confirm-sheet"
         role="dialog"
         aria-modal="true"
         aria-label="确认复用历史训练"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="appearance-sheet-head">
+        <div className="reuse-confirm-head">
           <div>
             <strong>复用到今天</strong>
             <span>已有未完成的 {sessionName} 草稿，继续会用历史记录覆盖它。</span>
@@ -519,60 +488,6 @@ function ReuseDraftConfirm({
         <div className="reuse-confirm-actions">
           <button type="button" className="secondary-button" onClick={onCancel}>取消</button>
           <button type="button" className="primary-button" onClick={onConfirm}>继续复用</button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function readSavedUiTheme(): UiTheme {
-  const savedTheme = localStorage.getItem(UI_THEME_STORAGE_KEY);
-  return uiThemeOptions.some((theme) => theme.id === savedTheme) ? (savedTheme as UiTheme) : 'dark-log';
-}
-
-function AppearanceSheet({
-  currentTheme,
-  onChange,
-  onClose,
-}: {
-  currentTheme: UiTheme;
-  onChange: (theme: UiTheme) => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="appearance-backdrop" role="presentation" onClick={onClose}>
-      <section
-        className="appearance-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="选择外观"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="appearance-sheet-head">
-          <div>
-            <strong>选择外观</strong>
-            <span>切换后立即应用到整个 App</span>
-          </div>
-          <button type="button" onClick={onClose} aria-label="关闭外观选择">
-            ×
-          </button>
-        </div>
-        <div className="appearance-options">
-          {uiThemeOptions.map((theme) => (
-            <button
-              key={theme.id}
-              type="button"
-              className={theme.id === currentTheme ? 'active' : ''}
-              onClick={() => onChange(theme.id)}
-              aria-pressed={theme.id === currentTheme}
-            >
-              <span className={`theme-swatch ${theme.id}`} aria-hidden="true" />
-              <span>
-                <strong>{theme.name}</strong>
-                <small>{theme.description}</small>
-              </span>
-            </button>
-          ))}
         </div>
       </section>
     </div>

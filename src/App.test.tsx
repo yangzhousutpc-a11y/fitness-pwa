@@ -84,24 +84,16 @@ describe('fitness PWA user flows', () => {
     expect(localStorage.getItem('fitness-pwa.install-prompt-dismissed.v1')).toBe('1');
   });
 
-  it('switches the app appearance and remembers the selected UI theme', async () => {
-    const { unmount } = render(<App />);
+  it('keeps the app on the dark training log theme without appearance switching', async () => {
+    localStorage.setItem('fitness-pwa.ui-theme.v1', 'paper-log');
 
-    const shell = await screen.findByRole('main');
-    expect(shell).toHaveAttribute('data-ui-theme', 'dark-log');
-
-    fireEvent.click(screen.getByRole('button', { name: '切换外观' }));
-    expect(screen.getByRole('dialog', { name: '选择外观' })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /纸感训练册/ }));
-
-    expect(shell).toHaveAttribute('data-ui-theme', 'paper-log');
-    expect(localStorage.getItem('fitness-pwa.ui-theme.v1')).toBe('paper-log');
-
-    unmount();
     render(<App />);
 
-    expect(await screen.findByRole('main')).toHaveAttribute('data-ui-theme', 'paper-log');
+    expect(await screen.findByRole('main')).toHaveAttribute('data-ui-theme', 'dark-log');
+    expect(screen.queryByRole('button', { name: '切换外观' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: '选择外观' })).not.toBeInTheDocument();
+
+    localStorage.removeItem('fitness-pwa.ui-theme.v1');
   });
 
   it('filters the exercise library by selected muscle group and search query', () => {
