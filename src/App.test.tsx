@@ -214,22 +214,22 @@ describe('fitness PWA user flows', () => {
 
     // 默认展开 Day 1
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
-    expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
+    expect(screen.queryByText('单手全肩屈绳索下压')).not.toBeInTheDocument();
     expect(screen.getByText('名师要点')).toBeInTheDocument();
-    expect(screen.getByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).toBeInTheDocument();
+    expect(screen.getByText('作为推类主项，重点发展卧推重量、神经调动和上肢推的整体能力。')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '杠铃卧推 展开收起' }));
-    expect(screen.queryByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).not.toBeInTheDocument();
+    expect(screen.queryByText('作为推类主项，重点发展卧推重量、神经调动和上肢推的整体能力。')).not.toBeInTheDocument();
 
     // 展开 Day 2 —— Day 1 应仍保持展开（独立展开，非互斥）
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
-    expect(screen.getByText('引体向上')).toBeInTheDocument();
+    expect(screen.getByText('单手全肩屈绳索下压')).toBeInTheDocument();
 
     // 再点 Day 2 —— 收起 Day 2，Day 1 不受影响
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
     expect(screen.getByText('杠铃卧推')).toBeInTheDocument();
-    expect(screen.queryByText('引体向上')).not.toBeInTheDocument();
+    expect(screen.queryByText('单手全肩屈绳索下压')).not.toBeInTheDocument();
   });
 
   it('keeps plan exercise collapse on the sticky heading instead of adding a bottom action', () => {
@@ -237,12 +237,12 @@ describe('fitness PWA user flows', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
 
-    expect(screen.getByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).toBeInTheDocument();
+    expect(screen.getByText('作为推类主项，重点发展卧推重量、神经调动和上肢推的整体能力。')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '收起杠铃卧推' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '杠铃卧推 展开收起' }));
 
-    expect(screen.queryByText('作为胸肩三头日的主力复合推举，先建立稳定卧推动作和胸部张力。')).not.toBeInTheDocument();
+    expect(screen.queryByText('作为推类主项，重点发展卧推重量、神经调动和上肢推的整体能力。')).not.toBeInTheDocument();
   });
 
   it('starts workouts with five sets and supports adding and deleting sets per exercise', () => {
@@ -727,8 +727,8 @@ describe('fitness PWA user flows', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '开始推荐训练' }));
 
-    expect(screen.getByRole('heading', { name: '引体向上' })).toBeInTheDocument();
-    expect(screen.getByText('0/30 组完成')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '单手全肩屈绳索下压' })).toBeInTheDocument();
+    expect(screen.getByText('0/25 组完成')).toBeInTheDocument();
   });
 
   it('requires a current follow plan before recommending and keeps recommendations inside that plan', async () => {
@@ -941,20 +941,20 @@ describe('fitness PWA user flows', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
-    // 先收起默认展开的 Day 1，再单独展开 Day 2（含 引体向上 / 高位下拉，曾共用 pull 图）
+    // 先收起默认展开的 Day 1，再单独展开 Day 2（含 单手下压 / 高位下拉，曾共用 pull 图）
     fireEvent.click(screen.getByRole('button', { name: 'Day 1 胸 / 肩 / 三头' }));
     fireEvent.click(screen.getByRole('button', { name: 'Day 2 背 / 后束 / 二头' }));
     fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
 
-    // 训练页默认只展开第一个动作；单独展开「高位下拉」「坐姿划船」（曾各自与 引体/划船 共用图）
+    // 训练页默认只展开第一个动作；单独展开「高位下拉」「胸支撑划船」
     fireEvent.click(screen.getByRole('button', { name: '高位下拉 展开收起' }));
-    fireEvent.click(screen.getByRole('button', { name: '坐姿绳索划船 展开收起' }));
+    fireEvent.click(screen.getByRole('button', { name: '胸支撑肩胛后缩划船 展开收起' }));
 
     const imgs = screen.getAllByRole('img') as HTMLImageElement[];
     const srcs = imgs.map((img) => img.getAttribute('src'));
+    expect(srcs).toContain('/coach-shots/straight-arm-pulldown-cue.jpg');
     expect(srcs).toContain('/coach-shots/lat-pulldown-cue.jpg');
     expect(srcs).toContain('/coach-shots/seated-cable-row-cue.jpg');
-    // 这两张与默认展开的引体向上互不重复
     expect(new Set(srcs).size).toBe(srcs.length);
   });
 

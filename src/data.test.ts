@@ -20,12 +20,15 @@ describe('built-in fitness data', () => {
       'Day 2 背 / 后束 / 二头',
       'Day 3 腿部',
     ]);
-    expect(plan.sourceUrl).toContain('bilibili.com/video/BV1FcdZBNEm3');
+    expect(plan.sourceUrl).toContain('bilibili.com/video/BV17ooLBUEqS');
+    expect(plan.sourceUrl).toContain('p=5');
     expect(plan.days.every((day) => day.sourceUrl.includes('bilibili.com/video/'))).toBe(true);
   });
 
-  it('uses the confirmed Day 1 follow-along exercise list from the public video entry', () => {
+  it('uses transcript-confirmed follow-along exercise lists and warmups for the three-day split', () => {
     const dayOne = coachPlans[0].days.find((day) => day.id === 'day-1-push');
+    const dayTwo = coachPlans[0].days.find((day) => day.id === 'day-2-pull');
+    const dayThree = coachPlans[0].days.find((day) => day.id === 'day-3-legs');
 
     expect(dayOne?.exerciseIds).toEqual([
       'barbell-bench-press',
@@ -34,6 +37,22 @@ describe('built-in fitness data', () => {
       'skull-crusher',
       'y-raise',
     ]);
+    expect(dayTwo?.exerciseIds).toEqual([
+      'one-arm-lat-pulldown',
+      'lat-pulldown',
+      'one-arm-cable-row',
+      'chest-supported-row',
+      'cable-curl',
+    ]);
+    expect(dayThree?.exerciseIds).toEqual([
+      'single-leg-deadlift',
+      'bulgarian-split-squat',
+      'front-squat',
+      'romanian-deadlift',
+      'back-extension',
+    ]);
+    expect(coachPlans[0].days.every((day) => (day.warmup?.length ?? 0) > 0)).toBe(true);
+    expect(coachPlans[0].days.flatMap((day) => day.coachNotes).every((note) => note.sourceBasis.includes('逐字稿提炼'))).toBe(true);
   });
 
   it('defines the Tan Chengyi private coaching follow-along plan from four public videos', () => {
