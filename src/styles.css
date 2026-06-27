@@ -111,27 +111,27 @@ a {
 }
 
 .app-shell[data-ui-theme="paper-log"] {
-  --bg-0: #e9e4d8;
-  --bg-1: #fbfaf6;
-  --surface-1: #fffdf8;
-  --surface-2: #f1efe7;
-  --line: rgba(23, 23, 21, 0.1);
-  --line-strong: rgba(23, 23, 21, 0.16);
-  --ink-1: #171715;
-  --ink-2: #6f6a61;
-  --ink-3: #9b958a;
-  --accent: #171715;
-  --accent-strong: #2d2a25;
-  --accent-soft: rgba(23, 23, 21, 0.08);
-  --accent-ink: #fbfaf6;
-  --card-bg: #fffdf8;
-  --control-bg: #f1efe7;
+  --bg-0: #eee8dc;
+  --bg-1: #f8f4ea;
+  --surface-1: #fffdf6;
+  --surface-2: #eee6d6;
+  --line: rgba(39, 45, 38, 0.14);
+  --line-strong: rgba(39, 45, 38, 0.24);
+  --ink-1: #151812;
+  --ink-2: #555d52;
+  --ink-3: #858a7d;
+  --accent: #1f7a4a;
+  --accent-strong: #17623c;
+  --accent-soft: rgba(31, 122, 74, 0.13);
+  --accent-ink: #fffdf6;
+  --card-bg: #fffdf6;
+  --control-bg: #eee6d6;
   --font-display: "Songti SC", "STSong", var(--font-body);
-  --topbar-bg: linear-gradient(180deg, rgba(251, 250, 246, 0.98), rgba(251, 250, 246, 0.86));
-  --nav-bg: linear-gradient(0deg, rgba(251, 250, 246, 0.98), rgba(251, 250, 246, 0.86));
-  --primary-card-bg: #fffdf8;
-  --primary-card-border: rgba(23, 23, 21, 0.16);
-  --shell-bg: #fbfaf6;
+  --topbar-bg: linear-gradient(180deg, rgba(248, 244, 234, 0.98), rgba(248, 244, 234, 0.88));
+  --nav-bg: linear-gradient(0deg, rgba(248, 244, 234, 0.98), rgba(248, 244, 234, 0.88));
+  --primary-card-bg: linear-gradient(135deg, #fffdf6, #eee6d6);
+  --primary-card-border: rgba(31, 122, 74, 0.26);
+  --shell-bg: #f8f4ea;
   --shadow-card: none;
 }
 
@@ -3303,11 +3303,12 @@ a {
 .app-shell[data-ui-theme="paper-log"] .progress-chart,
 .app-shell[data-ui-theme="paper-log"] .exercise-detail-hero {
   background: var(--surface-1);
+  border-color: var(--line);
   box-shadow: none;
 }
 
 .app-shell[data-ui-theme="paper-log"] .plan-choice-card.primary {
-  background: #fffdf8;
+  background: #fffdf6;
 }
 
 .app-shell[data-ui-theme="paper-log"] .bottom-nav button.active,
@@ -3332,8 +3333,57 @@ a {
   background: var(--surface-1);
 }
 
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-hero {
+  border-color: rgba(31, 122, 74, 0.26);
+  background: linear-gradient(135deg, rgba(255, 253, 246, 0.98), rgba(238, 230, 214, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
 .app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame {
-  background: var(--surface-2);
+  width: 42%;
+  background: transparent;
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame img {
+  opacity: 0.92;
+  filter: saturate(0.9) contrast(1.04);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-image-frame::after {
+  background:
+    linear-gradient(90deg, rgba(255, 253, 246, 0.9) 0%, rgba(255, 253, 246, 0.4) 52%, rgba(255, 253, 246, 0.04) 100%),
+    linear-gradient(180deg, rgba(248, 244, 234, 0) 0%, rgba(238, 230, 214, 0.22) 100%);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-copy h2 {
+  color: var(--ink-1);
+  text-shadow: none;
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-detail-copy p {
+  color: var(--ink-2);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-trend-row,
+.app-shell[data-ui-theme="paper-log"] .exercise-tip-card,
+.app-shell[data-ui-theme="paper-log"] .single-point-hint {
+  border-color: var(--line);
+  background: rgba(255, 253, 246, 0.9);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-tip-card {
+  border-left-color: var(--accent);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-tip-card p,
+.app-shell[data-ui-theme="paper-log"] .exercise-tip-card li {
+  color: var(--ink-2);
+}
+
+.app-shell[data-ui-theme="paper-log"] .exercise-trend-row i {
+  background: linear-gradient(90deg, var(--accent), rgba(31, 122, 74, 0.16));
 }
 
 .app-shell[data-ui-theme="pro-gray"] .primary-training-card {
