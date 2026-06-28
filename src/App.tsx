@@ -1352,8 +1352,13 @@ function PlanDetail({
                         <ul className="warmup-list">
                           {day.warmup.map((item) => (
                             <li key={item.name}>
-                              <span className="warmup-name">{item.name}</span>
-                              <span className="warmup-detail">{item.detail}</span>
+                              <div className="warmup-copy">
+                                <span className="warmup-name">{item.name}</span>
+                                <span className="warmup-detail">{item.detail}</span>
+                              </div>
+                              {item.imageUrl ? (
+                                <img className="warmup-image" src={withBase(item.imageUrl)} alt={`${item.name}示意图`} loading="lazy" />
+                              ) : null}
                             </li>
                           ))}
                         </ul>

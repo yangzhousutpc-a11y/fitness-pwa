@@ -515,9 +515,9 @@ export const coachPlans: CoachPlan[] = [
         focus: ['胸', '肩', '三头'],
         sourceUrl: dayOneSourceUrl,
         warmup: [
-          { name: '杠铃卧推热身组', detail: '视频要求第一组先用非常轻的重量做 15 次，约选择能做 20 次的重量，用来刷卧推动作熟练度，而不是一上来冲最大重量。' },
-          { name: '弹力带绕肩', detail: '从眼睛正前方绕到肩膀正后方即可，全程保持弹力带张力，不要完全放到底，让肩关节升温并保持安全张力。' },
-          { name: '俯卧 / 泡沫轴 Y 字激活', detail: '大拇指朝上、头别抬，只动肩不顶腰，重点激活下斜方和前锯肌，服务后续推类动作的肩胛稳定。' },
+          { name: '杠铃卧推热身组', detail: '视频要求第一组先用非常轻的重量做 15 次，约选择能做 20 次的重量，用来刷卧推动作熟练度，而不是一上来冲最大重量。', imageUrl: '/coach-shots/warmups/bench-press-warmup.jpg' },
+          { name: '弹力带绕肩', detail: '从眼睛正前方绕到肩膀正后方即可，全程保持弹力带张力，不要完全放到底，让肩关节升温并保持安全张力。', imageUrl: '/coach-shots/warmups/band-shoulder-pass-through.jpg' },
+          { name: '俯卧 / 泡沫轴 Y 字激活', detail: '大拇指朝上、头别抬，只动肩不顶腰，重点激活下斜方和前锯肌，服务后续推类动作的肩胛稳定。', imageUrl: '/coach-shots/warmups/prone-foam-roller-y-raise.jpg' },
         ],
         exerciseIds: [
           'barbell-bench-press',
@@ -591,8 +591,8 @@ export const coachPlans: CoachPlan[] = [
         focus: ['背', '肩', '二头'],
         sourceUrl: dayTwoSourceUrl,
         warmup: [
-          { name: '背阔轻重量预激活', detail: '先用单手全肩屈绳索下压的轻重量版本找背阔肌，保持手腕不乱动、向下拉而不是向后缩。' },
-          { name: '肩胛下压和胸椎位置', detail: '视频强调背部训练需要精细控制：躯干保持相对中立，肩胛能承住下拉，不要一上来就耸肩或后仰借力。' },
+          { name: '背阔轻重量预激活', detail: '先用单手全肩屈绳索下压的轻重量版本找背阔肌，保持手腕不乱动、向下拉而不是向后缩。', imageUrl: '/coach-shots/warmups/lat-pre-activation.jpg' },
+          { name: '肩胛下压和胸椎位置', detail: '视频强调背部训练需要精细控制：躯干保持相对中立，肩胛能承住下拉，不要一上来就耸肩或后仰借力。', imageUrl: '/coach-shots/warmups/scapular-depression.jpg' },
         ],
         exerciseIds: [
           'one-arm-lat-pulldown',
@@ -665,9 +665,9 @@ export const coachPlans: CoachPlan[] = [
         focus: ['腿', '臀'],
         sourceUrl: dayThreeSourceUrl,
         warmup: [
-          { name: '高脚杯 / 箱式深蹲退阶', detail: '不会做前蹲或足背屈受限时，先抱哑铃坐到凳子再起来；保持上身不动，膝盖跟脚尖同向，找到自己能控制的幅度。' },
-          { name: '单腿稳定预演', detail: '正式单腿硬拉和保加利亚蹲前，先用自重或轻重量确认骨盆稳定、支撑脚踩稳，避免膝盖内扣和身体旋转。' },
-          { name: '髋铰链空杆练习', detail: '罗马尼亚硬拉前先练脚、手、上背刚性和髋铰链：小腿接近垂直，背阔收紧让杠贴近身体。' },
+          { name: '高脚杯 / 箱式深蹲退阶', detail: '不会做前蹲或足背屈受限时，先抱哑铃坐到凳子再起来；保持上身不动，膝盖跟脚尖同向，找到自己能控制的幅度。', imageUrl: '/coach-shots/warmups/goblet-box-squat.jpg' },
+          { name: '单腿稳定预演', detail: '正式单腿硬拉和保加利亚蹲前，先用自重或轻重量确认骨盆稳定、支撑脚踩稳，避免膝盖内扣和身体旋转。', imageUrl: '/coach-shots/warmups/single-leg-stability.jpg' },
+          { name: '髋铰链空杆练习', detail: '罗马尼亚硬拉前先练脚、手、上背刚性和髋铰链：小腿接近垂直，背阔收紧让杠贴近身体。', imageUrl: '/coach-shots/warmups/empty-bar-hip-hinge.jpg' },
         ],
         exerciseIds: [
           'single-leg-deadlift',
@@ -752,8 +752,8 @@ export const coachPlans: CoachPlan[] = [
         focus: ['背', '二头'],
         sourceUrl: privateCoachingBackUrl,
         warmup: [
-          { name: '泡沫轴前锯肌推', detail: '跪姿、小臂放泡沫轴上向前推，躯干和重心不动、只动肩，把肩胛骨顶起来激活前锯肌和肩胛稳定。重心越靠前越难，做 2 组。' },
-          { name: '健腹轮前推（可选）', detail: '动作模式同上但手参与，能顺带提高手腕和小臂能力；手腕不适的人优先用这个，保持肩胛外展、核心发力。' },
+          { name: '泡沫轴前锯肌推', detail: '跪姿、小臂放泡沫轴上向前推，躯干和重心不动、只动肩，把肩胛骨顶起来激活前锯肌和肩胛稳定。重心越靠前越难，做 2 组。', imageUrl: '/coach-shots/warmups/foam-roller-serratus-push.jpg' },
+          { name: '健腹轮前推（可选）', detail: '动作模式同上但手参与，能顺带提高手腕和小臂能力；手腕不适的人优先用这个，保持肩胛外展、核心发力。', imageUrl: '/coach-shots/warmups/ab-wheel-rollout-warmup.jpg' },
         ],
         exerciseIds: [
           'straight-arm-pulldown',
@@ -826,7 +826,7 @@ export const coachPlans: CoachPlan[] = [
         focus: ['三头', '二头'],
         sourceUrl: privateCoachingArmsUrl,
         warmup: [
-          { name: '直接开练 + 热身组', detail: '谭成义原话：手臂训练不需要特别热身，直接开练即可，只需在正式动作前用轻重量多做 1-2 组热身组激活；若三头起步手腕不适，先用更轻的重量多激活几次。' },
+          { name: '直接开练 + 热身组', detail: '谭成义原话：手臂训练不需要特别热身，直接开练即可，只需在正式动作前用轻重量多做 1-2 组热身组激活；若三头起步手腕不适，先用更轻的重量多激活几次。', imageUrl: '/coach-shots/warmups/light-triceps-warmup.jpg' },
         ],
         exerciseIds: [
           'triceps-pushdown',
@@ -899,9 +899,9 @@ export const coachPlans: CoachPlan[] = [
         focus: ['胸', '三头'],
         sourceUrl: privateCoachingChestUrl,
         warmup: [
-          { name: '俯卧 TYW（侧重 Y 字）', detail: '泡沫轴垫高、只动肩不动躯干，激活下斜方与肩胛联动。最推荐 Y 字、尽量抬高，胸口抵住泡沫轴吸气做扩张对抗。' },
-          { name: '俯卧 Y 字推举', detail: '在胸廓扩张位做 Y 字推举，让肩在更协调的位置上活动，顺带调整肩肱节律。' },
-          { name: '弹力带绕肩', detail: '保持弹力带张力，从肩正前方绕到肩正后方，幅度不用大、全程别松掉，给肩关节升温。' },
+          { name: '俯卧 TYW（侧重 Y 字）', detail: '泡沫轴垫高、只动肩不动躯干，激活下斜方与肩胛联动。最推荐 Y 字、尽量抬高，胸口抵住泡沫轴吸气做扩张对抗。', imageUrl: '/coach-shots/warmups/prone-tyw-y.jpg' },
+          { name: '俯卧 Y 字推举', detail: '在胸廓扩张位做 Y 字推举，让肩在更协调的位置上活动，顺带调整肩肱节律。', imageUrl: '/coach-shots/warmups/prone-y-press.jpg' },
+          { name: '弹力带绕肩', detail: '保持弹力带张力，从肩正前方绕到肩正后方，幅度不用大、全程别松掉，给肩关节升温。', imageUrl: '/coach-shots/warmups/band-shoulder-pass-through.jpg' },
         ],
         exerciseIds: [
           'parallel-bar-dip',
@@ -963,8 +963,8 @@ export const coachPlans: CoachPlan[] = [
         focus: ['肩'],
         sourceUrl: privateCoachingShouldersUrl,
         warmup: [
-          { name: '弹力带绕肩', detail: '黄色等较轻弹力带，从肩正前方到肩正后方保持张力做约 20 次，让肩关节升温、分泌滑液，也是一种保养。' },
-          { name: 'TRX / 泡沫轴 Y 字提拉', detail: '向头顶方向走出 Y 字、激活肩胛和下斜方；脚越往前越难。没有 TRX 就用胸口抵泡沫轴、只动肩做 Y 字，别顶腰、保持脊柱不动。' },
+          { name: '弹力带绕肩', detail: '黄色等较轻弹力带，从肩正前方到肩正后方保持张力做约 20 次，让肩关节升温、分泌滑液，也是一种保养。', imageUrl: '/coach-shots/warmups/band-shoulder-pass-through.jpg' },
+          { name: 'TRX / 泡沫轴 Y 字提拉', detail: '向头顶方向走出 Y 字、激活肩胛和下斜方；脚越往前越难。没有 TRX 就用胸口抵泡沫轴、只动肩做 Y 字，别顶腰、保持脊柱不动。', imageUrl: '/coach-shots/warmups/trx-y-raise.jpg' },
         ],
         exerciseIds: [
           'rear-delt-fly',
@@ -1037,10 +1037,10 @@ export const coachPlans: CoachPlan[] = [
         focus: ['腿', '臀'],
         sourceUrl: tanchengyiLegsUrl,
         warmup: [
-          { name: '青蛙式髋部前后推', detail: '肘撑地、膝盖打开，骨盆前倾把屁股撅起来向后推；膝盖持续和地面对抗，一来一回约 14 次，做 2 组。' },
-          { name: '青蛙趴双侧髋内旋', detail: '身体向前推到紧的位置，腰不要塌，两侧同时内旋抬腿，减少侧屈旋转代偿，强化髋关节本体感受。' },
-          { name: '伟大者伸展', detail: '前脚放大步、后腿伸直，对侧手撑地，另一只手向上延长，眼睛看手指方向；重点感受臀和大腿后侧拉伸。' },
-          { name: '90/90 髋转换', detail: '前后腿都接近 90 度，先手撑地完成翻转；能力够再加入顶髋和伸腿，把髋外展位伸髋做明白。' },
+          { name: '青蛙式髋部前后推', detail: '肘撑地、膝盖打开，骨盆前倾把屁股撅起来向后推；膝盖持续和地面对抗，一来一回约 14 次，做 2 组。', imageUrl: '/coach-shots/warmups/frog-hip-rock.jpg' },
+          { name: '青蛙趴双侧髋内旋', detail: '身体向前推到紧的位置，腰不要塌，两侧同时内旋抬腿，减少侧屈旋转代偿，强化髋关节本体感受。', imageUrl: '/coach-shots/warmups/frog-hip-internal-rotation.jpg' },
+          { name: '伟大者伸展', detail: '前脚放大步、后腿伸直，对侧手撑地，另一只手向上延长，眼睛看手指方向；重点感受臀和大腿后侧拉伸。', imageUrl: '/coach-shots/warmups/worlds-greatest-stretch.jpg' },
+          { name: '90/90 髋转换', detail: '前后腿都接近 90 度，先手撑地完成翻转；能力够再加入顶髋和伸腿，把髋外展位伸髋做明白。', imageUrl: '/coach-shots/warmups/ninety-ninety-hip-switch.jpg' },
         ],
         exerciseIds: [
           'standing-calf-raise',

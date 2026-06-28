@@ -22,6 +22,7 @@ export interface Exercise {
 export interface WarmupItem {
   name: string;
   detail: string;
+  imageUrl?: string;
 }
 
 export interface TrainingDayTemplate {

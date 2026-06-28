@@ -115,6 +115,16 @@ describe('built-in fitness data', () => {
     }
   });
 
+  it('attaches a cue image path to every warmup item', () => {
+    const warmups = coachPlans.flatMap((plan) => plan.days.flatMap((day) => day.warmup ?? []));
+
+    expect(warmups.length).toBeGreaterThan(0);
+
+    for (const warmup of warmups) {
+      expect(warmup.imageUrl).toMatch(/^\/coach-shots\/warmups\/.+\.jpg$/);
+    }
+  });
+
   it('only references exercises that exist in the library', () => {
     const ids = new Set(exercises.map((exercise) => exercise.id));
     const referencedIds = coachPlans.flatMap((plan) => plan.days.flatMap((day) => day.exerciseIds));

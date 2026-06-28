@@ -854,7 +854,19 @@ a {
 
 .warmup-list li {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.32);
+}
+
+.warmup-copy {
+  display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .warmup-name {
@@ -867,6 +879,15 @@ a {
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--ink-2);
+}
+
+.warmup-image {
+  width: 76px;
+  aspect-ratio: 9 / 12;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(2, 6, 23, 0.38);
 }
 
 .plan-exercise-card {
