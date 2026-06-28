@@ -56,18 +56,30 @@ describe('built-in fitness data', () => {
     expect(coachPlans[0].days.flatMap((day) => day.coachNotes).every((note) => note.sourceBasis.includes('逐字稿提炼'))).toBe(true);
   });
 
-  it('defines the Tan Chengyi private coaching follow-along plan from four public videos', () => {
+  it('defines the Tan Chengyi private coaching follow-along plan from five public videos', () => {
     const plan = coachPlans.find((item) => item.id === 'tanchengyi-private-coaching-follow-along');
+    const legsDay = plan?.days.find((day) => day.id === 'private-day-5-legs');
 
     expect(plan?.coachName).toBe('谭成义');
     expect(plan?.title).toBe('谭成义私教跟练');
-    expect(plan?.days.map((day) => day.name)).toEqual(['Day 1 背部', 'Day 2 手臂', 'Day 3 胸部', 'Day 4 肩部']);
+    expect(plan?.days.map((day) => day.name)).toEqual(['Day 1 背部', 'Day 2 手臂', 'Day 3 胸部', 'Day 4 肩部', 'Day 5 腿部']);
     expect(plan?.days.map((day) => day.sourceUrl)).toEqual([
       'https://www.bilibili.com/video/BV1HR7o6CE8q/',
       'https://www.bilibili.com/video/BV1GzEg6wEVb/',
       'https://www.bilibili.com/video/BV1ZxEk6cEv1/',
       'https://www.bilibili.com/video/BV1csj36CEf9/',
+      'https://www.bilibili.com/video/BV1RjTT6FEKo/',
     ]);
+    expect(legsDay?.warmup?.length).toBeGreaterThanOrEqual(4);
+    expect(legsDay?.exerciseIds).toEqual([
+      'standing-calf-raise',
+      'hip-adduction-machine',
+      'bulgarian-split-squat',
+      'romanian-deadlift',
+      'seated-hip-flexion-raise',
+      'leg-curl',
+    ]);
+    expect(legsDay?.coachNotes.every((note) => note.sourceBasis.includes('腿部私教逐字稿提炼'))).toBe(true);
 
     for (const day of plan?.days ?? []) {
       expect(day.coachNotes).toHaveLength(day.exerciseIds.length);
