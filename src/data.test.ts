@@ -45,12 +45,11 @@ describe('built-in fitness data', () => {
       'cable-curl',
     ]);
     expect(dayThree?.exerciseIds).toEqual([
-      'standing-calf-raise',
-      'hip-adduction-machine',
+      'single-leg-deadlift',
       'bulgarian-split-squat',
+      'front-squat',
       'romanian-deadlift',
-      'seated-hip-flexion-raise',
-      'leg-curl',
+      'back-extension',
     ]);
     expect(coachPlans[0].days.every((day) => (day.warmup?.length ?? 0) > 0)).toBe(true);
     expect(coachPlans[0].days.flatMap((day) => day.coachNotes).every((note) => note.sourceBasis.includes('逐字稿提炼'))).toBe(true);
