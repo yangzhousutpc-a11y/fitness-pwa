@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { saveWorkoutSession } from './api';
 
 const apiState = vi.hoisted(() => ({
   currentPlanId: null as string | null,
@@ -205,6 +206,24 @@ describe('fitness PWA user flows', () => {
     expect(screen.getByText('训练记录')).toBeInTheDocument();
     expect(screen.getByText('5 个动作 · 1/25 组完成')).toBeInTheDocument();
     expect(apiState.sessions).toHaveLength(1);
+  });
+
+  it('keeps the workout draft if saving the completed workout fails', async () => {
+    vi.mocked(saveWorkoutSession).mockRejectedValueOnce(new Error('保存训练失败'));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: '进入三分化训练计划' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始训练' }));
+    fireEvent.change(screen.getAllByLabelText('第 1 组重量')[0], { target: { value: '60' } });
+    fireEvent.change(screen.getAllByLabelText('第 1 组次数')[0], { target: { value: '10' } });
+    fireEvent.click(screen.getAllByLabelText('切换第 1 组完成状态')[0]);
+    fireEvent.click(screen.getByRole('button', { name: '完成' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('保存训练失败')).toBeInTheDocument();
+    });
+
+    expect(localStorage.getItem('fitness-pwa.workout-drafts.v1')).toContain('60');
   });
 
   it('expands training days independently and lets plan exercises fold open like workout cards', () => {

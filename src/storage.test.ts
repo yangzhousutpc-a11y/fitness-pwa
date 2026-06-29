@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createEmptyCustomPlan, createSessionFromDay, createSessionFromHistory } from './storage';
+import {
+  createEmptyCustomPlan,
+  createSessionFromDay,
+  createSessionFromHistory,
+  loadWorkoutDrafts,
+  removeWorkoutDraft,
+  saveWorkoutDraft,
+} from './storage';
 import { coachPlans } from './data';
 
 describe('workout session factories', () => {
   beforeEach(() => {
     vi.setSystemTime(new Date('2026-06-24T10:00:00+08:00'));
+    localStorage.clear();
   });
 
   it('creates a session with five empty sets for every planned exercise', () => {
@@ -76,5 +84,38 @@ describe('workout session factories', () => {
         ],
       },
     ]);
+  });
+
+  it('persists and removes unfinished workout drafts separately from completed sessions', () => {
+    const session = createSessionFromDay(coachPlans[0], coachPlans[0].days[0]);
+    const draftKey = `${session.planId}:${session.dayId}`;
+
+    expect(loadWorkoutDrafts()).toEqual({});
+
+    saveWorkoutDraft(draftKey, session);
+
+    expect(loadWorkoutDrafts()[draftKey]).toEqual(session);
+    expect(localStorage.getItem('fitness-pwa.sessions.v1')).toBeNull();
+
+    removeWorkoutDraft(draftKey);
+
+    expect(loadWorkoutDrafts()[draftKey]).toBeUndefined();
+  });
+
+  it('ignores corrupted workout draft storage', () => {
+    localStorage.setItem('fitness-pwa.workout-drafts.v1', '{not json');
+
+    expect(loadWorkoutDrafts()).toEqual({});
+  });
+
+  it('ignores workout drafts with an invalid session shape', () => {
+    localStorage.setItem(
+      'fitness-pwa.workout-drafts.v1',
+      JSON.stringify({
+        'bad:day': { id: 'bad-draft', exerciseLogs: [{ exerciseId: 'barbell-bench-press' }] },
+      }),
+    );
+
+    expect(loadWorkoutDrafts()).toEqual({});
   });
 });

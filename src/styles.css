@@ -1085,6 +1085,8 @@ a {
 }
 
 .workout-tools {
+  display: flex;
+  justify-content: flex-end;
   margin-bottom: 14px;
 }
 
@@ -1092,8 +1094,8 @@ a {
   opacity: 0.38;
 }
 
-.workout-tools .secondary-button {
-  width: 100%;
+.workout-tools button {
+  min-height: 34px;
 }
 
 .workout-add-panel {
@@ -2092,6 +2094,33 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
   margin-top: 13px;
+}
+
+.weekly-review-lines {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weekly-review-lines li {
+  position: relative;
+  padding-left: 14px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.weekly-review-lines li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
 }
 
 .exercise-pr-grid {

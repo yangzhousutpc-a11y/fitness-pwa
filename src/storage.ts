@@ -1,6 +1,7 @@
 import type { CoachPlan, ExerciseLog, SetLog, TrainingDayTemplate, WorkoutSession } from './types';
 
 const defaultSetCount = 5;
+const workoutDraftsKey = 'fitness-pwa.workout-drafts.v1';
 
 export function createEmptySets(count = defaultSetCount): SetLog[] {
   return Array.from({ length: count }, (_, index) => ({
@@ -77,4 +78,82 @@ export function createSessionFromHistory(sourceSession: WorkoutSession): Workout
       })),
     })),
   };
+}
+
+function isSetLog(value: unknown): value is SetLog {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const set = value as Partial<SetLog>;
+  const hasValidWeight = set.weight === null || typeof set.weight === 'number';
+  const hasValidReps = set.reps === null || typeof set.reps === 'number';
+  return typeof set.setNumber === 'number' && hasValidWeight && hasValidReps && typeof set.completed === 'boolean';
+}
+
+function isExerciseLog(value: unknown): value is ExerciseLog {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const log = value as Partial<ExerciseLog>;
+  return typeof log.exerciseId === 'string' && typeof log.note === 'string' && Array.isArray(log.sets) && log.sets.every(isSetLog);
+}
+
+function isWorkoutSession(value: unknown): value is WorkoutSession {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const session = value as Partial<WorkoutSession>;
+  return (
+    typeof session.id === 'string' &&
+    typeof session.date === 'string' &&
+    typeof session.planId === 'string' &&
+    typeof session.dayId === 'string' &&
+    Array.isArray(session.exerciseLogs) &&
+    session.exerciseLogs.every(isExerciseLog)
+  );
+}
+
+export function loadWorkoutDrafts(): Record<string, WorkoutSession> {
+  try {
+    const raw = localStorage.getItem(workoutDraftsKey);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([, value]) => isWorkoutSession(value)),
+    );
+  } catch {
+    return {};
+  }
+}
+
+export function saveWorkoutDraft(draftKey: string, session: WorkoutSession): Record<string, WorkoutSession> {
+  const drafts = { ...loadWorkoutDrafts(), [draftKey]: session };
+  try {
+    localStorage.setItem(workoutDraftsKey, JSON.stringify(drafts));
+  } catch {
+    // 草稿只用于防误退恢复；存储失败时不能打断正在训练的记录流程。
+  }
+  return drafts;
+}
+
+export function removeWorkoutDraft(draftKey: string): Record<string, WorkoutSession> {
+  const drafts = { ...loadWorkoutDrafts() };
+  delete drafts[draftKey];
+  try {
+    if (Object.keys(drafts).length === 0) {
+      localStorage.removeItem(workoutDraftsKey);
+    } else {
+      localStorage.setItem(workoutDraftsKey, JSON.stringify(drafts));
+    }
+  } catch {
+    // 清理失败不影响已完成训练提交。
+  }
+  return drafts;
 }
