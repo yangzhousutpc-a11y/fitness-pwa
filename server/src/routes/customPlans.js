@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { validateCustomPlan } from '../validators.js';
 
 export function createCustomPlanRouter(customPlanStore) {
   const router = Router();
@@ -13,7 +14,8 @@ export function createCustomPlanRouter(customPlanStore) {
 
   router.post('/', async (req, res, next) => {
     try {
-      res.json({ code: 0, data: await customPlanStore.upsert(req.body) });
+      const plan = validateCustomPlan(req.body);
+      res.json({ code: 0, data: await customPlanStore.upsert(plan) });
     } catch (error) {
       next(error);
     }
@@ -21,7 +23,8 @@ export function createCustomPlanRouter(customPlanStore) {
 
   router.put('/:id', async (req, res, next) => {
     try {
-      res.json({ code: 0, data: await customPlanStore.upsert({ ...req.body, id: req.params.id }) });
+      const plan = validateCustomPlan({ ...req.body, id: req.params.id });
+      res.json({ code: 0, data: await customPlanStore.upsert(plan) });
     } catch (error) {
       next(error);
     }

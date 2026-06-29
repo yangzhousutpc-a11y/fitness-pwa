@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/stamp-sw.js",
     "check:assets": "node scripts/check-assets.js",
     "preview": "vite preview",
     "test": "vitest run",

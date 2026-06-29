@@ -125,6 +125,65 @@ test('workout sessions can be deleted through the API', async () => {
   assert.deepEqual(listResponse.body, { code: 0, data: [] });
 });
 
+test('rejects a malformed workout session with 400 instead of 500', async () => {
+  const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
+  const auth = { Authorization: 'Bearer secret-token' };
+
+  const response = await request(app).post('/api/workout-sessions').set(auth).send({ id: '' }).expect(400);
+
+  assert.equal(response.body.code, 1);
+  assert.match(response.body.message, /不能为空|必须/);
+
+  // 非法的 set.weight（字符串）必须被拦下，避免 Number("abc")=NaN 入库
+  const badWeight = await request(app)
+    .post('/api/workout-sessions')
+    .set(auth)
+    .send({
+      ...sampleSession,
+      exerciseLogs: [{ exerciseId: 'x', note: '', sets: [{ setNumber: 1, weight: 'abc', reps: 10, completed: true }] }],
+    })
+    .expect(400);
+  assert.match(badWeight.body.message, /weight/);
+
+  // completed 缺失/非布尔也必须拦下
+  const badCompleted = await request(app)
+    .post('/api/workout-sessions')
+    .set(auth)
+    .send({
+      ...sampleSession,
+      exerciseLogs: [{ exerciseId: 'x', note: '', sets: [{ setNumber: 1, weight: 60, reps: 10 }] }],
+    })
+    .expect(400);
+  assert.match(badCompleted.body.message, /completed/);
+
+  // note 缺失也必须拦下（store 会用它绑定，undefined 会炸 500）
+  const badNote = await request(app)
+    .post('/api/workout-sessions')
+    .set(auth)
+    .send({
+      ...sampleSession,
+      exerciseLogs: [{ exerciseId: 'x', sets: [{ setNumber: 1, weight: 60, reps: 10, completed: true }] }],
+    })
+    .expect(400);
+  assert.match(badNote.body.message, /note/);
+});
+
+test('rejects a malformed custom plan with 400 instead of 500', async () => {
+  const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
+  const auth = { Authorization: 'Bearer secret-token' };
+
+  const response = await request(app).post('/api/custom-plans').set(auth).send({ id: 'p1' }).expect(400);
+  assert.equal(response.body.code, 1);
+
+  // days 字段类型错误也应被拦成 400，而不是入库时炸成 500
+  const badDays = await request(app)
+    .post('/api/custom-plans')
+    .set(auth)
+    .send({ ...samplePlan, days: 'not-an-array' })
+    .expect(400);
+  assert.match(badDays.body.message, /days/);
+});
+
 test('current follow plan preference round-trips through the API', async () => {
   const app = createApp({ ...createMemoryStores(), apiToken: 'secret-token' });
   const auth = { Authorization: 'Bearer secret-token' };

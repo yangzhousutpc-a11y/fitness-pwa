@@ -7,6 +7,13 @@ type ApiResponse<T> = {
   message?: string;
 };
 
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
 const defaultApiBaseUrl = '';
 
 function getApiBaseUrl(): string {
@@ -26,7 +33,7 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
 
   if (response.status === 401) {
     clearApiToken();
-    throw new Error('访问密钥无效，请重新输入');
+    throw new AuthError('访问密钥无效，请重新输入');
   }
 
   if (!response.ok || body.code !== 0) {

@@ -12,6 +12,7 @@ import {
   getWeeklyStats,
 } from './analytics';
 import {
+  AuthError,
   deleteCustomPlan as deleteCustomPlanFromApi,
   deleteWorkoutSession as deleteWorkoutSessionFromApi,
   getCurrentPlanPreference,
@@ -93,6 +94,18 @@ function App() {
     setSyncStatus('error');
     setSyncError(error instanceof Error ? error.message : '数据库同步失败');
     setShowLogin(true);
+  }
+
+  // 写操作失败：先回滚本地态再提示，避免静默骗用户。
+  // 仅当是鉴权失败（AuthError/401）时才回到登录页；普通保存失败只显示可重试的横幅，不打断训练流程。
+  function reportWriteError(error: unknown, rollback: () => void) {
+    rollback();
+    const message = error instanceof Error ? error.message : '数据库同步失败';
+    setSyncStatus('error');
+    setSyncError(message);
+    if (error instanceof AuthError) {
+      setShowLogin(true);
+    }
   }
 
   function loadDatabaseState() {
@@ -199,15 +212,25 @@ function App() {
   }
 
   function finishWorkout(session: WorkoutSession) {
+    // 记录这条 id 之前的版本（复用历史记录时可能已存在），仅回滚这一条，避免快照覆盖其它并发变更。
+    const previousVersion = sessions.find((item) => item.id === session.id) ?? null;
     setSessions((current) => [session, ...current.filter((item) => item.id !== session.id)]);
     const draftKey = route.name === 'workout' ? getWorkoutDraftKey(route.planId, route.dayId) : null;
     saveWorkoutSession(session)
       .then(() => {
+        // 仅在确认写入成功后才删草稿，失败时草稿保留供重试。
         if (draftKey) {
           setWorkoutDrafts(removeWorkoutDraft(draftKey));
         }
       })
-      .catch(reportSyncError);
+      .catch((error) =>
+        reportWriteError(error, () =>
+          setSessions((current) => {
+            const withoutThis = current.filter((item) => item.id !== session.id);
+            return previousVersion ? [previousVersion, ...withoutThis] : withoutThis;
+          }),
+        ),
+      );
     setActiveTab('history');
     setRoute({ name: 'home' });
   }
@@ -266,8 +289,16 @@ function App() {
   }
 
   function updateCustomPlan(nextPlan: CoachPlan) {
+    const previousVersion = customPlans.find((item) => item.id === nextPlan.id) ?? null;
     setCustomPlans((current) => [nextPlan, ...current.filter((item) => item.id !== nextPlan.id)]);
-    saveCustomPlan(nextPlan).catch(reportSyncError);
+    saveCustomPlan(nextPlan).catch((error) =>
+      reportWriteError(error, () =>
+        setCustomPlans((current) => {
+          const withoutThis = current.filter((item) => item.id !== nextPlan.id);
+          return previousVersion ? [previousVersion, ...withoutThis] : withoutThis;
+        }),
+      ),
+    );
   }
 
   function goHome(tab: Tab = activeTab) {

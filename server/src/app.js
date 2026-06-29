@@ -12,6 +12,9 @@ import { createPreferenceStore } from './stores/preferenceStore.js';
 import { createWorkoutSessionStore } from './stores/workoutSessionStore.js';
 
 function getClientError(error) {
+  if (error?.name === 'ValidationError') {
+    return { status: 400, message: error.message };
+  }
   if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
     return { status: 500, message: '数据库账号或密码错误，请检查 MYSQL_USER/MYSQL_PASSWORD' };
   }

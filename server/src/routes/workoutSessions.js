@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { validateWorkoutSession } from '../validators.js';
 
 export function createWorkoutSessionRouter(workoutSessionStore) {
   const router = Router();
@@ -13,7 +14,8 @@ export function createWorkoutSessionRouter(workoutSessionStore) {
 
   router.post('/', async (req, res, next) => {
     try {
-      res.json({ code: 0, data: await workoutSessionStore.upsert(req.body) });
+      const session = validateWorkoutSession(req.body);
+      res.json({ code: 0, data: await workoutSessionStore.upsert(session) });
     } catch (error) {
       next(error);
     }

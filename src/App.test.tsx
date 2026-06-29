@@ -11,6 +11,12 @@ const apiState = vi.hoisted(() => ({
 }));
 
 vi.mock('./api', () => ({
+  AuthError: class AuthError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'AuthError';
+    }
+  },
   getCustomPlans: vi.fn(async () => {
     if (apiState.loadError) {
       const error = apiState.loadError;
@@ -208,7 +214,7 @@ describe('fitness PWA user flows', () => {
     expect(apiState.sessions).toHaveLength(1);
   });
 
-  it('keeps the workout draft if saving the completed workout fails', async () => {
+  it('rolls back the optimistic session and keeps the draft if saving the completed workout fails', async () => {
     vi.mocked(saveWorkoutSession).mockRejectedValueOnce(new Error('保存训练失败'));
     render(<App />);
 
@@ -223,7 +229,12 @@ describe('fitness PWA user flows', () => {
       expect(screen.getByText('保存训练失败')).toBeInTheDocument();
     });
 
+    // 草稿必须保留，让用户可以重试，不能静默丢
     expect(localStorage.getItem('fitness-pwa.workout-drafts.v1')).toContain('60');
+
+    // 关键：保存失败时不能把这条"假装已保存"的记录留在历史里骗用户
+    fireEvent.click(screen.getByRole('button', { name: '▤历史' }));
+    expect(screen.queryByText('5 个动作 · 1/25 组完成')).not.toBeInTheDocument();
   });
 
   it('expands training days independently and lets plan exercises fold open like workout cards', () => {
